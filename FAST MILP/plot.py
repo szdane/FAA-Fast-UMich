@@ -8,7 +8,7 @@ Visualise own-ship and intruder trajectories in 3-D (x, y, z) space.
 Usage
 -----
 python plot_trajectories_3d.py \
-    --solution_csv solution.csv \
+    --solution_csv solution1.csv \
     --intruder_glob "intruder*.csv" \
     --sep_nm 3.0 \
     --show_buffers
@@ -54,7 +54,7 @@ def sphere(ax, x0, y0, z0, r, **kwargs):
 
 # --------------------------------------------------------------------------- ui
 parser = argparse.ArgumentParser()
-parser.add_argument("--solution_csv", default="solution.csv", help="own-ship file")
+parser.add_argument("--solution_csv", default="solution1.csv", help="own-ship file")
 parser.add_argument(
     "--intruder_glob", default="intruder*.csv", help='glob for intruders ("*.csv")'
 )
