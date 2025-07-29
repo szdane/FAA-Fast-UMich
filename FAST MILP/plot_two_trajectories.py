@@ -40,8 +40,8 @@ def main():
     ax_xy = fig.add_subplot(gs[1, 1])                   # top view (x–y)
 
     # ---- 3‑D scatter, colour = time ----------------------------------------
-    ax3d.scatter(df.x1, df.y1, df.z1, c=colors, s=14, label="Flight 1", depthshade=False)
-    ax3d.scatter(df.x2, df.y2, df.z2, c=colors, s=14, marker='^',
+    ax3d.scatter(df.f1_lat, df.f1_lon, df.f1_alt_ft, c=colors, s=14, label="Flight 1", depthshade=False)
+    ax3d.scatter(df.f2_lat, df.f2_lon, df.f2_alt_ft, c=colors, s=14, marker='^',
                  label="Flight 2", depthshade=False)
 
     ax3d.set_xlabel("x")
@@ -59,15 +59,15 @@ def main():
     cbar.set_label("time t (s)")
 
     # ---- 2‑D projections (plain lines) -------------------------------------
-    ax_xz.plot(df.x1, df.z1, label="Flight 1")
-    ax_xz.plot(df.x2, df.z2, label="Flight 2")
+    ax_xz.plot(df.f1_lat, df.f1_alt_ft, label="Flight 1")
+    ax_xz.plot(df.f2_lat, df.f2_alt_ft, label="Flight 2")
     ax_xz.set_xlabel("x")
     ax_xz.set_ylabel("z (ft)")
     ax_xz.set_title("Side view (x–z)")
     ax_xz.legend()
 
-    ax_xy.plot(df.x1, df.y1, label="Flight 1")
-    ax_xy.plot(df.x2, df.y2, label="Flight 2")
+    ax_xy.plot(df.f1_lat, df.f1_lon, label="Flight 1")
+    ax_xy.plot(df.f2_lat, df.f2_lon, label="Flight 2")
     ax_xy.set_xlabel("x")
     ax_xy.set_ylabel("y")
     ax_xy.set_title("Top view (x–y)")

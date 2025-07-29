@@ -36,7 +36,7 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 – needed for 3‑D backe
 def build_parser():
     p = argparse.ArgumentParser(description="Animate two 4‑D trajectories")
     p.add_argument("--solution_csv", required=True,
-                   help="CSV with t,x1,y1,z1,x2,y2,z2 columns")
+                   help="CSV with t,f1_lat,f1_lon,f1_alt_ft,f2_lat,f2_lon,f2_alt_ft columns")
     p.add_argument("--fps", type=int, default=8,
                    help="Frames per second for saved file or live playback")
     p.add_argument("--save_gif", type=str, default=None,
@@ -60,7 +60,7 @@ def main():
     # Set fixed axis limits so the camera doesn’t jump
     pad = 0.1
     for axis, cols in zip([ax.set_xlim, ax.set_ylim, ax.set_zlim],
-                          [(df.x1, df.x2), (df.y1, df.y2), (df.z1, df.z2)]):
+                          [(df.f1_lat, df.f1_lon), (df.f2_lat, df.f2_lon), (df.f1_alt_ft, df.f2_alt_ft)]):
         mins = min(map(np.min, cols))
         maxs = max(map(np.max, cols))
         rng  = maxs - mins
@@ -87,19 +87,20 @@ def main():
 
     def update(frame):
         # Draw path up to 'frame'
-        path1.set_data(df.x1[:frame], df.y1[:frame])
-        path1.set_3d_properties(df.z1[:frame])
-        path2.set_data(df.x2[:frame], df.y2[:frame])
-        path2.set_3d_properties(df.z2[:frame])
+        path1.set_data(df.f1_lat[:frame], df.f1_lon[:frame])
+        path1.set_3d_properties(df.f1_alt_ft[:frame])
+        # path2.set_data(df.f2_lat[:frame], df.f2_lon[:frame])
+        # path2.set_3d_properties(df.f2_alt_ft[:frame])
 
         # Move the markers to current positions
-        dot1._offsets3d = (np.array([df.x1[frame]]),
-                           np.array([df.y1[frame]]),
-                           np.array([df.z1[frame]]))
-        dot2._offsets3d = (np.array([df.x2[frame]]),
-                           np.array([df.y2[frame]]),
-                           np.array([df.z2[frame]]))
-        return path1, path2, dot1, dot2
+        dot1._offsets3d = (np.array([df.f1_lat[frame]]),
+                           np.array([df.f1_lon[frame]]),
+                           np.array([df.f1_alt_ft[frame]]))
+        # dot2._offsets3d = (np.array([df.f2_lat[frame]]),
+        #                    np.array([df.f2_lon[frame]]),
+        #                    np.array([df.f2_alt_ft[frame]]))
+        # return path1, path2, dot1, dot2
+        return path1, dot1
 
     # ------------------------- create animation ---------------------------
     ani = FuncAnimation(fig, update, frames=N,

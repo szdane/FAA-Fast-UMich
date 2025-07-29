@@ -8,7 +8,7 @@ df = pd.read_csv("filtered_rows.csv")
 df['recTime'] = pd.to_datetime(df['recTime'], format='mixed', errors='raise')  
 
 # Filter by acID
-df = df[df['acId'] == 'SWA3255_KDENtoKDTW']
+df = df[df['acId'] == 'SWA3201_KBWItoKDTW']
 
 # Define time window
 start_time = pd.Timestamp('2023-12-22 00:30:01.000')
