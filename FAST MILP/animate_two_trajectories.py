@@ -89,23 +89,23 @@ def main():
         # Draw path up to 'frame'
         path1.set_data(df.f1_lat[:frame], df.f1_lon[:frame])
         path1.set_3d_properties(df.f1_alt_ft[:frame])
-        # path2.set_data(df.f2_lat[:frame], df.f2_lon[:frame])
-        # path2.set_3d_properties(df.f2_alt_ft[:frame])
+        path2.set_data(df.f2_lat[:frame], df.f2_lon[:frame])
+        path2.set_3d_properties(df.f2_alt_ft[:frame])
 
         # Move the markers to current positions
         dot1._offsets3d = (np.array([df.f1_lat[frame]]),
                            np.array([df.f1_lon[frame]]),
                            np.array([df.f1_alt_ft[frame]]))
-        # dot2._offsets3d = (np.array([df.f2_lat[frame]]),
-        #                    np.array([df.f2_lon[frame]]),
-        #                    np.array([df.f2_alt_ft[frame]]))
-        # return path1, path2, dot1, dot2
+        dot2._offsets3d = (np.array([df.f2_lat[frame]]),
+                           np.array([df.f2_lon[frame]]),
+                           np.array([df.f2_alt_ft[frame]]))
+        return path1, path2, dot1, dot2
         return path1, dot1
 
     # ------------------------- create animation ---------------------------
     ani = FuncAnimation(fig, update, frames=N,
                         init_func=init, blit=True,
-                        interval=2000/args.fps)
+                        interval=200/args.fps)
 
     # --------------------- save or just display ---------------------------
     if args.save_gif:

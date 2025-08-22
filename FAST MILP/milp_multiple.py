@@ -2,15 +2,21 @@ from gurobipy import *
 import numpy as np
 import pandas as pd
 
-DT = 60.0 
+DT = 1.0
 FT2NM             = 1 / 6076.12
-SEP_HOR_NM        = 500.0 * FT2NM      # 0.082 NM
-SEP_VERT_FT       = 100.0
+
 BIG_M             = 1e5
-V_MAX_X  = 0.25    # grid units per 30 s
-V_MAX_Y  = 0.072    
-V_MAX_Z  = 1000
+V_MAX_X  = 0.25/60    # grid units per s
+V_MAX_Y  = 0.072/60    
+V_MAX_Z  = 1000/60
 GLIDE_RATIO = 2
+SEP_HOR_NM        = 500.0 * FT2NM  + 2*V_MAX_X    
+SEP_VERT_FT       = 100.0 + 2*V_MAX_Z
+# CT = 0
+# CF = 999
+
+CT = 999
+CF = 1
 #first 4 indices -> entry, last 4 -> landing
 
 #DENtoDTW BWItoDTW
@@ -20,12 +26,15 @@ GLIDE_RATIO = 2
 
 
 #DAL1066, DAL498, EDV5018
-flights = [[39.471957,-82.139821,34843.470164, 0, 41.673148, -82.943072, 19820.938696, 1200],[39.471965,-82.139803,34406.851392,0,41.673149, -82.943096, 20227.116630, 900]]#,[44.62722,-77.79222, 36000.0,900]]
+flights = [[39.471957,-82.139821,34843.470164, 0, 41.673148, -82.943072, 19820.938696, 2100],[39.471965,-82.139803,34406.851392,0,41.673149, -82.943096, 20227.116630, 900]]#,[44.62722,-77.79222, 36000.0,900]]
+# flights = []
+# for i in range(10):
+#     flights.append([39.471957,-82.139821,34843.470164, 0, 41.673148, -82.943072, 19820.938696, 1200])
 v_avg = []
 for i in range(len(flights)):
-    v_x = abs(flights[i][0]-flights[i][4])/20
-    v_y = abs(flights[i][1]-flights[i][5])/20
-    v_z = abs(flights[i][2]-flights[i][6])/20
+    v_x = abs(flights[i][0]-flights[i][4])/(20*60)
+    v_y = abs(flights[i][1]-flights[i][5])/(20*60)
+    v_z = abs(flights[i][2]-flights[i][6])/(20*60)
     v_avg.append([v_x,v_y,v_z])
 
 print(v_avg)
@@ -101,13 +110,13 @@ diffz = []
 for k in range(1,N):
     #physical constraints
     for i in range(n):
-        m.addConstr(x[i][k] - x[i][k-1] <=  v_avg[i][0]*1.1)
-        m.addConstr(y[i][k] - y[i][k-1] <=  v_avg[i][1]*1.1)
-        m.addConstr(z[i][k] - z[i][k-1] <=  v_avg[i][2]*1.1)
+        m.addConstr(x[i][k] - x[i][k-1] <=  v_avg[i][0]*1.1*DT)
+        m.addConstr(y[i][k] - y[i][k-1] <=  v_avg[i][1]*1.1*DT)
+        m.addConstr(z[i][k] - z[i][k-1] <=  v_avg[i][2]*1.1*DT)
 
-        m.addConstr(x[i][k-1] - x[i][k] <=  v_avg[i][0]*1.1)
-        m.addConstr(y[i][k-1] - y[i][k] <=  v_avg[i][1]*1.1)
-        m.addConstr(z[i][k-1] - z[i][k] <=  v_avg[i][2]*1.1)
+        m.addConstr(x[i][k-1] - x[i][k] <=  v_avg[i][0]*1.1*DT)
+        m.addConstr(y[i][k-1] - y[i][k] <=  v_avg[i][1]*1.1*DT)
+        m.addConstr(z[i][k-1] - z[i][k] <=  v_avg[i][2]*1.1*DT)
 
 
         #dummy variables for the objective
@@ -144,12 +153,12 @@ for k in range(1,N):
         obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         obj += uz[i][k-1]*FT2NM*pos
-        # obj += 30*(1-is_end)
+        obj += (CT/CF)*(1-is_end)
 
 
 
 
-for i in range(N):
+for k in range(N):
     #safety constraints
     for i in range(n-1):
         for j in range(i+1,n):
@@ -167,8 +176,8 @@ m.setObjective(obj, GRB.MINIMIZE)
 
 m.optimize()
 
-for v in m.getVars():
-    print('%s %g' % (v.VarName, v.X))
+# for v in m.getVars():
+#     print('%s %g' % (v.VarName, v.X))
 
 print('Obj: %g' % m.ObjVal)
 pat = []
@@ -186,7 +195,7 @@ data = {
 df = pd.DataFrame(data)
 
 df["root"] = df["var"].str.extract(r"^([^\[]+)", expand=False)        
-df["t"]  = (df["var"].str.extract(r"\[(\d+)\]",  expand=False).astype(int))*60.0000
+df["t"]  = (df["var"].str.extract(r"\[(\d+)\]",  expand=False).astype(int))
 
 # 3. turn long → wide: one row per index, one column per root
 wide = (df.pivot(index="t", columns="root", values="value")
@@ -201,4 +210,4 @@ for i in range(n):
 
 wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-wide.to_csv("solution24.csv", index=False)
+wide.to_csv("solution29_2_1sec.csv", index=False)
