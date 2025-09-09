@@ -1,0 +1,193 @@
+ac_Type,acft_Class,Wing area,CD0,e,typical engine,Max thrust
+A320_IAE,Twin Engine. Commuter Aircraft,,0.021,0.85,IAE V2527M-A5,133
+A320_CFM,Twin Engine. Commuter Aircraft,,0.021,0.85,CFM56-5B4/P,120
+BCS3,Twin Engine. Commuter Aircraft,,0.021,0.85,PW 1525G-3,108.54
+B739,Twin Engine. Commuter Aircraft,,0.021,0.85,CFM56-7B27,121
+B38M,Twin Engine. Commuter Aircraft,,0.021,0.85,CFMI LEAP-1B28,127.62
+A20N_PW,Twin Engine. Commuter Aircraft,,0.021,0.85,PW 1127G,120
+A20N_CFM,Twin Engine. Commuter Aircraft,,0.021,0.85,CFMI LEAP-1A29,118.68
+A321_IAE,Twin Engine. Commuter Aircraft,,0.021,0.85,IAE V2533-A5,140.56
+A321_CFM,Twin Engine. Commuter Aircraft,,0.021,0.85,CFM56-5B3,150
+P28A,Single Engine. Light Aircraft - No Struts,,0.023,0.8,LYCOMING 0-360,1.69
+A21N_CFM,Twin Engine. Commuter Aircraft,,0.021,0.85,CFMI LEAP-1A33X,143.05
+A21N_PW,Twin Engine. Commuter Aircraft,,0.021,0.85,PW 1133G,147.28
+SF34,Twin Engine. Commuter Aircraft,,0.021,0.85,GE CT7-9B,6.71
+B77L,Twin Engine. Widebody Aircraft,,0.017,0.85,GE90-115,513.9
+B738,Twin Engine. Commuter Aircraft,,0.021,0.85,CFM56-7B27,121
+B737,Twin Engine. Commuter Aircraft,,0.021,0.85,CFM56-7B26,117
+B752_PW,Twin Engine. Commuter Aircraft,,0.021,0.85,PW PW2000-43,189
+B752_RR,Twin Engine. Commuter Aircraft,,0.021,0.85,RR RB211-535-E4B,193
+B763_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE CF6-80C2,263
+B763_RR,Twin Engine. Widebody Aircraft,,0.017,0.85,RR RB211-524H,264.4
+B763_PW,Twin Engine. Widebody Aircraft,,0.017,0.85,PW JT9D-7R4E4,220
+MD11_GE,Multi Engine. Widebody Aircraft,,0.019,0.84,GE CF6-80C2D2F,282.46
+MD11_PW,Multi Engine. Widebody Aircraft,,0.019,0.84,PW PW4462,280
+CRJ2,Twin Engine. Commuter Aircraft,,0.021,0.85,GE CF34-3,41
+PC12,Single Engine. Light Aircraft - No Struts,,0.023,0.8,PW PT6E-67XP,4.45
+DC93,Twin Engine. Commuter Aircraft,,0.021,0.85,PW JT8D-15,66.7
+A306_PW,Twin Engine. Widebody Aircraft,,0.017,0.85,PW PW4158,249
+A306_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE CF6-80C2,262
+B762_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE CF6-80C2B7F,276.2
+B762_PW,Twin Engine. Widebody Aircraft,,0.017,0.85,PW PW4062,281.6
+B722,Twin Engine. Commuter Aircraft,,0.021,0.85,PW JT8D-9,64.4
+C310,Twin Engine. Commuter Aircraft,,0.021,0.85,CONTINENTAL IO-520-M,1.62
+CL35,Twin Engine. Commuter Aircraft,,0.021,0.85,HONEYWELL HTF7350,33
+B77W,Twin Engine. Widebody Aircraft,,0.017,0.85,GE GE90-115B,513
+C750,Twin Engine. Commuter Aircraft,,0.021,0.85,RR AE3007C2,31.29
+GL5T,Twin Engine. Commuter Aircraft,,0.021,0.85,RR BR700-710D5-21,67.28
+H25B,Twin Engine. Commuter Aircraft,,0.021,0.85,HONEYWELL TFE 731-3-RH,16.6
+CL60,Twin Engine. Commuter Aircraft,,0.021,0.85,GE CF34-3B,41
+MD88,Twin Engine. Commuter Aircraft,,0.021,0.85,PW JT8D-219,93
+B748,Multi Engine. Widebody Aircraft,,0.019,0.84,GE Genx-2B67,296
+LJ35,Twin Engine. Commuter Aircraft,,0.021,0.85,HONEYWELL TFE 731-2-2B,16
+E190,Twin Engine. Commuter Aircraft,,0.021,0.85,GE CF34-10E,89
+GLF4,Twin Engine. Commuter Aircraft,,0.021,0.85,RR TAY  611-8C,61.6
+B744_RR,Multi Engine. Widebody Aircraft,,0.019,0.84,RR RB211-524H,258
+B744_PW,Multi Engine. Widebody Aircraft,,0.019,0.84,PW PW4056,252.4
+B744_GE,Multi Engine. Widebody Aircraft,,0.019,0.84,GE CF6-80C2B4,257.5
+B789_RR,Twin Engine. Widebody Aircraft,,0.017,0.85,RR TRENT 1000-K2,347.54
+B789_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE Genx-1B75,330
+LJ60,Twin Engine. Commuter Aircraft,,0.021,0.85,PW PW305A,20
+GL7T,Twin Engine. Commuter Aircraft,,0.021,0.85,GE PASSPORT,84.2
+A319_IAE,Twin Engine. Commuter Aircraft,,0.021,0.85,IAE V2524-A5,104.6
+A319_CFM,Twin Engine. Commuter Aircraft,,0.021,0.85,CFMI CFM56-5B,98
+B764_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE CF6-80C2B8F ,282.5
+B764_PW,Twin Engine. Widebody Aircraft,,0.017,0.85,PW PW4062,281.6
+B39M,Twin Engine. Commuter Aircraft,,0.021,0.85,CFMI LEAP-1B28,130.41
+A35K,Twin Engine. Widebody Aircraft,,0.017,0.85,RR TRENT XWB-97,431.5
+B788_RR,Twin Engine. Widebody Aircraft,,0.017,0.85,RR TRENT 1000-L3,331.62
+B788_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE Genx -1B70,310
+SH36,Twin Engine. Commuter Aircraft,,0.021,0.85,PW PT6A-65AR,8.02
+ASTR,Twin Engine. Commuter Aircraft,,0.021,0.85,HONEYWELL TFE 731-3B-100G,16.23
+A30B_PW,Twin Engine. Widebody Aircraft,,0.017,0.85,PW JT9D-59AIT,234
+A30B_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE CF6-50-C2,233
+A332_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE CF6-80E1,306
+A332_PW,Twin Engine. Widebody Aircraft,,0.017,0.85,PW PW4173,308
+A332_RR,Twin Engine. Widebody Aircraft,,0.017,0.85,RR TRENT 772C-60,316
+E75L,Twin Engine. Commuter Aircraft,,0.021,0.85,GE CF34-8E,62.3
+A333_RR,Twin Engine. Widebody Aircraft,,0.017,0.85,RR TRENT 772C-60,316
+A333_PW,Twin Engine. Widebody Aircraft,,0.017,0.85,PW PW4173,308
+A333_GE,Twin Engine. Widebody Aircraft,,0.017,0.85,GE CF6-80E1,306
+CRJ9,Twin Engine. Commuter Aircraft,,0.021,0.85,GE CF34-8C5,64.5
+B37M,Twin Engine. Commuter Aircraft,,0.021,0.85,CFMI LEAP-1B27,124.71
+AC50,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+E145,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+BCS1,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C680,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+CRJ7,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C208,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+BE99,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+B712,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+FA50,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+DH8D,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+B190,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C172,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+E75S,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+B753,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+E545,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+SR22,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+E120,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+P46T,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+F2TH,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+BE40,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+TBM9,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+C56X,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+SW4,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+B772,Twin Engine. Widebody Aircraft,,0.017,0.85,,
+PAY1,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+E170,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C68A,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+G280,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+A359,Twin Engine. Widebody Aircraft,,0.017,0.85,,
+LJ45,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PC24,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C25C,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C550,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+F900,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+TBM7,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+AEST,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C25B,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+GLF5,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+LJ40,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PA23,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PA24,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+E550,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+BE20,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+E135,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+WW24,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PA31,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C414,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+CL30,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+P32R,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+HDJT,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C421,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C150,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+GALX,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C560,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C182,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+EPIC,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+BE30,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PA32,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+BT36,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+GLF6,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+E55P,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+B78X,Twin Engine. Widebody Aircraft,,0.017,0.85,,
+E295,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+SF50,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+ACRO-SPORT II,Vintage Bi-plane with struts and bracing wire,,,,,
+C700,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+DA40,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+PA46,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+C72R,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+C82R,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+S22T,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+GLEX,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+BE36,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+BE23,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+BE55,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+B734,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+FA7X,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PA30,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+COL3,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+DA62,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+BE33,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+C206,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+C120,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+E195,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+TBM8,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+C25A,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C180,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+P28R,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+M20P,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+DC91,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+SR20,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+BE58,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+A388,Multi Engine. Widebody Aircraft,,0.019,0.84,,
+S76,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+E45X,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PA34,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+DV20,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+LJ31,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+AC11,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+SW3,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+GL6T,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C82S,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+C340,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+RV14,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+BE35,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+T210,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+C152,Single Engine. Light Aircraft - With Struts,,0.026,0.8,,
+SB20,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+RV10,Single Engine. Light Aircraft - No Struts,,0.023,0.8,,
+LJ35A,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+FA20,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C240,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+CL65,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+LJ70,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+MU2,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+PRM1,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+A343,Multi Engine. Widebody Aircraft,,0.019,0.84,,
+BE95,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+C441,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+MD90,Twin Engine. Commuter Aircraft,,0.021,0.85,,
+H25C,Twin Engine. Commuter Aircraft,,0.021,0.85,,
