@@ -2,7 +2,7 @@ from gurobipy import *
 import numpy as np
 import pandas as pd
 
-DT = 1.0
+DT = 60.0
 FT2NM             = 1 / 6076.12
 
 BIG_M             = 1e5
@@ -10,8 +10,10 @@ V_MAX_X  = 0.25/60    # grid units per s
 V_MAX_Y  = 0.072/60    
 V_MAX_Z  = 1000/60
 GLIDE_RATIO = 2
-SEP_HOR_NM        = 500.0 * FT2NM  + 2*V_MAX_X    
-SEP_VERT_FT       = 100.0 + 2*V_MAX_Z
+# SEP_HOR_NM        = 500.0 * FT2NM  + 2*V_MAX_X
+# SEP_VERT_FT       = 100.0 + 2*V_MAX_Z
+SEP_HOR_NM        = 500.0 * FT2NM  
+SEP_VERT_FT       = 100.0 
 # CT = 0
 # CF = 999
 
@@ -20,13 +22,14 @@ CF = 1
 #first 4 indices -> entry, last 4 -> landing
 
 #DENtoDTW BWItoDTW
-# flight1 = [40.67333,-80.76722, 34000.0, 0, 41.51444,  -82.56222,    10000.0, 900]
-# flight2 = [43.08,  -86.2251,  37000.0,   0, 42.6068, -83.9982, 10000.0, 900 ]
-# flights = [flight1, flight2]
+flight1 = [43.079997, -86.225066,  37000.000000, 0, 42.606837, -83.998162,  13370.483095 , 1200]
+# flight2 = [43.08,  -86.2251,  37000.0,   0, 42.6068, -83.9982, 10000.0, 1200 ]
+flight2 = [40.694705, -80.769895,  30000.000000, 0, 41.749154, -82.796963,  16902.643281,  916]
+flights = [flight1, flight2]
 
 
 #DAL1066, DAL498, EDV5018
-flights = [[39.471957,-82.139821,34843.470164, 0, 41.673148, -82.943072, 19820.938696, 2100],[39.471965,-82.139803,34406.851392,0,41.673149, -82.943096, 20227.116630, 900]]#,[44.62722,-77.79222, 36000.0,900]]
+# flights = [[39.471957,-82.139821,34843.470164, 0, 41.673148, -82.943072, 19820.938696, 2100],[39.471965,-82.139803,34406.851392,0,41.673149, -82.943096, 20227.116630, 900]]#,[44.62722,-77.79222, 36000.0,900]]
 # flights = []
 # for i in range(10):
 #     flights.append([39.471957,-82.139821,34843.470164, 0, 41.673148, -82.943072, 19820.938696, 1200])
@@ -48,7 +51,7 @@ star_fixes ={
         "RKCTY": (42.6869, -83.9603, (13000, 11000)), "VCTRZ": (41.9878, -84.0670, (15000, 12000)) # (lat, lon)
 }
 
-tN = flights[0][7]
+tN = 2100
 t0 = 0
 N  = int((tN - t0) / DT) + 1
 print(N)
@@ -110,13 +113,21 @@ diffz = []
 for k in range(1,N):
     #physical constraints
     for i in range(n):
-        m.addConstr(x[i][k] - x[i][k-1] <=  v_avg[i][0]*1.1*DT)
-        m.addConstr(y[i][k] - y[i][k-1] <=  v_avg[i][1]*1.1*DT)
-        m.addConstr(z[i][k] - z[i][k-1] <=  v_avg[i][2]*1.1*DT)
+        # m.addConstr(x[i][k] - x[i][k-1] <=  v_avg[i][0]*1.1*DT)
+        # m.addConstr(y[i][k] - y[i][k-1] <=  v_avg[i][1]*1.1*DT)
+        # m.addConstr(z[i][k] - z[i][k-1] <=  v_avg[i][2]*1.1*DT)
 
-        m.addConstr(x[i][k-1] - x[i][k] <=  v_avg[i][0]*1.1*DT)
-        m.addConstr(y[i][k-1] - y[i][k] <=  v_avg[i][1]*1.1*DT)
-        m.addConstr(z[i][k-1] - z[i][k] <=  v_avg[i][2]*1.1*DT)
+        # m.addConstr(x[i][k-1] - x[i][k] <=  v_avg[i][0]*1.1*DT)
+        # m.addConstr(y[i][k-1] - y[i][k] <=  v_avg[i][1]*1.1*DT)
+        # m.addConstr(z[i][k-1] - z[i][k] <=  v_avg[i][2]*1.1*DT)
+
+        m.addConstr(x[i][k] - x[i][k-1] <=  V_MAX_X*DT)
+        m.addConstr(y[i][k] - y[i][k-1] <=  V_MAX_Y*DT)
+        m.addConstr(z[i][k] - z[i][k-1] <=  V_MAX_Z*DT)
+
+        m.addConstr(x[i][k-1] - x[i][k] <=  V_MAX_X*DT)
+        m.addConstr(y[i][k-1] - y[i][k] <=  V_MAX_Y*DT)
+        m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT)
 
 
         #dummy variables for the objective
@@ -210,4 +221,4 @@ for i in range(n):
 
 wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-wide.to_csv("solution29_2_1sec.csv", index=False)
+wide.to_csv("ac_1sec.csv", index=False)
