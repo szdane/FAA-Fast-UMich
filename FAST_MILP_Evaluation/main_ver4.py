@@ -126,7 +126,6 @@ def compute_drag(mass, tas, alt, cd0, k, vs, S):
     
     return D
 
-
 # Acceleration limit check function
 def limit_acceleration(acc):
     """
@@ -187,7 +186,6 @@ def compute_fuel_flow(T, tsfc):
 
     return fuel_flow
 
-
 # compute emission function
 def compute_emission(fuel_flow):
     """
@@ -233,6 +231,60 @@ def compute_emission(fuel_flow):
 
     return CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
 
+# Compute fuel and emission flow at a timestep
+def compute_fuel_emission_flow(tas, alt, vs, mass, S, cd0, k, tsfc, limit=True, cal_emission=True):
+    """
+    Compute the fuel and emission flow at a timestep.
+
+    Args:
+        tas (float): True airspeed in m/s.
+        alt (float): Altitude in meters.
+        vs (float): Vertical speed in m/s.
+        mass (float): Aircraft mass in kg.
+        S (float): Wing area in m^2.
+        cd0 (float): Zero-lift drag coefficient.
+        k (float): Induced drag factor.
+        tsfc (float): Thrust specific fuel consumption in kg/Ns.
+        limit (bool): Whether to limit acceleration. Defaults to True.
+        cal_emission (bool): Whether to calculate emissions. Defaults to True.
+
+    Returns:
+        fuel_flow (float): Fuel flow in kg/s.
+        CO2_flow (float): CO2 emission in g/s.
+        H2O_flow (float): H2O emission in g/s.
+        Soot_flow (float): Soot emission in g/s.
+        SOx_flow (float): SOx emission in g/s.
+        NOx_flow (float): NOx emission in g/s.
+        CO_flow (float): CO emission in g/s.
+        HC_flow (float): HC emission in g/s.
+    """
+
+    # 1. calculate drag
+    D = compute_drag(mass, tas, alt, cd0, k, vs, S)
+
+    # 2. calculate gamma
+    gamma = compute_gamma(vs, tas, limit=False)
+
+    # 3. limit acceleration
+    acc = 0 # assume zero acceleration at a timestep
+    if limit:
+        acc = limit_acceleration(acc)
+
+    # 4. calculate thrust
+    T = compute_thrust(D, mass, gamma, acc)
+
+    # 5. calculate fuel flow
+    fuel_flow = compute_fuel_flow(T, tsfc)
+
+    # 6. calculate emissions
+    if cal_emission:
+        CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow = compute_emission(fuel_flow)
+
+    if cal_emission:
+        return fuel_flow, CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
+    else:
+        return fuel_flow
+    
 # Compute fuel and emission for a flight
 def compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_emission=True):
     """
@@ -314,33 +366,67 @@ def compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_
         return total_fuel
 
 
-# Main function to test the above functions
+# # Main function to test the above functions
+# if __name__ == "__main__":
+
+#     def main():
+#         # Example flight data (5 time steps)
+#         df = pd.DataFrame({
+#             'd_ts': [60, 60, 60, 60, 60],              # seconds
+#             'groundSpeed': [250, 255, 260, 265, 270],   # knots
+#             'alt': [10000, 12000, 14000, 16000, 18000], # feet
+#             'rateOfClimb': [500, 600, 700, 800, 900]    # ft/min
+#         })
+
+#         # print(df)
+#         print(df)
+
+#         # Example aircraft parameters
+#         S = 122.6      # m^2 (wing area)
+#         mtow = 70000   # kg (max takeoff weight)
+#         tsfc = 0.00003 # kg/Ns (thrust specific fuel consumption)
+#         cd0 = 0.02     # zero-lift drag coefficient
+#         k = 0.045      # induced drag factor
+
+#         # Calculate total fuel usage only
+#         total_fuel = compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_emission=False)
+#         print(f"Total fuel used: {total_fuel:.2f} kg")
+
+#         return 0
+
+# main()
+
+# Main function to test compute_fuel_emission_flow function
 if __name__ == "__main__":
 
     def main():
-        # Example flight data (5 time steps)
-        df = pd.DataFrame({
-            'd_ts': [60, 60, 60, 60, 60],              # seconds
-            'groundSpeed': [250, 255, 260, 265, 270],   # knots
-            'alt': [10000, 12000, 14000, 16000, 18000], # feet
-            'rateOfClimb': [500, 600, 700, 800, 900]    # ft/min
-        })
+        # Example parameters for a single time step
+        tas = 250 * 0.514444      # convert knots to m/s
+        alt = 10000 * 0.3048      # convert feet to meters
+        vs = 500 * 0.00508        # convert ft/min to m/s
 
-        # print(df)
-        print(df)
+        mass = 70000              # kg (aircraft mass)
+        S = 122.6                 # m^2 (wing area)
+        cd0 = 0.02                # zero-lift drag coefficient
+        k = 0.045                 # induced drag factor
+        tsfc = 0.00003            # kg/Ns (thrust specific fuel consumption)
 
-        # Example aircraft parameters
-        S = 122.6      # m^2 (wing area)
-        mtow = 70000   # kg (max takeoff weight)
-        tsfc = 0.00003 # kg/Ns (thrust specific fuel consumption)
-        cd0 = 0.02     # zero-lift drag coefficient
-        k = 0.045      # induced drag factor
+        # Calculate fuel flow and emissions for the time step
+        fuel_flow = compute_fuel_emission_flow(
+            tas, alt, vs, mass, S, cd0, k, tsfc, limit=True, cal_emission=False
+        )
 
-        # Calculate total fuel usage only
-        total_fuel = compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_emission=False)
-        print(f"Total fuel used: {total_fuel:.2f} kg")
+        print(f"Fuel flow: {fuel_flow:.4f} kg/s")
+
+        # print(f"CO2 flow: {CO2_flow:.2f} g/s")
+        # print(f"H2O flow: {H2O_flow:.2f} g/s")
+        # print(f"Soot flow: {Soot_flow:.4f} g/s")
+        # print(f"SOx flow: {SOx_flow:.2f} g/s")
+        # print(f"NOx flow: {NOx_flow:.2f} g/s")
+        # print(f"CO flow: {CO_flow:.2f} g/s")
+        # print(f"HC flow: {HC_flow:.2f} g/s")
 
         return 0
 
-main()
+    main()
 
