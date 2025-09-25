@@ -1,6 +1,8 @@
 from gurobipy import *
 import numpy as np
 import pandas as pd
+from main_ver4 import *
+import math
 
 DT = 60.0
 FT2NM             = 1 / 6076.12
@@ -24,6 +26,27 @@ CF = 1
 #     [39.471957, -82.139821, 34843.470164, 0,    41.673148, -82.943072, 19820.938696, 2100],
 #     [39.471965, -82.139803, 34406.851392, 900,  41.673149, -82.943096, 20227.116630, 2400] 
 # ]
+# df = pd.DataFrame({
+#             'd_ts': [60, 60, 60, 60, 60],              # seconds
+#             'groundSpeed': [250, 255, 260, 265, 270],   # knots
+#             'alt': [10000, 12000, 14000, 16000, 18000], # feet
+#             'rateOfClimb': [500, 600, 700, 800, 900]    # ft/min
+#         })
+
+# # print(df)
+# print(df)
+
+# Example aircraft parameters
+S = 122.6      # m^2 (wing area)
+mtow = 70000   # kg (max takeoff weight)
+tsfc = 0.00003 # kg/Ns (thrust specific fuel consumption)
+cd0 = 0.02     # zero-lift drag coefficient
+k = 0.045      # induced drag factor
+
+# # Calculate total fuel usage only
+# total_fuel = compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_emission=False)
+# print(f"Total fuel used: {total_fuel:.2f} kg")
+
 
 try:
     flights_df = pd.read_csv("entry_exit_points.csv")
@@ -199,10 +222,34 @@ for i in range(n):
         m.addConstr((is_end == 1) >> (y[i][k] == y[i][N-1]))
         m.addConstr((is_end == 1) >> (z[i][k] == z[i][N-1]))
 
+
         # Fuel usage with gliding effect
-        obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
-        obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
-        obj += uz[i][k-1]*FT2NM*pos
+        speed = m.addVar()
+        m.addConstr(speed*speed == diffx1*diffx1 + diffy1*diffy1)
+        def f(u):  return math.atan(u)
+        lbx = -2
+        ubx =  2    
+        npts = 101
+        x_pts = []
+        y_pts = []
+        for p in range(npts):    
+            x_pts.append(lbx + (ubx - lbx) * p / (npts - 1))    
+            y_pts.append(f(x_pts[p]))
+        
+        # for i in range(len(ptu)-1):
+        #     slope = (ptf[i+1]-ptf[i])/(ptu[i+1]-ptu[i])
+        #     c = ptf[i] - slope*ptu[i]
+        # if tas == 0 : print("WARNING: true air speed is 0")
+
+        # if vs/tas >= 2 or vs/tas<=-2: print("WARNING: vs/ts out of range, flight angle too steep") 
+        gamma = m.addVar()
+        x = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="z")
+        m.addGenConstrPWL(x,gamma,x_pts,y_pts,"PWLarctan")
+        fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, gamma, mtow,  122.6, cd0, k, tsfc, limit=True, cal_emission=True)
+        # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
+        # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
+        # obj += uz[i][k-1]*FT2NM*pos
+        obj += fuel_flow*DT
         obj += (CT/CF)*(1-is_end)
 
 
@@ -262,7 +309,7 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("ac_2_staggered_entry.csv", index=False)
-    print("Results saved to staggered_entry_10.csv")
+    wide.to_csv("trial.csv", index=False)
+    # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)
