@@ -245,7 +245,7 @@ for i in range(n):
         gamma = m.addVar()
         x = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="z")
         m.addGenConstrPWL(x,gamma,x_pts,y_pts,"PWLarctan")
-        fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, gamma, mtow,  122.6, cd0, k, tsfc, limit=True, cal_emission=True)
+        fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, gamma, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
         # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += uz[i][k-1]*FT2NM*pos

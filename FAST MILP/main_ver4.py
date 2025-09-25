@@ -50,7 +50,7 @@ def compute_gamma(vs, tas, limit=True):
     return gamma
 
 # Atmosphere calculation function
-def compute_atmosphere(h, dT=0):
+def compute_atmosphere(h, model, dT=0):
     """
     Compute air pressure, density, and temperature at a given altitude.
     # Coding logic from openap.extra.aero.atoms
@@ -73,16 +73,56 @@ def compute_atmosphere(h, dT=0):
     # 2. Compute temperature
     dT = np.maximum(-15, np.minimum(dT, 15)) # limit dT to -15 to 15 K
     T0_shift = T0 + dT # shifted sea-level temperature
-    if T0_shift + beta * h >= 216.65 + dT :
-        T = T0_shift + beta * h
-    else:
-        T =  216.65 + dT
+    # if T0_shift + beta * h >= 216.65 + dT :
+    #     T = T0_shift + beta * h
+    # else:
+    #     T =  216.65 + dT
+    T = model.addVar(name="T")  # Auxiliary variable for the maximum
+
+# Expressions for the two values to compare
+    # expr1 = 216.65 + dT
+    # expr2 = T0_shift + beta * h
+
+    expr1 = model.addVar(name="expr1")  # Create a variable for expr1
+    expr2 = model.addVar(name="expr2")  # Create a variable for expr2
+
+    # Add constraints to define expr1 and expr2
+    model.addConstr(expr1 == 216.65 + dT, name="expr1_constraint")
+    model.addConstr(expr2 == T0_shift + beta * h, name="expr2_constraint")
+
+    # Use GenConstrMax to set T as the maximum of expr1 and expr2
+    model.addGenConstrMax(T, [expr1, expr2], name="max_constraint")
     # T = np.maximum(T0_shift + beta * h, 216.65 + dT) # limit T to tropopause
 
     # 3. Compute density
+    # expr3 = model.addVar(name="expr3")  # Create a variable for expr3
+    # expr4 = model.addVar(name="expr4")  # Create a variable for expr4
+    # model.addConstr(expr3 == 0.0, name="expr3_constraint")
+    # model.addConstr(expr4 == h - 11000.0, name="expr4_constraint")
+    # dhstrat
+    # rhotrop = rho0 * (T / T0_shift) ** 4. # density at tropopause
+    # # dhstrat = np.maximum(0.0, h - 11000.0) # height above tropopause
+    # rho = rhotrop * np.exp(-dhstrat / 6341.552161) # density at altitude
+
+    expr3 = model.addVar(name="expr3")  # Create a variable for expr3
+    expr4 = model.addVar(name="expr4")  # Create a variable for expr4
+
+    model.addConstr(expr3 == 0.0, name="expr3_constraint")
+    model.addConstr(expr4 == h - 11000.0, name="expr4_constraint")
+
+    dhstrat = model.addVar(name="dhstrat")  # Auxiliary variable for the maximum
+
     rhotrop = rho0 * (T / T0_shift) ** 4. # density at tropopause
-    dhstrat = np.maximum(0.0, h - 11000.0) # height above tropopause
-    rho = rhotrop * np.exp(-dhstrat / 6341.552161) # density at altitude
+    model.addGenConstrMax(dhstrat, [expr3, expr4], name="max_constraint2")
+
+    rho = model.addVar(name="rho")  # Variable for density
+    exp = model.addVar(name="exp")  # Variable for the exponential term
+    cons = model.addVar(name="cons")  # Variable for the constant term
+    # model.addConstr(cons == math.e, name="const_constraint")
+    # model.addGenConstrPow(exp, cons, -dhstrat / 6341.552161, name="exp_constraint")
+    cons_value = math.e
+    model.addConstr(exp == cons_value ** (-dhstrat / 6341.552161), name="exp_constraint")
+    model.addConstr(rho == rhotrop * exp) # density at altitude
 
     # 4. Compute pressure
     p = rho * R * T
@@ -90,7 +130,7 @@ def compute_atmosphere(h, dT=0):
     return p, rho, T
 
 # Drag calculation function
-def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S):
+def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, model):
     """
     Compute the drag force using a simple parabolic drag polar.
     # Coding logic from openap.drag._calc_drag
@@ -122,17 +162,38 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S):
 
     # 4. calculate rho (air density)
     # coding logic from openap.extra.aero.density
-    _, rho, _ = compute_atmosphere(h)
+    _, rho, _ = compute_atmosphere(h, model)
 
     # 5. calculate qS (dynamic pressure times wing area)
     # Coding logic from openap.drag._cl
-    qS = 0.5 * rho * v**2 * S
-    qS = np.maximum(qS, 1e-3)  # avoid zero division
+    qS = model.addVar(name="qS")  # Variable for qS
+    model.addConstr(qS == 0.5 * rho * v**2 * S, name="qS_constraint")
+    cons = model.addVar(name="cons")  # Variable for the constant term
+    model.addConstr(cons == 1e-3, name="const_constraint")
+    # qS = 0.5 * rho * v**2 * S
+    model.addGenConstrMax(qS, [qS, cons], name="max_constraint3")
+    # qS = np.maximum(qS, 1e-3)  # avoid zero division
 
     # 6. calculate L (lift)
     # Coding logic from openap.drag._cl
     g0 = 9.80665  # m/s2, Sea level gravity constant
-    L = mass * g0 * np.cos(gamma)
+
+    gamma_min = -np.pi / 2
+    gamma_max = np.pi / 2
+    num_points = 100  # Number of points for the piecewise-linear approximation
+
+    # Generate points and their cosine values
+    gamma_points = np.linspace(gamma_min, gamma_max, num_points)
+    cos_values = np.cos(gamma_points)
+
+    # Add the piecewise-linear constraint for cos(gamma)
+    cos = model.addVar(name="cos")  # Variable for cosine
+    model.addGenConstrPWL(gamma, cos, gamma_points.tolist(), cos_values.tolist(), name="cos_pwl_constraint")
+    
+    # model.addConstr(cos == math.cos(gamma), name="cos_constraint")
+    L = model.addVar(name="L")  # Variable for lift
+    model.addConstr(L == mass * g0 * cos, name="L_constraint")
+    # L = mass * g0 * np.cos(gamma)
 
     # 7. calculate cl (lift coefficient)
     # Coding logic from openap.drag._calc_drag
@@ -254,7 +315,7 @@ def compute_emission(fuel_flow):
     return CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
 
 # Compute fuel and emission flow at a timestep
-def compute_fuel_emission_flow(tas, alt, vs, gamma, mass, S, cd0, k, tsfc, limit=True, cal_emission=True):
+def compute_fuel_emission_flow(tas, alt, vs, gamma, mass, S, cd0, k, tsfc, model, limit=True, cal_emission=True):
     """
     Compute the fuel and emission flow at a timestep.
 
@@ -282,7 +343,7 @@ def compute_fuel_emission_flow(tas, alt, vs, gamma, mass, S, cd0, k, tsfc, limit
     """
 
     # 1. calculate drag
-    D = compute_drag(gamma, mass, tas, alt, cd0, k, vs, S)
+    D = compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, model)
 
     # 2. calculate gamma
     #gamma = compute_gamma(vs, tas, limit=False)
