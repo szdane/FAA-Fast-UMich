@@ -188,6 +188,7 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, model):
 
     # Add the piecewise-linear constraint for cos(gamma)
     cos = model.addVar(name="cos")  # Variable for cosine
+    # tmp = model.addVar(name="x")  
     model.addGenConstrPWL(gamma, cos, gamma_points.tolist(), cos_values.tolist(), name="cos_pwl_constraint")
     
     # model.addConstr(cos == math.cos(gamma), name="cos_constraint")
@@ -229,7 +230,7 @@ def limit_acceleration(acc):
     return acc
 
 # Thrust calculation function
-def compute_thrust(D, mass, gamma, acc):
+def compute_thrust(D, mass, gamma, acc, model):
     """
     Compute the required thrust.
     # Coding logic from openap.fuel.enroute
@@ -245,7 +246,19 @@ def compute_thrust(D, mass, gamma, acc):
     """
     
     # 1. calculate thrust
-    T = D + mass * 9.81 * np.sin(gamma) + mass * acc
+    gamma_min = -np.pi / 2
+    gamma_max = np.pi / 2
+    num_points = 100  # Number of points for the piecewise-linear approximation
+
+    # Generate points and their cosine values
+    gamma_points = np.linspace(gamma_min, gamma_max, num_points)
+    sin_values = np.sin(gamma_points)
+
+    # Add the piecewise-linear constraint for cos(gamma)
+    sin = model.addVar(name="sin")  # Variable for cosine
+    model.addGenConstrPWL(gamma, sin, gamma_points.tolist(), sin_values.tolist(), name="sin_pwl_constraint")
+    T = model.addVar(name="T")  # Variable for lift
+    model.addConstr(T == D + mass * 9.81 * sin + mass * acc, name="T_constraint")
 
     return T
 
@@ -354,22 +367,22 @@ def compute_fuel_emission_flow(tas, alt, vs, gamma, mass, S, cd0, k, tsfc, model
         acc = limit_acceleration(acc)
 
     # 4. calculate thrust
-    T = compute_thrust(D, mass, gamma, acc)
+    T = compute_thrust(D, mass, gamma, acc, model)
 
     # 5. calculate fuel flow
     fuel_flow = compute_fuel_flow(T, tsfc)
 
     # 6. calculate emissions
-    if cal_emission:
-        CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow = compute_emission(fuel_flow)
+    # if cal_emission:
+    #     CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow = compute_emission(fuel_flow)
 
-    if cal_emission:
-        return fuel_flow, CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
-    else:
-        return fuel_flow
+    # if cal_emission:
+    #     return fuel_flow, CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
+    # else:
+    return fuel_flow
     
 # Compute fuel and emission for a flight
-def compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_emission=True):
+def compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, model, limit=True, cal_emission=True):
     """
     Compute the fuel and emission for a flight.
 
@@ -419,7 +432,7 @@ def compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_
             acc = limit_acceleration(acc)
 
         # 5. calculate thrust
-        T = compute_thrust(D, mass, gamma, acc)
+        T = compute_thrust(D, mass, gamma, acc, model)
 
         # 6. calculate fuel flow
         fuel_flow = compute_fuel_flow(T, tsfc)

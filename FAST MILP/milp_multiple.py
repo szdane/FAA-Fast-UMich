@@ -51,7 +51,7 @@ k = 0.045      # induced drag factor
 try:
     flights_df = pd.read_csv("entry_exit_points.csv")
     flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
-    flights_df = flights_df[:10]
+    flights_df = flights_df[:1]
     print(flights_df)
     flights_df['entry_rectime'] = pd.to_datetime(flights_df['entry_rectime'])
     flights_df['exit_rectime'] = pd.to_datetime(flights_df['exit_rectime'])
@@ -243,13 +243,13 @@ for i in range(n):
 
         # if vs/tas >= 2 or vs/tas<=-2: print("WARNING: vs/ts out of range, flight angle too steep") 
         gamma = m.addVar()
-        x = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="z")
-        m.addGenConstrPWL(x,gamma,x_pts,y_pts,"PWLarctan")
+        lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="z")
+        m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
         fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, gamma, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
         # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += uz[i][k-1]*FT2NM*pos
-        obj += fuel_flow*DT
+        obj += fuel_flow
         obj += (CT/CF)*(1-is_end)
 
 
@@ -309,7 +309,7 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("trial.csv", index=False)
+    wide.to_csv("trial1.csv", index=False)
     # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)

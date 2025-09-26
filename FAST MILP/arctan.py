@@ -41,3 +41,16 @@ approx = np.interp(1, x_pts, y_pts)
 real = np.arctan(1)
 
 print("real", real, "approx", approx)
+
+gamma_min = -np.pi / 2
+gamma_max = np.pi / 2
+num_points = 100  # Number of points for the piecewise-linear approximation
+
+# Generate points and their cosine values
+gamma_points = np.linspace(gamma_min, gamma_max, num_points)
+cos_values = np.cos(gamma_points)
+
+approx_cos = np.interp(1, gamma_points, cos_values)
+real_cos = np.cos(1)
+
+print("real cos", real_cos, "approx cos", approx_cos)
