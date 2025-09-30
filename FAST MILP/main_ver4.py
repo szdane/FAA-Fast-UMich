@@ -168,10 +168,10 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, model):
     # Coding logic from openap.drag._cl
     qS = model.addVar(name="qS")  # Variable for qS
     model.addConstr(qS == 0.5 * rho * v**2 * S, name="qS_constraint")
-    cons = model.addVar(name="cons")  # Variable for the constant term
-    model.addConstr(cons == 1e-3, name="const_constraint")
+    cons1 = model.addVar(name="cons1")  # Variable for the constant term
+    model.addConstr(cons1 == 1e-3, name="const_constraint")
     # qS = 0.5 * rho * v**2 * S
-    model.addGenConstrMax(qS, [qS, cons], name="max_constraint3")
+    model.addGenConstrMax(qS, [qS, cons1], name="max_constraint3")
     # qS = np.maximum(qS, 1e-3)  # avoid zero division
 
     # 6. calculate L (lift)
@@ -187,13 +187,13 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, model):
     cos_values = np.cos(gamma_points)
 
     # Add the piecewise-linear constraint for cos(gamma)
-    cos = model.addVar(name="cos")  # Variable for cosine
+    cos1 = model.addVar(name="cos1")  # Variable for cosine
     # tmp = model.addVar(name="x")  
-    model.addGenConstrPWL(gamma, cos, gamma_points.tolist(), cos_values.tolist(), name="cos_pwl_constraint")
+    model.addGenConstrPWL(gamma, cos1, gamma_points.tolist(), cos_values.tolist(), name="cos_pwl_constraint")
     
     # model.addConstr(cos == math.cos(gamma), name="cos_constraint")
     L = model.addVar(name="L")  # Variable for lift
-    model.addConstr(L == mass * g0 * cos, name="L_constraint")
+    model.addConstr(L == mass * g0 * cos1, name="L_constraint")
     # L = mass * g0 * np.cos(gamma)
 
     # 7. calculate cl (lift coefficient)
@@ -257,10 +257,10 @@ def compute_thrust(D, mass, gamma, acc, model):
     # Add the piecewise-linear constraint for cos(gamma)
     sin = model.addVar(name="sin")  # Variable for cosine
     model.addGenConstrPWL(gamma, sin, gamma_points.tolist(), sin_values.tolist(), name="sin_pwl_constraint")
-    T = model.addVar(name="T")  # Variable for lift
-    model.addConstr(T == D + mass * 9.81 * sin + mass * acc, name="T_constraint")
+    T1 = model.addVar(name="T1")  # Variable for lift
+    model.addConstr(T1 == D + mass * 9.81 * sin + mass * acc, name="T_constraint")
 
-    return T
+    return T1
 
 # Fuel flow calculation function
 def compute_fuel_flow(T, tsfc):
