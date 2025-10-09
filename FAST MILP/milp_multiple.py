@@ -253,10 +253,10 @@ for i in range(n):
         # if tas == 0 : print("WARNING: true air speed is 0")
 
         # if vs/tas >= 2 or vs/tas<=-2: print("WARNING: vs/ts out of range, flight angle too steep") 
-        gamma = m.addVar()
-        lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="lx")
-        m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
-        fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, gamma, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
+        # gamma = m.addVar()
+        # lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="lx")
+        # m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
+        fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
         # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += uz[i][k-1]*FT2NM*pos

@@ -122,7 +122,7 @@ def compute_atmosphere(h, m, dT=0):
     return p, rho, T
 
 # Drag calculation function
-def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, m):
+def compute_drag(mass, tas, alt, cd0, k, vs, S, m):
     """
     Compute the drag force using a simple parabolic drag polar.
     # Coding logic from openap.drag._calc_drag
@@ -341,7 +341,7 @@ def compute_fuel_emission_flow(tas, alt, vs, mass, S, cd0, k, tsfc, m, limit=Tru
     """
 
     # 1. calculate drag
-    D = compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, m)
+    D = compute_drag(mass, tas, alt, cd0, k, vs, S, m)
 
     # 2. calculate gamma
     gamma = compute_gamma(vs, tas, m, limit=False)
@@ -361,10 +361,10 @@ def compute_fuel_emission_flow(tas, alt, vs, mass, S, cd0, k, tsfc, m, limit=Tru
     if cal_emission:
         CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow = compute_emission_from_fuel_flow(fuel_flow)
 
-    if cal_emission:
-        return fuel_flow, CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
-    else:
-        return fuel_flow
+    # if cal_emission:
+    #     return fuel_flow, CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
+    # else:
+    return fuel_flow
     
 # Compute fuel and emission for a flight
 def compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, m, limit=True, cal_emission=True):
