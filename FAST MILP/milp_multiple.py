@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from main_ver4_gurobi import *
 import math
+from gurobipy.nlfunc import *
 
 DT = 60.0
 FT2NM             = 1 / 6076.12
@@ -52,6 +53,7 @@ try:
     flights_df = pd.read_csv("entry_exit_points.csv")
     flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
     flights_df = flights_df[:1]
+    
     print(flights_df)
     flights_df['entry_rectime'] = pd.to_datetime(flights_df['entry_rectime'])
     flights_df['exit_rectime'] = pd.to_datetime(flights_df['exit_rectime'])
@@ -74,6 +76,7 @@ try:
         'landing_time_sec'
     ]
     flights = flights_df[required_columns].values.tolist()
+    
     print(flights)
     print(f"Successfully loaded {len(flights)} flights from entry_exit_points.csv")
 except FileNotFoundError:
@@ -224,8 +227,16 @@ for i in range(n):
 
 
         # Fuel usage with gliding effect
+        DEG_TO_RAD = np.pi / 180.0
+        m_per_deg_lat = 111_132.0   
+        phi = diffx1 * DEG_TO_RAD
+        m_per_deg_lon = 111_320.0 * cos(phi)
+        m_per_deg_lon = 111_132.0 
+
+        diffy11  = diffy1 * m_per_deg_lon
+        diffx11 = diffx1 * m_per_deg_lat
         speed = m.addVar()
-        m.addConstr(speed*speed == diffx1*diffx1 + diffy1*diffy1)
+        m.addConstr(speed*speed == diffx11*diffx11 + diffy11*diffy11)
         def f(u):  return math.atan(u)
         lbx = -2
         ubx =  2    
@@ -243,7 +254,7 @@ for i in range(n):
 
         # if vs/tas >= 2 or vs/tas<=-2: print("WARNING: vs/ts out of range, flight angle too steep") 
         gamma = m.addVar()
-        lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="z")
+        lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="lx")
         m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
         fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, gamma, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
         # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))

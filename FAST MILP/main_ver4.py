@@ -5,6 +5,7 @@
 import numpy as np
 import pandas as pd
 import math
+from gurobipy.nlfunc import *
 
 # Gamma compute function
 def compute_gamma(vs, tas, limit=True):
@@ -22,7 +23,7 @@ def compute_gamma(vs, tas, limit=True):
     
     # 1. calculate gamma
     # coding logic from openap.drag._cl
-    #gamma = np.arctan2(vs, tas)
+    gamma = arctan2(vs, tas)
     # def f(u):  return math.atan(u)
     # lbx = -2
     # ubx =  2    
@@ -168,32 +169,33 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, model):
     # Coding logic from openap.drag._cl
     qS = model.addVar(name="qS")  # Variable for qS
     model.addConstr(qS == 0.5 * rho * v**2 * S, name="qS_constraint")
-    cons = model.addVar(name="cons")  # Variable for the constant term
-    model.addConstr(cons == 1e-3, name="const_constraint")
+    cons1 = model.addVar(name="cons1")  # Variable for the constant term
+    model.addConstr(cons1 == 1e-3, name="const_constraint")
     # qS = 0.5 * rho * v**2 * S
-    model.addGenConstrMax(qS, [qS, cons], name="max_constraint3")
+    model.addGenConstrMax(qS, [qS, cons1], name="max_constraint3")
     # qS = np.maximum(qS, 1e-3)  # avoid zero division
 
     # 6. calculate L (lift)
     # Coding logic from openap.drag._cl
     g0 = 9.80665  # m/s2, Sea level gravity constant
 
-    gamma_min = -np.pi / 2
-    gamma_max = np.pi / 2
-    num_points = 100  # Number of points for the piecewise-linear approximation
+    # gamma_min = -np.pi / 2
+    # gamma_max = np.pi / 2
+    # num_points = 100  # Number of points for the piecewise-linear approximation
 
-    # Generate points and their cosine values
-    gamma_points = np.linspace(gamma_min, gamma_max, num_points)
-    cos_values = np.cos(gamma_points)
+    # # Generate points and their cosine values
+    # gamma_points = np.linspace(gamma_min, gamma_max, num_points)
+    # cos_values = np.cos(gamma_points)
 
     # Add the piecewise-linear constraint for cos(gamma)
-    cos = model.addVar(name="cos")  # Variable for cosine
+    # cos1 = model.addVar(name="cos1")  # Variable for cosine
     # tmp = model.addVar(name="x")  
-    model.addGenConstrPWL(gamma, cos, gamma_points.tolist(), cos_values.tolist(), name="cos_pwl_constraint")
+    # model.addGenConstrPWL(gamma, cos1, gamma_points.tolist(), cos_values.tolist(), name="cos_pwl_constraint")
+    # model.addConstr()
     
     # model.addConstr(cos == math.cos(gamma), name="cos_constraint")
     L = model.addVar(name="L")  # Variable for lift
-    model.addConstr(L == mass * g0 * cos, name="L_constraint")
+    model.addConstr(L == mass * g0 * cos(gamma), name="L_constraint")
     # L = mass * g0 * np.cos(gamma)
 
     # 7. calculate cl (lift coefficient)
@@ -246,21 +248,21 @@ def compute_thrust(D, mass, gamma, acc, model):
     """
     
     # 1. calculate thrust
-    gamma_min = -np.pi / 2
-    gamma_max = np.pi / 2
-    num_points = 100  # Number of points for the piecewise-linear approximation
+    # gamma_min = -np.pi / 2
+    # gamma_max = np.pi / 2
+    # num_points = 100  # Number of points for the piecewise-linear approximation
 
-    # Generate points and their cosine values
-    gamma_points = np.linspace(gamma_min, gamma_max, num_points)
-    sin_values = np.sin(gamma_points)
+    # # Generate points and their cosine values
+    # gamma_points = np.linspace(gamma_min, gamma_max, num_points)
+    # sin_values = np.sin(gamma_points)
 
-    # Add the piecewise-linear constraint for sin(gamma)
-    sin = model.addVar(name="sin")  # Variable for sine
-    model.addGenConstrPWL(gamma, sin, gamma_points.tolist(), sin_values.tolist(), name="sin_pwl_constraint")
-    T = model.addVar(name="T")  # Variable for lift
-    model.addConstr(T == D + mass * 9.81 * sin + mass * acc, name="T_constraint")
+    # # Add the piecewise-linear constraint for cos(gamma)
+    # sin = model.addVar(name="sin")  # Variable for cosine
+    # model.addGenConstrPWL(gamma, sin, gamma_points.tolist(), sin_values.tolist(), name="sin_pwl_constraint")
+    T1 = model.addVar(name="T1")  # Variable for lift
+    model.addConstr(T1 == D + mass * 9.81 * sin(gamma) + mass * acc, name="T_constraint")
 
-    return T
+    return T1
 
 # Fuel flow calculation function
 def compute_fuel_flow(T, tsfc):
@@ -355,6 +357,11 @@ def compute_fuel_emission_flow(tas, alt, vs, gamma, mass, S, cd0, k, tsfc, model
         HC_flow (float): HC emission in g/s.
     """
 
+
+    # Vertical (feet -> meters)
+    FT_TO_M = 0.3048
+    alt = alt * FT_TO_M
+    vs = vs * FT_TO_M
     # 1. calculate drag
     D = compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, model)
 
