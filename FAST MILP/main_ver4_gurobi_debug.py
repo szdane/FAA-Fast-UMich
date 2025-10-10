@@ -5,6 +5,7 @@
 import numpy as np
 import pandas as pd
 import math
+import gurobipy as gp
 
 # Debug toggle: when True, replace nonconvex physics with simpler linear relations
 DEBUG_PHYSICS = True
@@ -26,31 +27,39 @@ def compute_gamma(vs, tas, m, limit=True, tas_floor=0.1):
     """
     
     # 1. calculate gamma with GUROBI version code (or debug linearization)
-    # if DEBUG_PHYSICS:
-    #     # For debugging: force gamma = 0 with no coupling to vs/tas
-    #     gamma = m.addVar(lb=0.0, ub=0.0, name="gamma_debug_zero")
-    # else:
+    if DEBUG_PHYSICS:
+        # For debugging: force gamma = 0 with no coupling to vs/tas
+        gamma = m.addVar(lb=0.0, ub=0.0, name="gamma_debug_zero")
+    else:
     # Create variables
-    gamma = m.addVar(lb=-math.pi/2, ub=math.pi/2, name="gamma")
-    # Keep ratio within the PWL domain to avoid extrapolation artifacts
-    ratio = m.addVar(lb=-2.0, ub=2.0, name="vs_tas_ratio")
+        gamma = m.addVar(lb=-math.pi/2, ub=math.pi/2, name="gamma")
+        # Keep ratio within the PWL domain to avoid extrapolation artifacts
+        ratio = m.addVar(lb=-100.0, ub=100.0, name="vs_tas_ratio")
 
-    # Piecewise-linear approximation of arctan
-    ratio_min = -2.0
-    ratio_max = 2.0
-    num_points = 100
-    ratio_points = np.linspace(ratio_min, ratio_max, num_points)
-    gamma_values = np.arctan(ratio_points)
+        # Piecewise-linear approximation of arctan
+        # ratio_min = -100.0
+        # ratio_max = 100.0
+        # num_points = 100
+        # ratio_points = np.linspace(ratio_min, ratio_max, num_points)
+        # gamma_values = np.arctan(ratio_points)
 
-    # # Guard against tas == 0 causing infeasibility, and define ratio
-    # m.addConstr(tas >= tas_floor, name="tas_floor")
-    # Guard: allow tas to be zero (common at end-of-flight) to avoid infeasibility,
-    # but keep it nonnegative. Maintain the vs = ratio * tas linkage.
-    m.addConstr(tas >= 0.0, name="tas_nonneg")
-    m.addConstr(vs == ratio * tas, name="ratio_definition")  # vs = ratio * tas
 
-    # gamma = atan(ratio) via PWL
-    m.addGenConstrPWL(ratio, gamma, ratio_points.tolist(), gamma_values.tolist(), name="arctan_approximation")
+
+        # # Guard against tas == 0 causing infeasibility, and define ratio
+        # m.addConstr(tas >= tas_floor, name="tas_floor")
+        # Guard: allow tas to be zero (common at end-of-flight) to avoid infeasibility,
+        # but keep it nonnegative. Maintain the vs = ratio * tas linkage.
+        m.addConstr(tas >= 0.1, name="tas_nonneg")
+        # m.addConstr((tas == 0) >> (ratio == 0), name="vs_zero_if_tas_zero") 
+        m.addConstr((vs == ratio * tas), name="ratio_definition")  # vs = ratio * tas
+        abs_ratio = m.addVar()
+        m.addConstr(abs_ratio == gp.abs_(ratio), name="abs_ratio_pos")
+        m.addConstr(gamma+gamma*abs_ratio/2 == ratio, name="gamma_ratio_def")
+        
+        # m.addConstr(ratio == 1)
+
+        # gamma = atan(ratio) via PWL
+        # m.addGenConstrPWL(ratio, gamma, ratio_points.tolist(), gamma_values.tolist(), name="arctan_approximation")
 
     # 2. limit gamma to -20 to 20 degrees (0.175 radians)
     if limit and not DEBUG_PHYSICS:
@@ -168,13 +177,13 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, m):
     h = alt # in m
     vs = vs # in m/s
 
-    if DEBUG_PHYSICS:
-        rho = 1.225  # constant density for debugging
-    else:
-        # 3. calculate rho (air density)
-        # coding logic from openap.extra.aero.density
-        _, rho, _ = compute_atmosphere(h, m)
-
+    # if DEBUG_PHYSICS:
+    #     rho = 1.225  # constant density for debugging
+    # else:
+    #     # 3. calculate rho (air density)
+    #     # coding logic from openap.extra.aero.density
+    #     _, rho, _ = compute_atmosphere(h, m)
+    rho = 1.225
     # 5. calculate qS (dynamic pressure times wing area)
     # Coding logic from openap.drag._cl
         # Create variables
@@ -188,6 +197,7 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, m):
         raw_qS = m.addVar(name="raw_qS")
         qS = m.addVar(lb=1e-3, name="qS")
         const_qS = m.addVar(name="const_qS")
+        m.addConstr(v >= 0.1)
         m.addConstr(const_qS == 1e-3, name="const_constraint")
         m.addConstr(raw_qS == 0.5 * rho * v*v * S, name="qS_raw_constraint")
         # qS >= max(raw_qS, const_qS)
@@ -217,7 +227,8 @@ def compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, m):
         # Skip lift/CL coupling; approximate through cd0 only
         cl = None
     else:
-        cl = m.addVar(lb=-10, ub=10, name="cl")
+        cl = m.addVar(lb=-100, ub=100, name="cl")
+        m.addConstr(qS >=  1e-3) 
         m.addConstr(cl * qS == L, name="cl_def")
 
     # 8. calculate cd (quadratic in cl)
@@ -427,6 +438,33 @@ def compute_fuel_emission_flow(
             CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow = compute_emission_from_fuel_flow(fuel_flow)
             return fuel_flow, CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
         return fuel_flow
+    
+
+    if mode == "simplified.1":
+        # Simplified physics: gamma=0, rho=rho_const, cd=cd0, acc=0
+        # qS = 0.5 * rho * tas^2 * S
+        v2 = m.addVar(lb=0.0)
+        m.addConstr(v2 == tas * tas)
+        qS1 = m.addVar()
+        m.addConstr(qS1 == 0.5 * rho_const * S * v2)
+
+        D = m.addVar(lb=0.0)
+        
+        m.addConstr(D == cd0 * qS1)
+        gamma = compute_gamma(vs, tas, m, limit=False)
+        # D = compute_drag(gamma, mass, tas, alt, cd0, k, vs, S, m)
+        
+        acc = 0
+        T = compute_thrust(D, mass, gamma, acc, m)
+        # T = m.addVar(lb=0.0)
+        # m.addConstr(T == D) 
+
+        fuel_flow = compute_fuel_flow_from_thrust(T, tsfc)
+        if cal_emission:
+            CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow = compute_emission_from_fuel_flow(fuel_flow)
+            return fuel_flow, CO2_flow, H2O_flow, Soot_flow, SOx_flow, NOx_flow, CO_flow, HC_flow
+        return fuel_flow
+    
 
     # Full physics (default)
     # # Requires NonConvex=2 due to bilinear terms in gamma, cl*qS, D==cd*qS

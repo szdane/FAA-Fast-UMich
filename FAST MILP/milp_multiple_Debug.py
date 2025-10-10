@@ -1,7 +1,7 @@
 from gurobipy import *
 import numpy as np
 import pandas as pd
-from main_ver4_gurobi import *
+from main_ver4_gurobi_debug import *
 import math
 
 DT = 60.0
@@ -49,9 +49,9 @@ k = 0.045      # induced drag factor
 
 
 try:
-    flights_df = pd.read_csv("FAST_MILP/entry_exit_points.csv")
+    flights_df = pd.read_csv("entry_exit_points.csv")
     flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
-    flights_df = flights_df[:1]
+    flights_df = flights_df[:2]
     print(flights_df)
     flights_df['entry_rectime'] = pd.to_datetime(flights_df['entry_rectime'])
     flights_df['exit_rectime'] = pd.to_datetime(flights_df['exit_rectime'])
@@ -101,23 +101,14 @@ star_fixes ={
         "RKCTY": (42.6869, -83.9603, (13000, 11000)), "VCTRZ": (41.9878, -84.0670, (15000, 12000)) # (lat, lon)
 }
 
-# The simulation runs until the latest scheduled landing time.
-# if flights:
-#     # Set t0 to the earliest entry time and tN to the latest landing time.
-#     t0 = 0
-#     tN = max(f[8] for f in flights)
-#     print(tN)
-# else:
-#     t0 = 0
-#     tN = 2100 
 max_time = max(f[8] for f in flights)
-if max_time > 210000:
+if max_time > 21000:
     t0 = 0
     tN = max_time
 
 else:
     t0 = 0
-    tN = 210000
+    tN = 21000
     
 print(f"Actual number of time steps:{((max_time-t0)/DT)+1}")
 N  = int((tN - t0) / DT) + 1
@@ -185,20 +176,20 @@ for i in range(n):
     # ensuring that dynamics constraints and costs only apply when it's flying.
     for k in range(entry_k + 1, N):
         # # Physical constraints
-        # m.addConstr(x[i][k] - x[i][k-1] <=  V_MAX_X*DT)
-        # m.addConstr(y[i][k] - y[i][k-1] <=  V_MAX_Y*DT)
-        # m.addConstr(z[i][k] - z[i][k-1] <=  V_MAX_Z*DT)
+        m.addConstr(x[i][k] - x[i][k-1] <=  V_MAX_X*DT)
+        m.addConstr(y[i][k] - y[i][k-1] <=  V_MAX_Y*DT)
+        m.addConstr(z[i][k] - z[i][k-1] <=  V_MAX_Z*DT)
 
-        # m.addConstr(x[i][k-1] - x[i][k] <=  V_MAX_X*DT)
-        # m.addConstr(y[i][k-1] - y[i][k] <=  V_MAX_Y*DT)
-        # m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT)
-        m.addConstr(x[i][k] - x[i][k-1] <=  v_x*DT)
-        m.addConstr(y[i][k] - y[i][k-1] <=  v_y*DT)
-        m.addConstr(z[i][k] - z[i][k-1] <=  v_z*DT)
+        m.addConstr(x[i][k-1] - x[i][k] <=  V_MAX_X*DT)
+        m.addConstr(y[i][k-1] - y[i][k] <=  V_MAX_Y*DT)
+        m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT)
+        # m.addConstr(x[i][k] - x[i][k-1] <=  v_x*DT)
+        # m.addConstr(y[i][k] - y[i][k-1] <=  v_y*DT)
+        # m.addConstr(z[i][k] - z[i][k-1] <=  v_z*DT)
 
-        m.addConstr(x[i][k-1] - x[i][k] <=  v_x*DT)
-        m.addConstr(y[i][k-1] - y[i][k] <=  v_y*DT)
-        m.addConstr(z[i][k-1] - z[i][k] <=  v_z*DT)
+        # m.addConstr(x[i][k-1] - x[i][k] <=  v_x*DT)
+        # m.addConstr(y[i][k-1] - y[i][k] <=  v_y*DT)
+        # m.addConstr(z[i][k-1] - z[i][k] <=  v_z*DT)
 
 
         # Dummy variables for the objective
@@ -245,11 +236,15 @@ for i in range(n):
         gamma = m.addVar()
         lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="z")
         m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
-        fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, 0.8*mtow, S, cd0, k, tsfc, m, limit=True, cal_emission=False, mode="full")
+
+        t = m.addVar(name="t")
+
+        m.addGenConstrIndicator(is_end, 0, t == compute_fuel_emission_flow(speed, z[i][k], diffz1, 0.8*mtow, S, cd0, k, tsfc, m, limit=True, cal_emission=False, mode="full"))   # active branch
+        m.addGenConstrIndicator(is_end, 1, t == 0)
         # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += uz[i][k-1]*FT2NM*pos
-        obj += fuel_flow
+        obj += t
         obj += (CT/CF)*(1-is_end)
 
 
@@ -309,7 +304,7 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("FAST_MILP/trial1.csv", index=False)
+    wide.to_csv("trial1.csv", index=False)
     # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)

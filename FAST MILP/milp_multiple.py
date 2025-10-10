@@ -52,7 +52,7 @@ k = 0.045      # induced drag factor
 try:
     flights_df = pd.read_csv("entry_exit_points.csv")
     flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
-    flights_df = flights_df[:1]
+    flights_df = flights_df[:2]
     
     print(flights_df)
     flights_df['entry_rectime'] = pd.to_datetime(flights_df['entry_rectime'])
@@ -188,20 +188,20 @@ for i in range(n):
     # ensuring that dynamics constraints and costs only apply when it's flying.
     for k in range(entry_k + 1, N):
         # # Physical constraints
-        # m.addConstr(x[i][k] - x[i][k-1] <=  V_MAX_X*DT)
-        # m.addConstr(y[i][k] - y[i][k-1] <=  V_MAX_Y*DT)
-        # m.addConstr(z[i][k] - z[i][k-1] <=  V_MAX_Z*DT)
+        m.addConstr(x[i][k] - x[i][k-1] <=  V_MAX_X*DT)
+        m.addConstr(y[i][k] - y[i][k-1] <=  V_MAX_Y*DT)
+        m.addConstr(z[i][k] - z[i][k-1] <=  V_MAX_Z*DT)
 
-        # m.addConstr(x[i][k-1] - x[i][k] <=  V_MAX_X*DT)
-        # m.addConstr(y[i][k-1] - y[i][k] <=  V_MAX_Y*DT)
-        # m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT)
-        m.addConstr(x[i][k] - x[i][k-1] <=  v_x*DT)
-        m.addConstr(y[i][k] - y[i][k-1] <=  v_y*DT)
-        m.addConstr(z[i][k] - z[i][k-1] <=  v_z*DT)
+        m.addConstr(x[i][k-1] - x[i][k] <=  V_MAX_X*DT)
+        m.addConstr(y[i][k-1] - y[i][k] <=  V_MAX_Y*DT)
+        m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT)
+        # m.addConstr(x[i][k] - x[i][k-1] <=  v_x*DT)
+        # m.addConstr(y[i][k] - y[i][k-1] <=  v_y*DT)
+        # m.addConstr(z[i][k] - z[i][k-1] <=  v_z*DT)
 
-        m.addConstr(x[i][k-1] - x[i][k] <=  v_x*DT)
-        m.addConstr(y[i][k-1] - y[i][k] <=  v_y*DT)
-        m.addConstr(z[i][k-1] - z[i][k] <=  v_z*DT)
+        # m.addConstr(x[i][k-1] - x[i][k] <=  v_x*DT)
+        # m.addConstr(y[i][k-1] - y[i][k] <=  v_y*DT)
+        # m.addConstr(z[i][k-1] - z[i][k] <=  v_z*DT)
 
 
         # Dummy variables for the objective
@@ -227,25 +227,25 @@ for i in range(n):
 
 
         # Fuel usage with gliding effect
-        DEG_TO_RAD = np.pi / 180.0
-        m_per_deg_lat = 111_132.0   
-        phi = diffx1 * DEG_TO_RAD
-        m_per_deg_lon = 111_320.0 * cos(phi)
-        m_per_deg_lon = 111_132.0 
+        # DEG_TO_RAD = np.pi / 180.0
+        # m_per_deg_lat = 111_132.0   
+        # phi = diffx1 * DEG_TO_RAD
+        # m_per_deg_lon = 111_320.0 * cos(phi)
+        # m_per_deg_lon = 111_132.0 
 
-        diffy11  = diffy1 * m_per_deg_lon
-        diffx11 = diffx1 * m_per_deg_lat
-        speed = m.addVar()
-        m.addConstr(speed*speed == diffx11*diffx11 + diffy11*diffy11)
-        def f(u):  return math.atan(u)
-        lbx = -2
-        ubx =  2    
-        npts = 101
-        x_pts = []
-        y_pts = []
-        for p in range(npts):    
-            x_pts.append(lbx + (ubx - lbx) * p / (npts - 1))    
-            y_pts.append(f(x_pts[p]))
+        # diffy11  = diffy1 * m_per_deg_lon
+        # diffx11 = diffx1 * m_per_deg_lat
+        # speed = m.addVar()
+        # m.addConstr(speed*speed == diffx11*diffx11 + diffy11*diffy11)
+        # def f(u):  return math.atan(u)
+        # lbx = -2
+        # ubx =  2    
+        # npts = 101
+        # x_pts = []
+        # y_pts = []
+        # for p in range(npts):    
+        #     x_pts.append(lbx + (ubx - lbx) * p / (npts - 1))    
+        #     y_pts.append(f(x_pts[p]))
         
         # for i in range(len(ptu)-1):
         #     slope = (ptf[i+1]-ptf[i])/(ptu[i+1]-ptu[i])
@@ -256,11 +256,11 @@ for i in range(n):
         # gamma = m.addVar()
         # lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="lx")
         # m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
-        fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
-        # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
-        # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
-        # obj += uz[i][k-1]*FT2NM*pos
-        obj += fuel_flow
+        # fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
+        obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
+        obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
+        obj += uz[i][k-1]*FT2NM*pos
+        # obj += fuel_flow
         obj += (CT/CF)*(1-is_end)
 
 
@@ -320,7 +320,7 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("trial1.csv", index=False)
+    wide.to_csv("trial2.csv", index=False)
     # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)
