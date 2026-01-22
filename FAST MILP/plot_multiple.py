@@ -77,23 +77,21 @@ def main():
             continue
 
         marker = next(marker_cycle)
-        label  = f"Flight {i}"
 
         # 3‑D scatter colour‑coded by time
         ax3d.scatter(df[lat_col], df[lon_col], df[alt_col],
-                     c=colors, s=14, marker=marker,
-                     label=label, depthshade=False)
+                     c=colors, s=14, marker=marker, depthshade=False)
 
         # 2‑D projections (plain lines)
-        ax_xz.plot(df[lat_col], df[alt_col], marker=marker, markevery=[0], label=label)
-        ax_xy.plot(df[lat_col], df[lon_col], marker=marker, markevery=[0], label=label)
+        ax_xz.plot(df[lat_col], df[alt_col], marker=marker, markevery=[0])
+        ax_xy.plot(df[lat_col], df[lon_col], marker=marker, markevery=[0])
 
     # ---- axis labels, legends, colour bar -----------------------------------
     ax3d.set_xlabel("latitude")
     ax3d.set_ylabel("longitude")
     ax3d.set_zlabel("altitude (ft)")
     ax3d.set_title("3‑D trajectories (colour = time)")
-    ax3d.legend(loc="upper left")
+    # ax3d.legend(loc="upper left")
 
     sm = plt.cm.ScalarMappable(cmap=cmap,
                                norm=plt.Normalize(vmin=df.t.min(),
@@ -105,12 +103,12 @@ def main():
     ax_xz.set_xlabel("latitude")
     ax_xz.set_ylabel("altitude (ft)")
     ax_xz.set_title("Side view (lat–alt)")
-    ax_xz.legend()
+    # ax_xz.legend()
 
     ax_xy.set_xlabel("latitude")
     ax_xy.set_ylabel("longitude")
     ax_xy.set_title("Top view (lat–lon)")
-    ax_xy.legend()
+    # ax_xy.legend()
 
     plt.show()
 

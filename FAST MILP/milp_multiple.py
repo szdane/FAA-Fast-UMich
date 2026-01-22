@@ -320,7 +320,7 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("trial2.csv", index=False)
+    wide.to_csv("trial3.csv", index=False)
     # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)
