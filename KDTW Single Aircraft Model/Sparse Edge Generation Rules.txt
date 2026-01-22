@@ -1,6 +1,0 @@
-All of your neighbors need to be closer to the airport than you
-Metering fix nodes can't connect to eachother
-No edges can pass through the TRACON (if line intersects TRACON polygon, don't consider it)
-Connect to the k nearest neighbors that satisfy these conditions
-
-Yuewi: calculate the congestion in some small box surrounding each edge
