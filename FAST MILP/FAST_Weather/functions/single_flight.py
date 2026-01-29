@@ -38,7 +38,7 @@ def single_flight_optimization(acId="FFT3987_KMCOtoKDTW", acType="B737", dic_by_
 
     # 1.3 Serra's Optimized Waypoints, which includes entering and exiting location for pre-TRACON
     df_Serra_optWaypoints = pd.read_csv(waypoint_csv)  # Load the flight data into pandaframe df
-    df_wp = df_Serra_optWaypoints[["t", "f_lat", "f_lon", "f_alt_ft"]].copy()
+    df_wp = df_Serra_optWaypoints[["t", "f1_lat", "f1_lon", "f1_alt_ft"]].copy()
     df_wp.columns = ["t", "lat", "lon", "alt_ft"]  # rename columns
 
     df_wp = pd.DataFrame(df_wp) # save waypoints in dataframe format

@@ -8,10 +8,10 @@ DT = 60.0
 FT2NM             = 1 / 6076.12
 
 BIG_M             = 1e5
-# V_MAX_X  = 0.25/60    # grid units per s
-# V_MAX_Y  = 0.072/60    
-V_MAX_X = 250
-V_MAX_Y = 250
+V_MAX_X  = 0.25/60    # grid units per s
+V_MAX_Y  = 0.072/60    
+# V_MAX_X = 250
+# V_MAX_Y = 250
 V_MAX_Z  = 1000/60
 GLIDE_RATIO = 2
 # SEP_HOR_NM        = 500.0 * FT2NM  + DT*V_MAX_X
@@ -88,14 +88,34 @@ except Exception as e:
     print(f"An error occurred while reading the CSV file: {e}")
     flights = []
 
-try:
-    weather_df = pd.read_csv("infeasible_regions.csv")
-except FileNotFoundError:
-    # fallback for when running from a different working directory
-    print(f"An error occurred while reading the CSV file: {e}")
-    weather_df = []
+WEATHER_STEP_SEC = 300  # 5 minutes
 
-weather_df = weather_df[['min_lat', 'max_lat', 'min_lon', 'max_lon']].dropna().reset_index(drop=True)
+weather_files = [
+    "infeasible_regions_fake_frames/infeasible_regions_t00min.csv",
+    "infeasible_regions_fake_frames/infeasible_regions_t05min.csv",
+    "infeasible_regions_fake_frames/infeasible_regions_t10min.csv",
+    "infeasible_regions_fake_frames/infeasible_regions_t15min.csv",
+    "infeasible_regions_fake_frames/infeasible_regions_t20min.csv",
+    "infeasible_regions_fake_frames/infeasible_regions_t25min.csv",
+    "infeasible_regions_fake_frames/infeasible_regions_t30min.csv",
+]
+
+weather_files = ["infeasible_regions.csv"]
+weather_dfs = []
+for fp in weather_files:
+    try:
+        dfw = pd.read_csv(fp)
+        dfw = dfw[['min_lat', 'max_lat', 'min_lon', 'max_lon']].dropna().reset_index(drop=True)
+        weather_dfs.append(dfw)
+    except FileNotFoundError:
+        print(f"WARNING: missing weather file: {fp}")
+    except Exception as e:
+        print(f"WARNING: could not read {fp}: {e}")
+
+# If nothing loaded, use empty list
+if len(weather_dfs) == 0:
+    print("No weather frames loaded; skipping weather constraints.")
+
 
 
 v_avg = []
@@ -108,21 +128,21 @@ for i in range(len(flights)):
 
 # print(v_avg)
 
-# star_fixes ={
-#         "BONZZ": (41.7483, -82.7972, (21000, 15000)), "CRAKN": (41.6730, -82.9405, (26000, 12000)), "CUUGR": (42.3643, -83.0975, (11000, 10000)),
-#         "FERRL": (42.4165, -82.6093, (10000, 8000)), "GRAYT": (42.9150, -83.6020, (22000, 17000)), "HANBL": (41.7375, -84.1773, (21000, 17000)),
-#         "HAYLL": (41.9662, -84.2975, (11000, 11000)), "HTROD": (42.0278, -83.3442, (12000, 12000)), "KKISS": (42.5443, -83.7620, (15000, 12000)),
-#         "KLYNK": (41.8793, -82.9888, (10000, 9000)), "LAYKS": (42.8532, -83.5498, (10000, 10000)), "LECTR": (41.9183, -84.0217, (10000, 8000)),
-#         "RKCTY": (42.6869, -83.9603, (13000, 11000)), "VCTRZ": (41.9878, -84.0670, (15000, 12000)) # (lat, lon)
-# }
+star_fixes ={
+        "BONZZ": (41.7483, -82.7972, (21000, 15000)), "CRAKN": (41.6730, -82.9405, (26000, 12000)), "CUUGR": (42.3643, -83.0975, (11000, 10000)),
+        "FERRL": (42.4165, -82.6093, (10000, 8000)), "GRAYT": (42.9150, -83.6020, (22000, 17000)), "HANBL": (41.7375, -84.1773, (21000, 17000)),
+        "HAYLL": (41.9662, -84.2975, (11000, 11000)), "HTROD": (42.0278, -83.3442, (12000, 12000)), "KKISS": (42.5443, -83.7620, (15000, 12000)),
+        "KLYNK": (41.8793, -82.9888, (10000, 9000)), "LAYKS": (42.8532, -83.5498, (10000, 10000)), "LECTR": (41.9183, -84.0217, (10000, 8000)),
+        "RKCTY": (42.6869, -83.9603, (13000, 11000)), "VCTRZ": (41.9878, -84.0670, (15000, 12000)) # (lat, lon)
+}
 
-star_fixes = {'BONZZ': (np.float64(46142.63262673297), np.float64(-51455.44055057798), (21000, 15000)), 'CRAKN': (np.float64(34294.83535890254), np.float64(-59895.72883085624), (26000, 12000)), 
-              'CUUGR': (np.float64(21024.51683518695), np.float64(16922.101415528916), (11000, 10000)), 'FERRL': (np.float64(61083.1599606936), np.float64(22961.796796482908), (10000, 8000)), 
-              'GRAYT': (np.float64(-20245.67574577981), np.float64(78155.09504878709), (22000, 17000)), 'HANBL': (np.float64(-68361.78373155238), np.float64(-52477.4658479923), (21000, 17000)), 
-              'HAYLL': (np.float64(-78054.67623105628), np.float64(-26945.079163737624), (11000, 11000)), 'HTROD': (np.float64(759.9551189871775), np.float64(-20526.540523690936), (12000, 12000)), 
-              'KKISS': (np.float64(-33474.12951926423), np.float64(36985.80493080173), (15000, 12000)), 'KLYNK': (np.float64(30185.5684596365), np.float64(-36974.57610805848), (10000, 9000)), 
-              'LAYKS': (np.float64(-16010.594434343164), np.float64(71272.13930802463), (10000, 10000)), 'LECTR': (np.float64(-55294.67078726591), np.float64(-32486.361165977654), (10000, 8000)), 
-              'RKCTY': (np.float64(-49605.97832190019), np.float64(52938.81765769922), (13000, 11000)), 'VCTRZ': (np.float64(-58978.255222062704), np.float64(-24728.180763285345), (15000, 12000))}
+# star_fixes = {'BONZZ': (np.float64(46142.63262673297), np.float64(-51455.44055057798), (21000, 15000)), 'CRAKN': (np.float64(34294.83535890254), np.float64(-59895.72883085624), (26000, 12000)), 
+#               'CUUGR': (np.float64(21024.51683518695), np.float64(16922.101415528916), (11000, 10000)), 'FERRL': (np.float64(61083.1599606936), np.float64(22961.796796482908), (10000, 8000)), 
+#               'GRAYT': (np.float64(-20245.67574577981), np.float64(78155.09504878709), (22000, 17000)), 'HANBL': (np.float64(-68361.78373155238), np.float64(-52477.4658479923), (21000, 17000)), 
+#               'HAYLL': (np.float64(-78054.67623105628), np.float64(-26945.079163737624), (11000, 11000)), 'HTROD': (np.float64(759.9551189871775), np.float64(-20526.540523690936), (12000, 12000)), 
+#               'KKISS': (np.float64(-33474.12951926423), np.float64(36985.80493080173), (15000, 12000)), 'KLYNK': (np.float64(30185.5684596365), np.float64(-36974.57610805848), (10000, 9000)), 
+#               'LAYKS': (np.float64(-16010.594434343164), np.float64(71272.13930802463), (10000, 10000)), 'LECTR': (np.float64(-55294.67078726591), np.float64(-32486.361165977654), (10000, 8000)), 
+#               'RKCTY': (np.float64(-49605.97832190019), np.float64(52938.81765769922), (13000, 11000)), 'VCTRZ': (np.float64(-58978.255222062704), np.float64(-24728.180763285345), (15000, 12000))}
 
 max_time = max(f[8] for f in flights)
 if max_time > 2100:
@@ -192,22 +212,35 @@ is_end = [[m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}') for k in range(N)]
 landed = [[m.addVar(vtype=GRB.BINARY, name=f'landed_{i}_{k}') for k in range(N)] for i in range(n)]
 
 
-# if len(weather_df) > 0:
-#     for i in range(n):
-#         entry_k = entry_indices[i]
-#         for k in range(entry_k, N):
-#             for r, row in weather_df.iterrows():
-#                 out = m.addVars(4, vtype=GRB.BINARY, name=f"w_out_{i}_{k}_{r}")
-#                 m.addConstr(out.sum() >= 1, name=f"w_outside_{i}_{k}_{r}")
+if len(weather_dfs) > 0:
+    last_idx = len(weather_dfs) - 1
 
-#                 m.addConstr(x[i][k] <= row['min_lat'] - WEATHER_EPS_DEG + BIG_M * (1 - out[0]),
-#                             name=f"w_left_{i}_{k}_{r}")
-#                 m.addConstr(x[i][k] >= row['max_lat'] + WEATHER_EPS_DEG - BIG_M * (1 - out[1]),
-#                             name=f"w_right_{i}_{k}_{r}")
-#                 m.addConstr(y[i][k] <= row['min_lon'] - WEATHER_EPS_DEG + BIG_M * (1 - out[2]),
-#                             name=f"w_below_{i}_{k}_{r}")
-#                 m.addConstr(y[i][k] >= row['max_lon'] + WEATHER_EPS_DEG - BIG_M * (1 - out[3]),
-#                             name=f"w_above_{i}_{k}_{r}")
+    for i in range(n):
+        entry_k = entry_indices[i]
+
+        for k in range(entry_k, N):
+            t_sec = k * DT
+            frame_idx = int(t_sec // WEATHER_STEP_SEC)
+            if frame_idx > last_idx:
+                frame_idx = last_idx  # hold the last frame after 30 min (or whatever you loaded)
+
+            dfw = weather_dfs[frame_idx]
+            if dfw.empty:
+                continue
+
+            # One set of "outside rectangle" constraints per rectangle row
+            for r, row in dfw.iterrows():
+                out = m.addVars(4, vtype=GRB.BINARY, name=f"w_out_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(out.sum() >= 1, name=f"w_outside_{i}_{k}_{frame_idx}_{r}")
+
+                m.addConstr(x[i][k] <= row['min_lat'] - WEATHER_EPS_DEG + BIG_M * (1 - out[0]),
+                            name=f"w_left_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(x[i][k] >= row['max_lat'] + WEATHER_EPS_DEG - BIG_M * (1 - out[1]),
+                            name=f"w_right_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(y[i][k] <= row['min_lon'] - WEATHER_EPS_DEG + BIG_M * (1 - out[2]),
+                            name=f"w_below_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(y[i][k] >= row['max_lon'] + WEATHER_EPS_DEG - BIG_M * (1 - out[3]),
+                            name=f"w_above_{i}_{k}_{frame_idx}_{r}")
 
 obj = LinExpr()
 
@@ -345,7 +378,7 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("res/weathertrial.csv", index=False)
+    wide.to_csv("res/weathertrialstatic.csv", index=False)
     # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)
