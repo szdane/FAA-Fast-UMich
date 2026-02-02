@@ -13,29 +13,12 @@ V_MAX_X  = 0.25/60    # grid units per s
 V_MAX_Y  = 0.072/60    
 V_MAX_Z  = 1000/60
 GLIDE_RATIO = 2
-# SEP_HOR_NM        = 500.0 * FT2NM  + DT*V_MAX_X
-# SEP_VERT_FT       = 100.0 + DT*V_MAX_Z
 SEP_HOR_NM = 500.0 * FT2NM
 SEP_VERT_FT = 100.0
 
 CT = 999
 CF = 1
 
-# DAL1066, DAL498, EDV5018
-# Format: [start_lat, start_lon, start_alt, entry_time_sec, end_lat, end_lon, end_alt, landing_time_sec]
-# flights = [
-#     [39.471957, -82.139821, 34843.470164, 0,    41.673148, -82.943072, 19820.938696, 2100],
-#     [39.471965, -82.139803, 34406.851392, 900,  41.673149, -82.943096, 20227.116630, 2400] 
-# ]
-# df = pd.DataFrame({
-#             'd_ts': [60, 60, 60, 60, 60],              # seconds
-#             'groundSpeed': [250, 255, 260, 265, 270],   # knots
-#             'alt': [10000, 12000, 14000, 16000, 18000], # feet
-#             'rateOfClimb': [500, 600, 700, 800, 900]    # ft/min
-#         })
-
-# # print(df)
-# print(df)
 
 # Example aircraft parameters
 S = 122.6      # m^2 (wing area)
@@ -45,8 +28,6 @@ cd0 = 0.02     # zero-lift drag coefficient
 k = 0.045      # induced drag factor
 
 # # Calculate total fuel usage only
-# total_fuel = compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_emission=False)
-# print(f"Total fuel used: {total_fuel:.2f} kg")
 
 
 try:
@@ -105,14 +86,6 @@ star_fixes ={
 }
 
 # The simulation runs until the latest scheduled landing time.
-# if flights:
-#     # Set t0 to the earliest entry time and tN to the latest landing time.
-#     t0 = 0
-#     tN = max(f[8] for f in flights)
-#     print(tN)
-# else:
-#     t0 = 0
-#     tN = 2100 
 max_time = max(f[8] for f in flights)
 if max_time > 210000:
     t0 = 0
@@ -194,14 +167,7 @@ for i in range(n):
 
         m.addConstr(x[i][k-1] - x[i][k] <=  V_MAX_X*DT)
         m.addConstr(y[i][k-1] - y[i][k] <=  V_MAX_Y*DT)
-        m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT)
-        # m.addConstr(x[i][k] - x[i][k-1] <=  v_x*DT)
-        # m.addConstr(y[i][k] - y[i][k-1] <=  v_y*DT)
-        # m.addConstr(z[i][k] - z[i][k-1] <=  v_z*DT)
-
-        # m.addConstr(x[i][k-1] - x[i][k] <=  v_x*DT)
-        # m.addConstr(y[i][k-1] - y[i][k] <=  v_y*DT)
-        # m.addConstr(z[i][k-1] - z[i][k] <=  v_z*DT)
+        m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT
 
 
         # Dummy variables for the objective
@@ -225,38 +191,6 @@ for i in range(n):
         m.addConstr((is_end == 1) >> (y[i][k] == y[i][N-1]))
         m.addConstr((is_end == 1) >> (z[i][k] == z[i][N-1]))
 
-
-        # Fuel usage with gliding effect
-        # DEG_TO_RAD = np.pi / 180.0
-        # m_per_deg_lat = 111_132.0   
-        # phi = diffx1 * DEG_TO_RAD
-        # m_per_deg_lon = 111_320.0 * cos(phi)
-        # m_per_deg_lon = 111_132.0 
-
-        # diffy11  = diffy1 * m_per_deg_lon
-        # diffx11 = diffx1 * m_per_deg_lat
-        # speed = m.addVar()
-        # m.addConstr(speed*speed == diffx11*diffx11 + diffy11*diffy11)
-        # def f(u):  return math.atan(u)
-        # lbx = -2
-        # ubx =  2    
-        # npts = 101
-        # x_pts = []
-        # y_pts = []
-        # for p in range(npts):    
-        #     x_pts.append(lbx + (ubx - lbx) * p / (npts - 1))    
-        #     y_pts.append(f(x_pts[p]))
-        
-        # for i in range(len(ptu)-1):
-        #     slope = (ptf[i+1]-ptf[i])/(ptu[i+1]-ptu[i])
-        #     c = ptf[i] - slope*ptu[i]
-        # if tas == 0 : print("WARNING: true air speed is 0")
-
-        # if vs/tas >= 2 or vs/tas<=-2: print("WARNING: vs/ts out of range, flight angle too steep") 
-        # gamma = m.addVar()
-        # lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="lx")
-        # m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
-        # fuel_flow = compute_fuel_emission_flow(speed, z[i][k], diffz1, mtow,  122.6, cd0, k, tsfc, m, limit=True, cal_emission=True)
         obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         obj += uz[i][k-1]*FT2NM*pos
@@ -272,13 +206,7 @@ for k in range(N):
             # at a time k if both aircraft i and j have entered the simulation.
             if k >= entry_indices[i] and k >= entry_indices[j]:
                 bin_vars = m.addVars(range(6), name='bin', vtype=GRB.BINARY)
-                m.addConstr(bin_vars[0]+bin_vars[1]+bin_vars[2]+bin_vars[3]+bin_vars[4]+bin_vars[5]>= 1)
-                # m.addConstr(x[i][k] - x[j][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[0]))
-                # m.addConstr(y[i][k] - y[j][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[1]))
-                # m.addConstr(z[i][k] - z[j][k] >=  SEP_VERT_FT - BIG_M*(1 - bin_vars[2]))
-                # m.addConstr(x[j][k] - x[i][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[3]))
-                # m.addConstr(y[j][k] - y[i][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[4]))
-                # m.addConstr(z[j][k] - z[i][k] >=  SEP_VERT_FT - BIG_M*(1 - bin_vars[5]))
+                m.addConstr(bin_vars[0]+bin_vars[1]+bin_vars[2]+bin_vars[3]+bin_vars[4]+bin_vars[5]>= 1
 
                 m.addConstr(x[i][k] - x[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[0]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])
                 m.addConstr(y[i][k] - y[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[1]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])

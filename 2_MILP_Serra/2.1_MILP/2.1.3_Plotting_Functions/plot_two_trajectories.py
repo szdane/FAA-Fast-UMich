@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Plot two trajectories
 """
 plot_two_trajectories.py  –  colour‑coded by time
 -------------------------------------------------
