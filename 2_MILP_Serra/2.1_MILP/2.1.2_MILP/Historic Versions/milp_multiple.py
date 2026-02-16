@@ -50,7 +50,7 @@ k = 0.045      # induced drag factor
 
 
 try:
-    flights_df = pd.read_csv("entry_exit_points.csv")
+    flights_df = pd.read_csv("../../2.1.1_Input_Data/entry_exit_points.csv")
     flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
     flights_df = flights_df[:2]
     
@@ -80,7 +80,7 @@ try:
     print(flights)
     print(f"Successfully loaded {len(flights)} flights from entry_exit_points.csv")
 except FileNotFoundError:
-    print("Error: 'entry_exit_points.csv' not found. Please ensure the file is in the same directory as the script.")
+    print("Error: 'entry_exit_points.csv' not found at ../../2.1.1_Input_Data/. Please check the file location.")
     flights = []
 except Exception as e:
     print(f"An error occurred while reading the CSV file: {e}")
