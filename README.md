@@ -1,5 +1,12 @@
 # FAA-Fast-UMich
 
+To run the MILP:
+    python -m pip install -r requirements.txt
+    cd 2_MILP_Serra/2.1_MILP/2.1.2_MILP
+    python milp_multiple_Debug.py
+
+Note that the resulting waypoints will ve saved under "2_MILP_Serra/2.3_Outputs_and_Results"
+
 * All the codes you need to run FAA FAST project MILP Optimizer:
     * https://github.com/szdane/FAA-Fast-UMich/blob/main/FAST%20MILP/milp_multiple_Debug.py (MILP)
     * https://github.com/szdane/FAA-Fast-UMich/blob/main/FAST%20MILP/main_ver4_gurobi_debug.py (Fuel Estimation)
