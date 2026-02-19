@@ -13,7 +13,7 @@ import openap.casadi as oc
 import pandas as pd
 from openap.extra.aero import fpm, ft, kts
 
-from functions.base import Base #from openap.top.base import Base
+from Functions.fuel_emission_analysis_base import Base #from openap.top.base import Base
 
 
 class Cruise_with_Multi_Waypoints(Base):

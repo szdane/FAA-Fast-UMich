@@ -17,7 +17,7 @@ from openap.extra.aero import fpm, ft, kts
 from pyproj import Proj
 
 try:
-    from . import tools
+    from . import openap_tools
 except:
     RuntimeWarning("cfgrib and sklearn are required for wind integration")
 
@@ -202,7 +202,7 @@ class Base:
         return np.vstack([xp_guess, yp_guess, h_guess, m_guess, ts_guess]).T
 
     def enable_wind(self, windfield: pd.DataFrame):
-        self.wind = tools.PolyWind(
+        self.wind = openap_tools.PolyWind(
             windfield, self.proj, self.lat1, self.lon1, self.lat2, self.lon2
         )
 

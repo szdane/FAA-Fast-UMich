@@ -1,120 +1,150 @@
 from gurobipy import *
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from main_ver4_gurobi_debug import *
-from main import analyze_optimized_trajectory
 import math
-import os
-# Clear terminal
-os.system('cls' if os.name == 'nt' else 'clear')
 
-############
-# 1. SETUP #
-############
-print(" === PROBLEM SETUP ===")
-## 1.1 Set parameters
-# Global parameters
-FT2NM             = 1 / 6076.12               # Feet to NM
-flights_to_optimize = ["DAL1208_KORDtoKDTW"]  # Define flights to optimize
-# flights_to_optimize = [
-#     "DAL1208_KORDtoKDTW",
-#     "DAL1066_KTPAtoKDTW",
-#     "EDV5018_CYULtoKDTW",
-#     "AAL1456_KORDtoKDTW"
+DT = 60.0*5
+FT2NM             = 1 / 6076.12
+
+BIG_M             = 1e5
+V_MAX_X  = 0.14/60    # grid units per s
+V_MAX_Y  = 0.072/60 
+# V_MAX_X = 250
+# V_MAX_Y = 250
+V_MAX_Z  = 1000/60
+GLIDE_RATIO = 2
+# SEP_HOR_NM        = 500.0 * FT2NM  + DT*V_MAX_X
+# SEP_VERT_FT       = 100.0 + DT*V_MAX_Z
+SEP_HOR_NM = 500.0 * FT2NM
+SEP_VERT_FT = 100.0
+
+CT = 1
+CF = 1.5
+
+WEATHER_EPS_DEG = 1e-4
+
+# DAL1066, DAL498, EDV5018
+# Format: [start_lat, start_lon, start_alt, entry_time_sec, end_lat, end_lon, end_alt, landing_time_sec]
+# flights = [
+#     [39.471957, -82.139821, 34843.470164, 0,    41.673148, -82.943072, 19820.938696, 2100],
+#     [39.471965, -82.139803, 34406.851392, 900,  41.673149, -82.943096, 20227.116630, 2400] 
 # ]
+# flights = [[0, 43.050, -83.850, 30000.0, 0, 41.673148, -82.943072, 19820.938696, 2100]]
+# df = pd.DataFrame({
+#             'd_ts': [60, 60, 60, 60, 60],              # seconds
+#             'groundSpeed': [250, 255, 260, 265, 270],   # knots
+#             'alt': [10000, 12000, 14000, 16000, 18000], # feet
+#             'rateOfClimb': [500, 600, 700, 800, 900]    # ft/min
+#         })
 
-# Model parameters
-DT = 60.0                                  # Time step seconds
-
-# Cost parameters
-CT = 1                                     # Time cost weight
-CF = 1.5                                   # Fuel cost weight
-
-# Constraint parameters
-BIG_M             = 1e5                    # Disjunction constant
-
-V_MAX_X  = 0.25/60                         # Max latitude speed
-V_MAX_Y  = 0.072/60                        # Max longitude speed
-V_MAX_Z  = 1000/60                         # Max altitude speed
-
-SEP_HOR_NM = 500.0 * FT2NM                 # Horizontal separation minimum
-SEP_VERT_FT = 100.0                        # Vertical separation minimum
-
-#GLIDE_SLOPE = 100                          # Max glide slope (descent/horizontal) ≈ 5.7 degrees
-
-WEATHER_EPS_DEG = 1e-4                     # Weather buffer tolerance
-WEATHER_STEP_SEC = 300                     # Weather frame interval in seconds (5 minutes) 
+# # print(df)
+# print(df)
 
 # Example aircraft parameters
-S = 122.6                                  # Wing area m^2
-mtow = 70000                               # Max takeoff weight kg
-tsfc = 0.00003                             # Thrust specific fuel consumption
-cd0 = 0.02                                 # Zero-lift drag coefficient
-k = 0.045                                  # Induced drag factor
-print("Parameters loaded...")
+S = 122.6      # m^2 (wing area)
+mtow = 70000   # kg (max takeoff weight)
+tsfc = 0.00003 # kg/Ns (thrust specific fuel consumption)
+cd0 = 0.02     # zero-lift drag coefficient
+k = 0.045      # induced drag factor
 
-## 1.2. Define STAR fixes
+# # Calculate total fuel usage only
+# total_fuel = compute_fuel_emission_for_flight(df, S, mtow, tsfc, cd0, k, limit=True, cal_emission=False)
+# print(f"Total fuel used: {total_fuel:.2f} kg")
+
+
+try:
+    flights_df = pd.read_csv("../2.1.1_Input_Data/entry_exit_points.csv")[12:13]
+    flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
+    flights_df = flights_df
+    print(flights_df)
+    flights_df['entry_rectime'] = pd.to_datetime(flights_df['entry_rectime'])
+    flights_df['exit_rectime'] = pd.to_datetime(flights_df['exit_rectime'])
+    min_time = flights_df['entry_rectime'].min()
+    max_time = flights_df['exit_rectime'].max()
+    print(f"Reference start time (t=0): {min_time}", f"End time: {max_time}")
+
+    # Calculate entry and landing times in total seconds relative to the min_time
+    flights_df['entry_time_sec'] = (flights_df['entry_rectime'] - min_time).dt.total_seconds()
+    flights_df['landing_time_sec'] = (flights_df['exit_rectime'] - min_time).dt.total_seconds()
+
+    # flights_df = flights_df.sort_values(by='entry_time_sec').reset_index(drop=True)
+
+    # Create the final list of lists in the format required by the model:
+    # [entry_lat, entry_lon, entry_alt, entry_time_sec, exit_lat, exit_lon, exit_alt, landing_time_sec]
+    required_columns = ['acId',
+        'entry_lat', 'entry_lon', 'entry_alt',
+        'entry_time_sec',
+        'exit_lat', 'exit_lon', 'exit_alt',
+        'landing_time_sec'
+    ]
+    flights = flights_df[required_columns].values.tolist()
+    print(flights)
+    print(f"Successfully loaded {len(flights)} flights from entry_exit_points.csv")
+except FileNotFoundError:
+    print("Error: 'entry_exit_points.csv' not found. Please ensure the file is in the same directory as the script.")
+    flights = []
+except Exception as e:
+    print(f"An error occurred while reading the CSV file: {e}")
+    flights = []
+
+WEATHER_STEP_SEC = 300  # 5 minutes
+
+# weather_files = [
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t00min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t05min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t10min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t15min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t20min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t25min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t30min.csv",
+# ]
+
+weather_files = ["../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t00min.csv"]
+weather_dfs = []
+for fp in weather_files:
+    try:
+        dfw = pd.read_csv(fp)
+        dfw = dfw[['min_lat', 'max_lat', 'min_lon', 'max_lon']].dropna().reset_index(drop=True)
+        weather_dfs.append(dfw)
+    except FileNotFoundError:
+        print(f"WARNING: missing weather file: {fp}")
+    except Exception as e:
+        print(f"WARNING: could not read {fp}: {e}")
+
+# If nothing loaded, use empty list
+if len(weather_dfs) == 0:
+    print("No weather east loaded; skipping weather constraints.")
+
+
+
+v_avg = []
+for i in range(len(flights)):
+    dt = (flights[i][8]-flights[i][4])
+    v_x = abs(flights[i][1]-flights[i][5])/(dt)
+    v_y = abs(flights[i][2]-flights[i][6])/(dt)
+    v_z = abs(flights[i][3]-flights[i][7])/(dt)
+    v_avg.append([v_x,v_y,v_z])
+
+# print(v_avg)
+
 star_fixes ={
         "BONZZ": (41.7483, -82.7972, (21000, 15000)), "CRAKN": (41.6730, -82.9405, (26000, 12000)), "CUUGR": (42.3643, -83.0975, (11000, 10000)),
         "FERRL": (42.4165, -82.6093, (10000, 8000)), "GRAYT": (42.9150, -83.6020, (22000, 17000)), "HANBL": (41.7375, -84.1773, (21000, 17000)),
         "HAYLL": (41.9662, -84.2975, (11000, 11000)), "HTROD": (42.0278, -83.3442, (12000, 12000)), "KKISS": (42.5443, -83.7620, (15000, 12000)),
         "KLYNK": (41.8793, -82.9888, (10000, 9000)), "LAYKS": (42.8532, -83.5498, (10000, 10000)), "LECTR": (41.9183, -84.0217, (10000, 8000)),
-        "RKCTY": (42.6869, -83.9603, (13000, 11000)), "VCTRZ": (41.9878, -84.0670, (15000, 12000)) # name: (lat, lon, (alt_min_ft, alt_max_ft))
+        "RKCTY": (42.6869, -83.9603, (13000, 11000)), "VCTRZ": (41.9878, -84.0670, (15000, 12000)) # (lat, lon)
 }
-print("STAR fixes loaded...")
 
-## 1.3. Load flight data
-# Load and filter flights
-script_dir = Path(__file__).parent # gets the directory where the current script is located
-csv_path = script_dir.parent / "2.1.1_Input_Data" / "entry_exit_points.csv"
-all_flights_df = pd.read_csv(csv_path)
-flights_df = all_flights_df[all_flights_df['acId'].isin(flights_to_optimize)].reset_index(drop=True)
+# star_fixes = {'BONZZ': (np.float64(46142.63262673297), np.float64(-51455.44055057798), (21000, 15000)), 'CRAKN': (np.float64(34294.83535890254), np.float64(-59895.72883085624), (26000, 12000)), 
+#               'CUUGR': (np.float64(21024.51683518695), np.float64(16922.101415528916), (11000, 10000)), 'FERRL': (np.float64(61083.1599606936), np.float64(22961.796796482908), (10000, 8000)), 
+#               'GRAYT': (np.float64(-20245.67574577981), np.float64(78155.09504878709), (22000, 17000)), 'HANBL': (np.float64(-68361.78373155238), np.float64(-52477.4658479923), (21000, 17000)), 
+#               'HAYLL': (np.float64(-78054.67623105628), np.float64(-26945.079163737624), (11000, 11000)), 'HTROD': (np.float64(759.9551189871775), np.float64(-20526.540523690936), (12000, 12000)), 
+#               'KKISS': (np.float64(-33474.12951926423), np.float64(36985.80493080173), (15000, 12000)), 'KLYNK': (np.float64(30185.5684596365), np.float64(-36974.57610805848), (10000, 9000)), 
+#               'LAYKS': (np.float64(-16010.594434343164), np.float64(71272.13930802463), (10000, 10000)), 'LECTR': (np.float64(-55294.67078726591), np.float64(-32486.361165977654), (10000, 8000)), 
+#               'RKCTY': (np.float64(-49605.97832190019), np.float64(52938.81765769922), (13000, 11000)), 'VCTRZ': (np.float64(-58978.255222062704), np.float64(-24728.180763285345), (15000, 12000))}
 
-# Find relative time for all flight histories in seconds from the earliest entry time
-flights_df['entry_rectime'] = pd.to_datetime(flights_df['entry_rectime'])
-flights_df['exit_rectime'] = pd.to_datetime(flights_df['exit_rectime'])
-min_time = flights_df['entry_rectime'].min()
-max_time = flights_df['exit_rectime'].max() # Set the beginning of the time grid to the earliest entry time across all flights, and the end to the latest exit time.
-
-flights_df['rel_entry_time'] = (flights_df['entry_rectime'] - min_time).dt.total_seconds()
-flights_df['rel_landing_time'] = (flights_df['exit_rectime'] - min_time).dt.total_seconds() # compute the [relative landing time] in seconds relative to the [earliest entry time] (in seconds)
-
-# Keep flights in DataFrame format for easier access
-required_columns = ['acId',
-    'entry_lat', 'entry_lon', 'entry_alt',
-    'rel_entry_time',
-    'exit_lat', 'exit_lon', 'exit_alt',
-    'rel_landing_time'
-]
-flights = flights_df[required_columns].copy() # make a copy to avoid SettingWithCopyWarning
-print(f"Flight data loaded...")
-
-## 1.4. Load weather data
-# define weather csv file pathes
-fast_milp_dir = script_dir.parent.parent.parent / "FAST MILP"
-weather_files = [
-    str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t00min.csv")
-    # str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t00min.csv"),
-    # str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t05min.csv"),
-    # str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t10min.csv"),
-    # str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t15min.csv"),
-    # str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t20min.csv"),
-    # str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t25min.csv"),
-    # str(fast_milp_dir / "infeasible_regions_fake_frames" / "infeasible_regions_t30min.csv"),
-]
-
-# Saves the weather CSV files into memory as a list of DataFrames
-weather_dfs = []
-for fp in weather_files: # fp means "file path"
-    dfw = pd.read_csv(fp)
-    dfw = dfw[['min_lat', 'max_lat', 'min_lon', 'max_lon']].dropna().reset_index(drop=True)
-    weather_dfs.append(dfw)
-print(f"Weather data loaded...")
-
-## 1.5. Determine time steps
-max_time = flights['rel_landing_time'].max() 
-# Set the end of the time grid to the latest landing time across all flights, or to a fixed value (e.g., 2100 seconds) if the max landing time is too short for testing purposes.
+max_time = max(f[8] for f in flights)
 if max_time > 2100:
     t0 = 0
     tN = max_time
@@ -122,139 +152,103 @@ if max_time > 2100:
 else:
     t0 = 0
     tN = 2100
+    
+print(f"Actual number of time steps:{((max_time-t0)/DT)+1}")
+N  = int((tN - t0) / DT) + 1
+print(f"Number of time steps: {N}")
+times = np.linspace(t0, tN, N, dtype=int)
 
-flights['flight_entry_timestep'] = (flights['rel_entry_time'] / DT).astype(int) # find out which time step each flight comes in, 
-                                                                                # and then append this information as a new column in the flights DataFrame for easier access later. 
-                                                                                # This will be used to enforce that separation constraints and fuel costs only apply after the flight has entered the simulation.
+# Convert entry times in seconds to discrete time step indices
+entry_indices = [int(f[4] / DT) for f in flights]
+print(f"Entry time indices for flights: {entry_indices}")
 
-N_steps  = int((tN - t0) / DT) + 1 # N_steps is both the number of time steps and the number of optimization steps.
-print("Time steps loaded...")
-print()
-print("Final flight data for optimization:")
-print(flights)
-print()
-print()
+m = Model("mip1") 
 
-########################
-# 2. MILP Optimization #
-########################
-print(" === MILP OPTIMIZATION ===")
-# 2.1. Create model
-env = Env(empty=True)
-env.setParam("OutputFlag", 0)   # disable all output from Gurobi
-env.start()
-
-m = Model("mip1", env=env)
-print("Model created...")
-
-# 2.2. Create decision variables
-# i) Create decision variables of position and control inputs for every flight and every time step.
-N_flights = len(flights)
+n = len(flights)
 x = []
 y = []
 z = []
 ux = []
 uy = []
 uz = []
-for i in range(1,N_flights+1):
-    x.append(m.addVars(range(N_steps), name=f"f{i}_lat", lb = -100000))       # latitude of flight i at time step k, for k in [0, N_steps-1], with a very loose lower bound to avoid unboundedness issues in the early stages of optimization.
-    y.append(m.addVars(range(N_steps), name=f"f{i}_lon", lb=-100000))         # longitude of flight i at time step k, for k in [0, N_steps-1], with a very loose lower bound to avoid unboundedness issues in the early stages of optimization.
-    z.append(m.addVars(range(N_steps), name=f"f{i}_alt_ft"))                  # altitude of flight i at time step k, for k in [0, N_steps-1]
-    ux.append(m.addVars(range(N_steps), name=f"uf{i}_x"))                     # control input in x direction for flight i at time step k, for k in [0, N_steps-1]
-    uy.append(m.addVars(range(N_steps), name=f"uf{i}_y"))                     # control input in y direction for flight i at time step k, for k in [0, N_steps-1]
-    uz.append(m.addVars(range(N_steps), name=f"uf{i}_z"))                     # control input in z direction for flight i at time step k, for k in [0, N_steps-1]
+for i in range(1,n+1):
+    x.append(m.addVars(range(N), name=f"f{i}_lat", lb = -100000))
+    y.append(m.addVars(range(N), name=f"f{i}_lon", lb=-100000))
+    z.append(m.addVars(range(N), name=f"f{i}_alt_ft"))
+    ux.append(m.addVars(range(N), name=f"uf{i}_x"))
+    uy.append(m.addVars(range(N), name=f"uf{i}_y"))
+    uz.append(m.addVars(range(N), name=f"uf{i}_z"))
 
-# ii) Add binary STAR fix decision variables
-fix_names = list(star_fixes)                                            # Get list of STAR fix names
-lat_vals  = [star_fixes[k][0] for k in fix_names]                       # Get list of latitude of each fix k
-lon_vals  = [star_fixes[k][1] for k in fix_names]                       # Get list of longitude of each fix
-alt_vals_min = [star_fixes[k][2][1] for k in fix_names]                 # Get list of minimum altitude of each fix
-alt_vals_max = [star_fixes[k][2][0] for k in fix_names]                 # Get list of maximum altitude of each fix
-k_fixes = len(fix_names)                                                # Count number of STAR fixes
+for i in range(n):
+    # The original code only constrained the position at k=0.
+    # Now, we fix the aircraft's position at its entry point for all time steps
+    # up to and including its entry time index.
+    entry_k = entry_indices[i]
+    for k in range(entry_k + 1):
+        m.addConstr(x[i][k] == flights[i][1], f"c_pre_entry_x_{i}_t{k}")
+        m.addConstr(y[i][k] == flights[i][2], f"c_pre_entry_y_{i}_t{k}")
+        m.addConstr(z[i][k] == flights[i][3], f"c_pre_entry_z_{i}_t{k}")
+
+
+fix_names = list(star_fixes)           
+lat_vals  = [star_fixes[k][0] for k in fix_names]
+lon_vals  = [star_fixes[k][1] for k in fix_names]
+alt_vals_min = [star_fixes[k][2][1] for k in fix_names]
+alt_vals_max = [star_fixes[k][2][0] for k in fix_names]
+k_fixes = len(fix_names) # Renamed from k to avoid conflict
 b = []
-for i in range(N_flights):
-    b.append(m.addVars(k_fixes, vtype=GRB.BINARY, name=f"y{i+1}"))      # Binary variable y[i][k] is 1 if flight i chooses fix k, and 0 otherwise.
+for i in range(n):
+    b.append(m.addVars(k_fixes, vtype=GRB.BINARY, name=f"y{i+1}"))
 
-# iii) Add cost function variables
-diffx = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="dx") # add variable difference_x, diffx[i,k] for ith flight at time step k will be defined with x[i][k] - x[i][k-1]
-diffy = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="dy") # add variable difference_y, diffy[i,k] for ith flight at time step k will be defined with y[i][k] - y[i][k-1]
-diffz = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="dz") # add variable difference_z, diffz[i,k] for ith flight at time step k will be defined with z[i][k] - z[i][k-1]
-is_end = m.addVars(N_flights, N_steps, vtype=GRB.BINARY, name="is_end")  # add binary variable to indicate whether the flight has reached its chosen STAR fix at time step k, is_end[i,k] ∈ {0,1} for ith flight at time step k
-                                                           # is_end[i,k] = 1 means the flight has reached its chosen STAR fix at time step k, and is_end[i,k] = 0 means it has not reached its chosen STAR fix at time step k.
-speed = m.addVars(N_flights, N_steps, name="speed") # add variable for speed at time step k for flight i, which will be defined with sqrt(diffx[i,k]^2 + diffy[i,k]^2)
-tfuel = m.addVars(N_flights, N_steps, name="t") # add variable for fuel usage at time step k for flight i, which will be defined with compute_fuel_emission_flow()) when is_end[i,k] = 0 (active branch), and 0 when is_end[i,k] = 1 (inactive branch)
-print("Decision variables created...")
+for j in range(n):
+    m.addConstr(quicksum(b[j][i] for i in range(k_fixes)) == 1, f"one_fix{j+1}")
+    m.addConstr(x[j][N-1] == LinExpr(lat_vals, b[j].values()),  f"lat_choice{j+1}")
+    m.addConstr(y[j][N-1] == LinExpr(lon_vals, b[j].values()),  f"lon_choice{j+1}")
+    m.addConstr(z[j][N-1] <= LinExpr(alt_vals_max, b[j].values()), f"alt_choice_max{j+1}")
+    m.addConstr(z[j][N-1] >= LinExpr(alt_vals_min, b[j].values()), f"alt_choice_min{j+1}")
 
-# 2.3. Define Objective Function
+is_end = [[m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}') for k in range(N)] for i in range(n)]
+
+# is_end = [[m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}') for k in range(N)] for i in range(n)]
+
+
+if len(weather_dfs) > 0:
+    last_idx = len(weather_dfs) - 1
+
+    for i in range(n):
+        entry_k = entry_indices[i]
+
+        for k in range(entry_k, N):
+            t_sec = k * DT
+            frame_idx = int(t_sec // WEATHER_STEP_SEC)
+            if frame_idx > last_idx:
+                frame_idx = last_idx  # hold the last frame after 30 min for now
+
+            dfw = weather_dfs[frame_idx]
+            if dfw.empty:
+                continue
+
+            # One set of "outside rectangle" constraints per rectangle row
+            for r, row in dfw.iterrows():
+                out = m.addVars(4, vtype=GRB.BINARY, name=f"w_out_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(out.sum() >= 1, name=f"w_outside_{i}_{k}_{frame_idx}_{r}")
+
+                m.addConstr(x[i][k] <= row['min_lat'] - WEATHER_EPS_DEG + BIG_M * (1 - out[0]),
+                            name=f"w_left_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(x[i][k] >= row['max_lat'] + WEATHER_EPS_DEG - BIG_M * (1 - out[1]),
+                            name=f"w_right_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(y[i][k] <= row['min_lon'] - WEATHER_EPS_DEG + BIG_M * (1 - out[2]),
+                            name=f"w_below_{i}_{k}_{frame_idx}_{r}")
+                m.addConstr(y[i][k] >= row['max_lon'] + WEATHER_EPS_DEG - BIG_M * (1 - out[3]),
+                            name=f"w_above_{i}_{k}_{frame_idx}_{r}")
+
 obj = LinExpr()
 
-for i in range(N_flights): # for each flight i
-    entry_k = flights.iloc[i]['flight_entry_timestep'] # flight enters airspace at timestep k
-    for k in range(entry_k + 1, N_steps): 
-        # Define Variables
-        m.addConstr(diffx[i, k] == x[i][k] - x[i][k-1]) # define difference_x  = x[i][k] - x[i][k-1]
-        m.addConstr(ux[i][k-1] == abs_(diffx[i, k]))  # define control input in x direction to be equal to the absolute value of difference_x 
-
-        m.addConstr(diffy[i, k] == y[i][k] - y[i][k-1]) # define difference_y  = y[i][k] - y[i][k-1]
-        m.addConstr(uy[i][k-1] == abs_(diffy[i, k]))  # define control input in y direction to be equal to the absolute value of difference_y
-
-        m.addConstr(diffz[i, k] == z[i][k] - z[i][k-1]) # define difference_z  = z[i][k] - z[i][k-1]
-        m.addConstr(uz[i][k-1] == abs_(diffz[i, k]))  # define control input in z direction to be equal to the absolute value of difference_z
-
-        m.addConstr(speed[i, k]*speed[i, k] == diffx[i, k]*diffx[i, k] + diffy[i, k]*diffy[i, k]) # define speed 
-
-        # Glide angle constraint: descent distance / horizontal distance <= GLIDE_SLOPE
-        # m.addConstr(-diffz[i, k] <= GLIDE_SLOPE * speed[i, k], f"glide_angle_{i}_{k}")
-
-        m.addGenConstrIndicator(is_end[i, k], 0, tfuel[i, k] == compute_fuel_emission_flow(speed[i, k], z[i][k], diffz[i, k], 0.8*mtow, S, cd0, k, tsfc, m, limit=True, cal_emission=False, mode="full"))   # active branch
-        m.addGenConstrIndicator(is_end[i, k], 1, tfuel[i, k] == 0) # define fuel usage at time step k for flight i, which will be defined with compute_fuel_emission_flow()) when is_end[i,k] = 0 (active branch), and 0 when is_end[i,k] = 1 (inactive branch)
-
-        # Define cost function
-        obj += tfuel[i, k]
-        obj += (CT/CF)*(1-is_end[i, k])
-
-        m.setObjective(obj, GRB.MINIMIZE)
-print("Objective function created...")
-
-# 2.4. Define constraints
-# i) Add is_end logic constraints
-for i in range(N_flights):
-    entry_k = flights.iloc[i]['flight_entry_timestep']
-    
-    # Before entry: is_end must be 0 (aircraft hasn't entered yet)
-    for k in range(entry_k + 1):
-        m.addConstr(is_end[i, k] == 0, f"is_end_before_entry_{i}_{k}")
-    
-    # After entry: enforce monotonicity (once is_end becomes 1, it stays 1)
-    for k in range(entry_k + 2, N_steps):
-        m.addConstr((is_end[i, k] == 1) >> (x[i][k] == x[i][N_steps-1])) # if is_end = 1, then the flight has reached its chosen STAR fix in the x direction
-        m.addConstr((is_end[i, k] == 1) >> (y[i][k] == y[i][N_steps-1])) # if is_end = 1, then the flight has reached its chosen STAR fix in the y direction
-        m.addConstr((is_end[i, k] == 1) >> (z[i][k] == z[i][N_steps-1])) # if is_end = 1, then the flight has reached its chosen STAR fix in the z direction
-        m.addConstr(is_end[i, k] >= is_end[i, k-1], f"is_end_monotonic_{i}_{k}")
-print("is_end logic constraints created...")
-
-# ii) Add entry point constraints
-for i in range(N_flights):
-    entry_k = flights.iloc[i]['flight_entry_timestep'] # flight enters airspace at timestep k
-    for k in range(entry_k + 1): # Constraint aircraft to be at entry point from time step 0 up to and including the entry time step k, then allow it to start moving after that.
-        m.addConstr(x[i][k] == flights.iloc[i]['entry_lat'], f"c_pre_entry_x_{i}_t{k}")
-        m.addConstr(y[i][k] == flights.iloc[i]['entry_lon'], f"c_pre_entry_y_{i}_t{k}")
-        m.addConstr(z[i][k] == flights.iloc[i]['entry_alt'], f"c_pre_entry_z_{i}_t{k}")
-print("Entry point constraints created...")
-
-# iii) Add STAR fix (exit point) constraints
-for j in range(N_flights):
-    m.addConstr(quicksum(b[j][i] for i in range(k_fixes)) == 1, f"one_fix{j+1}") # Ensure only one binary variable is 1 for flight j -> exactly one fix is chosen for each flight
-    m.addConstr(x[j][N_steps-1] == LinExpr(lat_vals, b[j].values()),  f"lat_choice{j+1}")
-    m.addConstr(y[j][N_steps-1] == LinExpr(lon_vals, b[j].values()),  f"lon_choice{j+1}")
-    m.addConstr(z[j][N_steps-1] <= LinExpr(alt_vals_max, b[j].values()), f"alt_choice_max{j+1}")
-    m.addConstr(z[j][N_steps-1] >= LinExpr(alt_vals_min, b[j].values()), f"alt_choice_min{j+1}")
-print(f"STAR fix constraints created...")
-
-# iv) Add max x, y, z constraints for each flight after entry time step
-for i in range(N_flights): # for each flight i
-    entry_k = flights.iloc[i]['flight_entry_timestep'] # This loop now starts from the time step *after* the aircraft enters,
-    for k in range(entry_k + 1, N_steps): # for time steps after the entry time step, add constraints and costs. Before the entry time step, the aircraft is stationary at the entry point, so we don't need to add constraints or costs.
+for i in range(n):
+    entry_k = entry_indices[i]
+    # This loop now starts from the time step *after* the aircraft enters,
+    # ensuring that dynamics constraints and costs only apply when it's flying.
+    for k in range(entry_k + 1, N):
         # # Physical constraints
         m.addConstr(x[i][k] - x[i][k-1] <=  V_MAX_X*DT)
         m.addConstr(y[i][k] - y[i][k-1] <=  V_MAX_Y*DT)
@@ -263,107 +257,128 @@ for i in range(N_flights): # for each flight i
         m.addConstr(x[i][k-1] - x[i][k] <=  V_MAX_X*DT)
         m.addConstr(y[i][k-1] - y[i][k] <=  V_MAX_Y*DT)
         m.addConstr(z[i][k-1] - z[i][k] <=  V_MAX_Z*DT)
-print("Max speed constraints created...")
+        # m.addConstr(x[i][k] - x[i][k-1] <=  v_x*DT)
+        # m.addConstr(y[i][k] - y[i][k-1] <=  v_y*DT)
+        # m.addConstr(z[i][k] - z[i][k-1] <=  v_z*DT)
 
-# v) Add weather constraints to each flight and each time step based on the weather frames loaded into memory.
-if len(weather_dfs) > 0:
-    last_idx = len(weather_dfs) - 1
+        # m.addConstr(x[i][k-1] - x[i][k] <=  v_x*DT)
+        # m.addConstr(y[i][k-1] - y[i][k] <=  v_y*DT)
+        # m.addConstr(z[i][k-1] - z[i][k] <=  v_z*DT)
 
-    for i in range(N_flights): # for each flight i
-        entry_k = flights.iloc[i]['flight_entry_timestep'] # flight enters airspace at timestep k
 
-        for k in range(entry_k, N_steps): # start applying weather constraints from the entry time step k to final timestep N_steps
-            t_sec = k * DT # convert time step k to actual time in seconds
-            frame_idx = int(t_sec // WEATHER_STEP_SEC) # determine which weather frame index to use based on the actual time in seconds of current time step k
-            if frame_idx > last_idx: # if the computed frame index exceeds the available weather frames, hold it at the last available frame index to avoid index out of range errors. 
-                frame_idx = last_idx # This means that after we run out of new weather frames, we will keep applying the constraints of the last weather frame for all subsequent time steps.
+        # Dummy variables for the objective
+        diffx1 = m.addVar(lb=-GRB.INFINITY, name=f'dx{i}_{k}')     
+        m.addConstr(diffx1 == x[i][k] - x[i][k-1])
+        m.addConstr(ux[i][k-1] == abs_(diffx1))  
 
-            dfw = weather_dfs[frame_idx] # get the weather DataFrame for the current time step k based on the computed frame index
-            if dfw.empty:
-                continue # if there are no weather constraints for this frame, skip to the next iteration without adding any constraints to avoid errors from trying to add constraints with an empty DataFrame
+        diffy1 = m.addVar(lb=-GRB.INFINITY, name=f'dy{i}_{k}')     
+        m.addConstr(diffy1 == y[i][k] - y[i][k-1])
+        m.addConstr(uy[i][k-1] == abs_(diffy1))  
 
-            # Force the aircraft point (x[i][k], y[i][k]) to be outside the weather rectangle
-            for r, row in dfw.iterrows():
-                out = m.addVars(4, vtype=GRB.BINARY, name=f"w_out_{i}_{k}_{frame_idx}_{r}") # Binary variables to determine which side of the weather rectangle the aircraft is on: left, right, below, or above. 
-                m.addConstr(out.sum() >= 1, name=f"w_outside_{i}_{k}_{frame_idx}_{r}") # force at least one side to be chosen
+        diffz1 = m.addVar(lb=-GRB.INFINITY, name=f'dz{i}_{k}') 
+        pos = m.addVar(vtype=GRB.BINARY)    
+        m.addConstr(diffz1 == z[i][k] - z[i][k-1])
+        m.addGenConstrIndicator(pos, 1, diffz1, GRB.GREATER_EQUAL, 1e-6, name=f"pos_is_one_{i}_{k}")
+        m.addGenConstrIndicator(pos, 0, diffz1, GRB.LESS_EQUAL,     0.0, name=f"pos_is_zero_{i}_{k}")
+        m.addConstr(uz[i][k-1] == abs_(diffz1)) 
 
-                m.addConstr(x[i][k] <= row['min_lat'] - WEATHER_EPS_DEG + BIG_M * (1 - out[0]), # out[0] is 0 -> forces x[i][k] to be less than or equal to row['min_lat'] - WEATHER_EPS_DEG -> meaning the aircraft must be on the left side of the left boundary of the weather rectangle.
-                            name=f"w_left_{i}_{k}_{frame_idx}_{r}")
-                m.addConstr(x[i][k] >= row['max_lat'] + WEATHER_EPS_DEG - BIG_M * (1 - out[1]), # out[1] is 0 -> forces x[i][k] to be greater than or equal to row['max_lat'] + WEATHER_EPS_DEG -> meaning the aircraft must be on the right side of the right boundary of the weather rectangle.
-                            name=f"w_right_{i}_{k}_{frame_idx}_{r}")
-                m.addConstr(y[i][k] <= row['min_lon'] - WEATHER_EPS_DEG + BIG_M * (1 - out[2]), # out[2] is 0 -> forces y[i][k] to be less than or equal to row['min_lon'] - WEATHER_EPS_DEG -> meaning the aircraft must be below the bottom boundary of the weather rectangle.
-                            name=f"w_below_{i}_{k}_{frame_idx}_{r}")
-                m.addConstr(y[i][k] >= row['max_lon'] + WEATHER_EPS_DEG - BIG_M * (1 - out[3]), # out[3] is 0 -> forces y[i][k] to be greater than or equal to row['max_lon'] + WEATHER_EPS_DEG -> meaning the aircraft must be above the top boundary of the weather rectangle.
-                            name=f"w_above_{i}_{k}_{frame_idx}_{r}")
-print("Weather constraints created...")
+        # is_end = m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}')
+        m.addConstr((is_end[i][k] == 1) >> (x[i][k] == x[i][N-1]))
+        m.addConstr((is_end[i][k] == 1) >> (y[i][k] == y[i][N-1]))
+        m.addConstr((is_end[i][k] == 1) >> (z[i][k] == z[i][N-1]))
 
-# vi) define safety seperation constraints
-for k in range(N_steps):
-    for i in range(N_flights-1):
-        for j in range(i+1,N_flights): # Loop over every pair of aircraft (i, j), without repeating pairs
-            if k >= flights.iloc[i]['flight_entry_timestep'] and k >= flights.iloc[j]['flight_entry_timestep']: # Only enforce separation if BOTH aircraft have entered the airspace.
-                bin_vars = m.addVars(range(6), name='bin', vtype=GRB.BINARY) # binary variables for the 6 possible separation scenarios: i left of j, i right of j, i above j, i below j, i in front of j, i behind j
 
-                m.addConstr(x[i][k] - x[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[0]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k]) # when bin_vars[0] = 1, this constraint enforces that x[i][k] - x[j][k] >= SEP_HOR_NM, meaning i is to the right of j by at least the horizontal separation minimum.
-                m.addConstr(y[i][k] - y[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[1]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k]) # when bin_vars[1] = 1, this constraint enforces that y[i][k] - y[j][k] >= SEP_HOR_NM, meaning i is above j by at least the horizontal separation minimum.
-                m.addConstr(z[i][k] - z[j][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[2]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k]) # when bin_vars[2] = 1, this constraint enforces that z[i][k] - z[j][k] >= SEP_VERT_FT, meaning i is above j by at least the vertical separation minimum.
-                m.addConstr(x[j][k] - x[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[3]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k]) # when bin_vars[3] = 1, this constraint enforces that x[j][k] - x[i][k] >= SEP_HOR_NM, meaning j is to the right of i by at least the horizontal separation minimum.
-                m.addConstr(y[j][k] - y[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[4]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k]) # when bin_vars[4] = 1, this constraint enforces that y[j][k] - y[i][k] >= SEP_HOR_NM, meaning j is above i by at least the horizontal separation minimum.
-                m.addConstr(z[j][k] - z[i][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[5]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k]) # when bin_vars[5] = 1, this constraint enforces that z[j][k] - z[i][k] >= SEP_VERT_FT, meaning j is above i by at least the vertical separation minimum.
+        # Fuel usage with gliding effect
+        speed = m.addVar()
+        m.addConstr(speed*speed == diffx1*diffx1 + diffy1*diffy1)
+        def f(u):  return math.atan(u)
+        lbx = -2
+        ubx =  2    
+        npts = 101
+        x_pts = []
+        y_pts = []
+        for p in range(npts):    
+            x_pts.append(lbx + (ubx - lbx) * p / (npts - 1))    
+            y_pts.append(f(x_pts[p]))
+        
+        # for i in range(len(ptu)-1):
+        #     slope = (ptf[i+1]-ptf[i])/(ptu[i+1]-ptu[i])
+        #     c = ptf[i] - slope*ptu[i]
+        # if tas == 0 : print("WARNING: true air speed is 0")
 
-                m.addConstr(bin_vars[0]+bin_vars[1]+bin_vars[2]+bin_vars[3]+bin_vars[4]+bin_vars[5]>= 1) # at least one of the separation scenarios must be true to confirm seperation
-print("Separation constraints created...")
+        # if vs/tas >= 2 or vs/tas<=-2: print("WARNING: vs/ts out of range, flight angle too steep") 
+        gamma = m.addVar()
+        lx = m.addVar(lb=lbx, ub=ubx, vtype=GRB.CONTINUOUS, name="z")
+        m.addGenConstrPWL(lx,gamma,x_pts,y_pts,"PWLarctan")
 
-# 2.6. Initiate optimization
-print("Starting optimization...")
+        t = m.addVar(name="t")
+
+        m.addGenConstrIndicator(is_end[i][k], 0, t == compute_fuel_emission_flow(speed, z[i][k], diffz1, 0.8*mtow, S, cd0, k, tsfc, m, limit=True, cal_emission=False, mode="full"))   # active branch
+        m.addGenConstrIndicator(is_end[i][k], 1, t == 0)
+        # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
+        # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
+        # obj += uz[i][k-1]*FT2NM*pos
+        obj += t
+        obj += (CT/CF)*(1-is_end[i][k])
+
+
+for k in range(N):
+    # Safety constraints
+    for i in range(n-1):
+        for j in range(i+1,n):
+            # This 'if' condition ensures that separation constraints are only enforced
+            # at a time k if both aircraft i and j have entered the simulation.
+            if k >= entry_indices[i] and k >= entry_indices[j]:
+                bin_vars = m.addVars(range(6), name='bin', vtype=GRB.BINARY)
+                m.addConstr(bin_vars[0]+bin_vars[1]+bin_vars[2]+bin_vars[3]+bin_vars[4]+bin_vars[5]>= 1)
+                # m.addConstr(x[i][k] - x[j][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[0]))
+                # m.addConstr(y[i][k] - y[j][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[1]))
+                # m.addConstr(z[i][k] - z[j][k] >=  SEP_VERT_FT - BIG_M*(1 - bin_vars[2]))
+                # m.addConstr(x[j][k] - x[i][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[3]))
+                # m.addConstr(y[j][k] - y[i][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[4]))
+                # m.addConstr(z[j][k] - z[i][k] >=  SEP_VERT_FT - BIG_M*(1 - bin_vars[5]))
+
+                m.addConstr(x[i][k] - x[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[0]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(y[i][k] - y[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[1]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(z[i][k] - z[j][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[2]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(x[j][k] - x[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[3]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(y[j][k] - y[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[4]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(z[j][k] - z[i][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[5]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+
+
+
+m.setObjective(obj, GRB.MINIMIZE)
 m.optimize()
-print("Optimization completed.")
-print()
-print()
 
+if m.status == GRB.OPTIMAL:
+    print('Obj: %g' % m.ObjVal)
+    pat = []
+    for i in range(N):
+        for j in range(n):
+            pat.append(f"f{j+1}_lat[{i}]")
+            pat.append(f"f{j+1}_lon[{i}]")
+            pat.append(f"f{j+1}_alt_ft[{i}]")
 
-# ###########
-# 3. OUTPUT #
-# ###########
-print(" === OUTPUT RESULTS ===")
-if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optimal solution.
-    # 3.1. Print objective value
-    print('Optimization success! Obj= %g' % m.ObjVal) 
+    data = {
+        "var": [v.VarName for v in m.getVars() if v.VarName in pat],
+        "value": [v.X       for v in m.getVars() if v.VarName in pat],
+    }
+    df = pd.DataFrame(data)
 
-    # 3.2. Extract the optimized trajectories for each flight and save them to a CSV file for visualization and analysis.
-    # i) initialize pattern to extract the optimized lat, lon and alt_ft for each flight j at each time step i
-    rows = []
-    for k in range(N_steps): # for each time step k
-        row = {"t": k * DT}  # convert time step k to actual time in seconds
-        for i in range(N_flights): # for each flight j
-            row[f"f{i+1}_lat"]    = x[i][k].X # .X means we want to extract the optimized value
-            row[f"f{i+1}_lon"]    = y[i][k].X 
-            row[f"f{i+1}_alt_ft"] = z[i][k].X
-        rows.append(row)
+    df["root"] = df["var"].str.extract(r"^([^\[]+)", expand=False)        
+    df["t"]  = (df["var"].str.extract(r"\[(\d+)\]",  expand=False).astype(int))*DT
 
-    df_wide = pd.DataFrame(rows) # convert pd into a DataFrame
+    wide = (df.pivot(index="t", columns="root", values="value")
+              .sort_index()
+              .reset_index())
 
-    # Save the results to a CSV file
-    output_dir = script_dir.parent / "2.3_Outputs_and_Results" / "res"
-    output_dir.mkdir(parents=True, exist_ok=True) # create the output directory if it doesn't exist
-    output_path = output_dir / "weathertrialstatic.csv" # define the output file path for the optimized trajectories CSV file
-    df_wide.to_csv(output_path, index=False) # save the optimized trajectories to a CSV file without the index column
-    print(f"Results saved to {output_path}")
-    print()
-    
-    # 3.3. Analyze and visualize optimized trajectory
-    print(" === ANALYZING OPTIMIZED TRAJECTORY ===")
-    # Prepare aircraft list with acId and acType
-    aircraft_list = []
-    for idx in range(N_flights):
-        acId = flights.iloc[idx]['acId']
-        # Default to B737 if acType not available - you can modify this mapping as needed
-        acType = "B737"  # TODO: Add acType to flights dataframe if needed
-        aircraft_list.append({"acId": acId, "acType": acType})
-    
-    # Call the analysis function
-    results = analyze_optimized_trajectory(df_wide, aircraft_list)
-    print("Analysis and visualization complete!")
+    ordered = ['t']
+    for i in range(n):
+        ordered.extend([f'f{i+1}_lat', f'f{i+1}_lon', f'f{i+1}_alt_ft'])
+
+    wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
+
+    wide.to_csv("../../2.3_Outputs_and_Results/weathertrial_static_single.csv", index=False)
+    # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)
-    df_wide = None

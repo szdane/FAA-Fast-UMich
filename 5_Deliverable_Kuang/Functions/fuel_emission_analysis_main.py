@@ -27,8 +27,8 @@ from openap.extra.aero import fpm, ft, kts
 from pathlib import Path
 
 # input custom helper functions
-from functions import computation, plot
-from functions.trajectory import Cruise_with_Multi_Waypoints
+from Functions import fuel_emission_analysis_computation, fuel_emission_analysis_plot
+from Functions.fuel_emission_analysis_trajectory import Cruise_with_Multi_Waypoints
 
 # input plotting functions
 from shapely.geometry import Polygon, Point
@@ -74,7 +74,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
    
     # 1.5 Input Yuwei's csv and find selected flights (ref: https://openap.dev/fuel_emission.html) (coord1, coord2 = lat, lon)
     # i) first dataframe containing data for all the time for all the flights
-    df_csv = pd.read_csv(str(script_dir / "filtered_rows.csv"),
+    df_csv = pd.read_csv(str(script_dir.parent / "Input" / "filtered_rows.csv"),
                      usecols=lambda col: col in ["recTime", "acId", "groundSpeed", "alt", "rateOfClimb", "coord1", "coord2"],
                      dtype={"acId": str})  # Load the flight data into pandaframe df
 
@@ -97,7 +97,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         # Select the DataFrame for this aircraft from dic_by_acid
         df_hist = dic_by_acid[acId]
         # Add computed x, y, z columns
-        x_col, y_col = computation.proj_with_defined_origin(
+        x_col, y_col = fuel_emission_analysis_computation.proj_with_defined_origin(
             df_hist["coord1"], df_hist["coord2"], dtw_lat, dtw_lon
         )
         df_hist['x'] = x_col
@@ -164,7 +164,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
     selected_fix_lon_list = [lon for lat, lon in selected_fix_coords]
     
     # lat, lon, x, y of selected star fixes with dtw at origin
-    selected_fix_x_list, selected_fix_y_list = computation.proj_with_defined_origin(selected_fix_lat_list, selected_fix_lon_list, dtw_lat, dtw_lon)
+    selected_fix_x_list, selected_fix_y_list = fuel_emission_analysis_computation.proj_with_defined_origin(selected_fix_lat_list, selected_fix_lon_list, dtw_lat, dtw_lon)
     selected_fix_df = pd.DataFrame({
         "lat": selected_fix_lat_list,
         "lon": selected_fix_lon_list,
@@ -184,7 +184,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
     x_raw, y_raw = preTRACON_circle_latlon.exterior.xy  # x = lon, y = lat
     lat_array = np.array(x_raw)
     lon_array = np.array(y_raw)
-    preTRACON_circle_x, preTRACON_circle_y = computation.proj_with_defined_origin(lat_array, lon_array, dtw_lat, dtw_lon)
+    preTRACON_circle_x, preTRACON_circle_y = fuel_emission_analysis_computation.proj_with_defined_origin(lat_array, lon_array, dtw_lat, dtw_lon)
     preTRACON_circle_xy = Polygon(zip(preTRACON_circle_x, preTRACON_circle_y))
 
     # 2.4 Find Trajectory Intersection
@@ -196,14 +196,14 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         df_hist_flight = dic_hist_flights[acId]
 
         # Pre-TRACON entry intersection
-        entry_xy,  entry_idx = computation.find_trajectory_intersection(df_hist_flight, preTRACON_circle_xy)
-        entry_lat, entry_lon = computation.proj_with_defined_origin(entry_xy[0], entry_xy[1], dtw_lat, dtw_lon, inverse=True)
-        entry_row = computation.interpolate_row_from_xy(df_hist_flight, entry_xy[0], entry_xy[1])
+        entry_xy,  entry_idx = fuel_emission_analysis_computation.find_trajectory_intersection(df_hist_flight, preTRACON_circle_xy)
+        entry_lat, entry_lon = fuel_emission_analysis_computation.proj_with_defined_origin(entry_xy[0], entry_xy[1], dtw_lat, dtw_lon, inverse=True)
+        entry_row = fuel_emission_analysis_computation.interpolate_row_from_xy(df_hist_flight, entry_xy[0], entry_xy[1])
 
         # Pre-TRACON exit intersection
-        exit_xy, exit_idx = computation.find_trajectory_intersection(df_hist_flight, TRACON_polygon)
-        exit_lat, exit_lon = computation.proj_with_defined_origin(exit_xy[0], exit_xy[1], dtw_lat, dtw_lon, inverse=True)
-        exit_row = computation.interpolate_row_from_xy(df_hist_flight, exit_xy[0], exit_xy[1])
+        exit_xy, exit_idx = fuel_emission_analysis_computation.find_trajectory_intersection(df_hist_flight, TRACON_polygon)
+        exit_lat, exit_lon = fuel_emission_analysis_computation.proj_with_defined_origin(exit_xy[0], exit_xy[1], dtw_lat, dtw_lon, inverse=True)
+        exit_row = fuel_emission_analysis_computation.interpolate_row_from_xy(df_hist_flight, exit_xy[0], exit_xy[1])
 
         # Extract the segment of trajectory within pre-TRACON
         df_segment = df_hist_flight[
@@ -234,7 +234,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         df_pre = dic_hist_flights_preTracon[acId]
 
         # Compute fuel and emissions for this segment
-        df_pre_update = computation.compute_fuel_and_emission(df_pre, acType, m0)
+        df_pre_update = fuel_emission_analysis_computation.compute_fuel_and_emission(df_pre, acType, m0)
 
         # Cover the previous df in the dictionary
         dic_hist_flights_preTracon[acId] = df_pre_update
@@ -270,7 +270,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         middle_waypoints = df_wp.iloc[1:-1][["lat", "lon", "alt_ft", "t"]].values.tolist()
 
         # 4.3 Data cleaning by reducing number of waypoints
-        middle_waypoints_cleaned = computation.waypoint_cleaning(
+        middle_waypoints_cleaned = fuel_emission_analysis_computation.waypoint_cleaning(
             origin, middle_waypoints, destination,
             lat0=dtw_lat, lon0=dtw_lon, threshold_deg=10
         )
@@ -315,7 +315,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         })
 
         # Compute x,y,z
-        x_opt, y_opt = computation.proj_with_defined_origin(
+        x_opt, y_opt = fuel_emission_analysis_computation.proj_with_defined_origin(
             df_opt["coord1"], df_opt["coord2"], dtw_lat, dtw_lon
         )
         df_opt["x"] = x_opt
@@ -323,7 +323,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         df_opt["z"] = df_opt["alt"] * ft
 
         # 4.5 Estimate fuel and emissions
-        df_opt = computation.compute_fuel_and_emission(df_opt, acType, m0)
+        df_opt = fuel_emission_analysis_computation.compute_fuel_and_emission(df_opt, acType, m0)
 
         # 4.6 Save to dictionary
         dic_opt_flights_preTracon[acId] = df_opt
@@ -352,20 +352,20 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         print(dic_opt_flights_preTracon[acId])
 
     # 5.2 Plot Historic trajectory
-    plot.plot_2d_trajectories(dic=dic_hist_flights, labels=[f"Historic Trajectory for \n {ac['acId']}" for ac in aircraft_list], colors=["#E42320", "#6A8EC9", "#B46DA9"], plot_trajectory_endpoints=False,
+    fuel_emission_analysis_plot.plot_2d_trajectories(dic=dic_hist_flights, labels=[f"Historic Trajectory for \n {ac['acId']}" for ac in aircraft_list], colors=["#E42320", "#6A8EC9", "#B46DA9"], plot_trajectory_endpoints=False,
                             tracon_polygon=(TRACON_polygon_x, TRACON_polygon_y), tracon_label="TRACON", preTracon_circle=(preTRACON_circle_x, preTRACON_circle_y),  preTracon_label="Pre-TRACON",
                             plot_waypoints=False, waypoints=None, waypoints_tolerance=None, plot_waypoint_tol_zone=False,
                             lat0=dtw_lat, lon0=dtw_lon, plot_lat_lon_grid=True,
                             title="2D Historic Flight Trajectories")
 
     # 5.2 plot original & cleaned waypoints
-    plot.plot_2d_trajectories(dic=None, labels=None, colors=None, plot_trajectory_endpoints=False, 
+    fuel_emission_analysis_plot.plot_2d_trajectories(dic=None, labels=None, colors=None, plot_trajectory_endpoints=False, 
                             tracon_polygon=(TRACON_polygon_x, TRACON_polygon_y), tracon_label="TRACON", preTracon_circle=(preTRACON_circle_x, preTRACON_circle_y),  preTracon_label="Pre-TRACON",
                             plot_waypoints=True, waypoints=dic_waypoints, waypoints_tolerance=3000, plot_waypoint_tol_zone=False,
                             lat0=dtw_lat, lon0=dtw_lon, plot_lat_lon_grid=False,
                             title="Optimal Waypoints")
     
-    plot.plot_2d_trajectories(dic=None, labels=None, colors=None, plot_trajectory_endpoints=False, 
+    fuel_emission_analysis_plot.plot_2d_trajectories(dic=None, labels=None, colors=None, plot_trajectory_endpoints=False, 
                             tracon_polygon=(TRACON_polygon_x, TRACON_polygon_y), tracon_label="TRACON", preTracon_circle=(preTRACON_circle_x, preTRACON_circle_y),  preTracon_label="Pre-TRACON",
                             plot_waypoints=True, waypoints=dic_waypoints_cleaned, waypoints_tolerance=3000, plot_waypoint_tol_zone=False,
                             lat0=dtw_lat, lon0=dtw_lon, plot_lat_lon_grid=False,
@@ -378,7 +378,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
     for acId, df_opt in dic_opt_flights_preTracon.items():
         combined_dic[f"{acId}_optimized"] = df_opt
     #print(combined_dic)
-    plot.plot_2d_trajectories(
+    fuel_emission_analysis_plot.plot_2d_trajectories(
         dic=combined_dic, labels=[f"Historic {ac['acId']}" for ac in aircraft_list] + [f"Optimized {ac['acId']}" for ac in aircraft_list],
         colors=["#E42320", "#6A8EC9", "#E42320", "#6A8EC9"], plot_trajectory_endpoints=False,
         tracon_polygon=(TRACON_polygon_x, TRACON_polygon_y), tracon_label="TRACON", preTracon_circle=(preTRACON_circle_x, preTRACON_circle_y), preTracon_label="Pre-TRACON",
@@ -393,7 +393,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         combined_dic[f"{acId}_historic"] = df_hist
     for acId, df_opt in dic_opt_flights_preTracon.items():
         combined_dic[f"{acId}_optimized"] = df_opt
-    plot.plot_3d_trajectories(dic=combined_dic, labels=[f"Historic {ac['acId']}" for ac in aircraft_list] + [f"Optimized {ac['acId']}" for ac in aircraft_list], colors=["#E42320", "#6A8EC9", "#E42320", "#6A8EC9"],
+    fuel_emission_analysis_plot.plot_3d_trajectories(dic=combined_dic, labels=[f"Historic {ac['acId']}" for ac in aircraft_list] + [f"Optimized {ac['acId']}" for ac in aircraft_list], colors=["#E42320", "#6A8EC9", "#E42320", "#6A8EC9"],
                             waypoints=dic_waypoints_cleaned,
                             lat0=dtw_lat, lon0=dtw_lon,
                             title="3D Historic & Optimized Routes")
@@ -410,7 +410,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         color = color_list[idx % len(color_list)]
 
         # i) Fuel Flow and Usage
-        plot.plot_fuel_flow_and_usage(
+        fuel_emission_analysis_plot.plot_fuel_flow_and_usage(
             df1=df_hist, df2=df_opt,
             color1=color, color2=color,
             linestyle1='--', linestyle2='-',
@@ -420,7 +420,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None):
         )
 
         # ii) NOx Flow and Emission
-        plot.plot_NOx_flow_and_emission(
+        fuel_emission_analysis_plot.plot_NOx_flow_and_emission(
             df1=df_hist, df2=df_opt,
             color1=color, color2=color,
             linestyle1='--', linestyle2='-',

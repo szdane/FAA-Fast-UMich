@@ -8,7 +8,7 @@ from matplotlib.widgets import Button
 import numpy as np
 import pandas as pd
 
-from functions import computation
+from Functions import fuel_emission_analysis_computation
 
 def init_plot_style():  # Define global plot formatting
     matplotlib.rc("font", size=11)
@@ -135,14 +135,14 @@ def plot_2d_trajectories(
         for lat in lat_lines:
             lons = np.linspace(lon_lines.min(), lon_lines.max(), 200)
             lats = np.full_like(lons, lat)
-            x, y = computation.proj_with_defined_origin(lats, lons, lat0, lon0)
+            x, y = fuel_emission_analysis_computation.proj_with_defined_origin(lats, lons, lat0, lon0)
             ax.plot(x / 1000, y / 1000, color='gray', linestyle=':', linewidth=0.8, alpha=0.4)
             ax.text(x[0] / 1000, y[0] / 1000, f"{lat:.1f}°", va="center", ha="right", fontsize=7, color="#848484")
 
         for lon in lon_lines:
             lats = np.linspace(lat_lines.min(), lat_lines.max(), 200)
             lons = np.full_like(lats, lon)
-            x, y = computation.proj_with_defined_origin(lats, lons, lat0, lon0)
+            x, y = fuel_emission_analysis_computation.proj_with_defined_origin(lats, lons, lat0, lon0)
             ax.plot(x / 1000, y / 1000, color='gray', linestyle=':', linewidth=0.8, alpha=0.4)
             ax.text(x[-1] / 1000, y[-1] / 1000, f"{lon:.1f}°", va="bottom", ha="center", fontsize=7, color="#848484")
 
@@ -151,21 +151,21 @@ def plot_2d_trajectories(
         for acId, df_wp in waypoints.items():
             waypoint_lat = df_wp["lat"].tolist()
             waypoint_lon = df_wp["lon"].tolist()
-            x_wp, y_wp = computation.proj_with_defined_origin(waypoint_lat, waypoint_lon, lat0, lon0)
+            x_wp, y_wp = fuel_emission_analysis_computation.proj_with_defined_origin(waypoint_lat, waypoint_lon, lat0, lon0)
             ax.scatter(x_wp / 1000, y_wp / 1000,
                        color="black", marker='x', s=40, linewidth=1,
                        label=f"Waypoints ({acId})", zorder=6)
             
         if plot_waypoint_tol_zone == True:
             for lat, lon, alt, t in waypoints:
-                x_wp, y_wp = computation.proj_with_defined_origin(lat, lon, lat0, lon0)
+                x_wp, y_wp = fuel_emission_analysis_computation.proj_with_defined_origin(lat, lon, lat0, lon0)
                 ax.add_patch(plt.Circle((x_wp / 1000, y_wp / 1000), waypoints_tolerance / 1000, fill=False, color='black', linestyle=':', label='Waypoint Constraint Zone'))
 
         label_plotted = False  # this block is to ensure only one label in legend
         for acId, df_wp in waypoints.items():
             for _, row in df_wp.iterrows():
                 lat, lon, alt, t = row["lat"], row["lon"], row["alt_ft"], row["t"]
-                x_wp, y_wp = computation.proj_with_defined_origin(lat, lon, lat0, lon0)
+                x_wp, y_wp = fuel_emission_analysis_computation.proj_with_defined_origin(lat, lon, lat0, lon0)
                 circle = plt.Circle((x_wp / 1000, y_wp / 1000), waypoints_tolerance / 1000, fill=True, linewidth = 1.5, color='#F5A216', zorder=5.5) #, linestyle=':')
                 if not label_plotted:
                     circle.set_label("Waypoint Constraint Zone")
@@ -225,7 +225,7 @@ def plot_3d_trajectories(
             lat_list = wps["lat"].tolist()
             lon_list = wps["lon"].tolist()
             alt_list = wps["alt_ft"].tolist()
-            x_wp, y_wp = computation.proj_with_defined_origin(lat_list, lon_list, lat0, lon0)
+            x_wp, y_wp = fuel_emission_analysis_computation.proj_with_defined_origin(lat_list, lon_list, lat0, lon0)
             
             color = colors[idx % len(colors)]
             ax.scatter(np.array(x_wp) / 1000, np.array(y_wp) / 1000, alt_list,
