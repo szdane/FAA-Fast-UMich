@@ -4,12 +4,12 @@ import pandas as pd
 from main_ver4_gurobi_debug import *
 import math
 
-DT = 60.0
+DT = 60.0*5
 FT2NM             = 1 / 6076.12
 
 BIG_M             = 1e5
-V_MAX_X  = 0.25/60    # grid units per s
-V_MAX_Y  = 0.072/60    
+V_MAX_X  = 0.14/60    # grid units per s
+V_MAX_Y  = 0.072/60 
 # V_MAX_X = 250
 # V_MAX_Y = 250
 V_MAX_Z  = 1000/60
@@ -54,7 +54,7 @@ k = 0.045      # induced drag factor
 
 
 try:
-    flights_df = pd.read_csv("entry_exit_points.csv")[12:13]
+    flights_df = pd.read_csv("../2.1.1_Input_Data/entry_exit_points.csv")[12:13]
     flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
     flights_df = flights_df
     print(flights_df)
@@ -90,17 +90,17 @@ except Exception as e:
 
 WEATHER_STEP_SEC = 300  # 5 minutes
 
-weather_files = [
-    "infeasible_regions_fake_frames/infeasible_regions_t00min.csv",
-    "infeasible_regions_fake_frames/infeasible_regions_t05min.csv",
-    "infeasible_regions_fake_frames/infeasible_regions_t10min.csv",
-    "infeasible_regions_fake_frames/infeasible_regions_t15min.csv",
-    "infeasible_regions_fake_frames/infeasible_regions_t20min.csv",
-    "infeasible_regions_fake_frames/infeasible_regions_t25min.csv",
-    "infeasible_regions_fake_frames/infeasible_regions_t30min.csv",
-]
+# weather_files = [
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t00min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t05min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t10min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t15min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t20min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t25min.csv",
+#     "../2.1._Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t30min.csv",
+# ]
 
-weather_files = ["infeasible_regions.csv"]
+weather_files = ["../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t00min.csv"]
 weather_dfs = []
 for fp in weather_files:
     try:
@@ -114,7 +114,7 @@ for fp in weather_files:
 
 # If nothing loaded, use empty list
 if len(weather_dfs) == 0:
-    print("No weather frames loaded; skipping weather constraints.")
+    print("No weather east loaded; skipping weather constraints.")
 
 
 
@@ -209,7 +209,7 @@ for j in range(n):
 
 is_end = [[m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}') for k in range(N)] for i in range(n)]
 
-landed = [[m.addVar(vtype=GRB.BINARY, name=f'landed_{i}_{k}') for k in range(N)] for i in range(n)]
+# is_end = [[m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}') for k in range(N)] for i in range(n)]
 
 
 if len(weather_dfs) > 0:
@@ -282,10 +282,10 @@ for i in range(n):
         m.addGenConstrIndicator(pos, 0, diffz1, GRB.LESS_EQUAL,     0.0, name=f"pos_is_zero_{i}_{k}")
         m.addConstr(uz[i][k-1] == abs_(diffz1)) 
 
-        is_end = m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}')
-        m.addConstr((is_end == 1) >> (x[i][k] == x[i][N-1]))
-        m.addConstr((is_end == 1) >> (y[i][k] == y[i][N-1]))
-        m.addConstr((is_end == 1) >> (z[i][k] == z[i][N-1]))
+        # is_end = m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}')
+        m.addConstr((is_end[i][k] == 1) >> (x[i][k] == x[i][N-1]))
+        m.addConstr((is_end[i][k] == 1) >> (y[i][k] == y[i][N-1]))
+        m.addConstr((is_end[i][k] == 1) >> (z[i][k] == z[i][N-1]))
 
 
         # Fuel usage with gliding effect
@@ -313,13 +313,13 @@ for i in range(n):
 
         t = m.addVar(name="t")
 
-        m.addGenConstrIndicator(is_end, 0, t == compute_fuel_emission_flow(speed, z[i][k], diffz1, 0.8*mtow, S, cd0, k, tsfc, m, limit=True, cal_emission=False, mode="full"))   # active branch
-        m.addGenConstrIndicator(is_end, 1, t == 0)
+        m.addGenConstrIndicator(is_end[i][k], 0, t == compute_fuel_emission_flow(speed, z[i][k], diffz1, 0.8*mtow, S, cd0, k, tsfc, m, limit=True, cal_emission=False, mode="full"))   # active branch
+        m.addGenConstrIndicator(is_end[i][k], 1, t == 0)
         # obj += (ux[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += (uy[i][k-1]-uz[i][k-1]*FT2NM*(1/18)*(1-pos))
         # obj += uz[i][k-1]*FT2NM*pos
         obj += t
-        obj += (CT/CF)*(1-is_end)
+        obj += (CT/CF)*(1-is_end[i][k])
 
 
 for k in range(N):
@@ -338,12 +338,12 @@ for k in range(N):
                 # m.addConstr(y[j][k] - y[i][k] >=  SEP_HOR_NM - BIG_M*(1 - bin_vars[4]))
                 # m.addConstr(z[j][k] - z[i][k] >=  SEP_VERT_FT - BIG_M*(1 - bin_vars[5]))
 
-                m.addConstr(x[i][k] - x[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[0]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])
-                m.addConstr(y[i][k] - y[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[1]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])
-                m.addConstr(z[i][k] - z[j][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[2]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])
-                m.addConstr(x[j][k] - x[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[3]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])
-                m.addConstr(y[j][k] - y[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[4]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])
-                m.addConstr(z[j][k] - z[i][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[5]) - BIG_M*landed[i][k] - BIG_M*landed[j][k])
+                m.addConstr(x[i][k] - x[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[0]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(y[i][k] - y[j][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[1]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(z[i][k] - z[j][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[2]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(x[j][k] - x[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[3]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(y[j][k] - y[i][k] >= SEP_HOR_NM - BIG_M*(1 - bin_vars[4]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
+                m.addConstr(z[j][k] - z[i][k] >= SEP_VERT_FT - BIG_M*(1 - bin_vars[5]) - BIG_M*is_end[i][k] - BIG_M*is_end[j][k])
 
 
 
@@ -366,7 +366,7 @@ if m.status == GRB.OPTIMAL:
     df = pd.DataFrame(data)
 
     df["root"] = df["var"].str.extract(r"^([^\[]+)", expand=False)        
-    df["t"]  = (df["var"].str.extract(r"\[(\d+)\]",  expand=False).astype(int))*60
+    df["t"]  = (df["var"].str.extract(r"\[(\d+)\]",  expand=False).astype(int))*DT
 
     wide = (df.pivot(index="t", columns="root", values="value")
               .sort_index()
@@ -378,7 +378,7 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("res/weathertrialstatic.csv", index=False)
+    wide.to_csv("../../2.3_Outputs_and_Results/weathertrial_static_single.csv", index=False)
     # print("Results saved to staggered_entry_10.csv")
 else:
     print("Optimization was not successful. Status code:", m.status)
