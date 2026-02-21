@@ -1,9 +1,5 @@
 # FAA-Fast-UMich
 
-**Hi Max and JB! To run the project (MILP + Fuel Estimation):**
-* **step 1: download filtered_rows.csv from Slack Channel, and put it in 5_Deliverable_Kuang/Input**
-* **step 2: run 5_Deliverable_Kuang/main.py**
-
 To run the MILP:
     python -m pip install -r requirements.txt
     cd 2_MILP_Serra/2.1_MILP/2.1.2_MILP
