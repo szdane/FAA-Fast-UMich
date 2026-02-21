@@ -116,7 +116,7 @@ print(f"Weather data loaded...")
 
 ## 1.5. Determine time steps
 max_time = flights['rel_landing_time'].max() 
-# Set the end of the time grid to the latest landing time across all flights, or to a fixed value (e.g., 2100 seconds) if the max landing time is too short for testing purposes.
+# Set the end of the time grid to the latest exit time across all flights, or to a fixed value (e.g., 2100 seconds = 35 min) if the max exit time is too short for testing purposes.
 if max_time > 2100:
     t0 = 0
     tN = max_time
@@ -199,7 +199,7 @@ for i in range(N_flights):
         m.addConstr(diffy[i, k] == y[i][k] - y[i][k-1])
         m.addConstr(diffz[i, k] == z[i][k] - z[i][k-1])
 
-        # Absolute steps (your existing "controls")
+        # Absolute steps
         m.addConstr(ux[i][k-1] == abs_(diffx[i, k]))
         m.addConstr(uy[i][k-1] == abs_(diffy[i, k]))
         m.addConstr(uz[i][k-1] == abs_(diffz[i, k]))
@@ -218,13 +218,13 @@ for i in range(N_flights):
         )
         m.addGenConstrIndicator(is_end[i, k], 1, tfuel[i, k] == 0)
 
-        # NEW (minimal but important): better-scaled time + smoothness
+        # cost for altitude smoothness
         active = 1 - is_end[i, k]
         obj += CF * tfuel[i, k]
-        obj += CT * DT * active
+        obj += CT * DT * active 
         obj += CSMOOTH * (ux[i][k-1] + uy[i][k-1] + ALPHA_Z * uz[i][k-1])
 
-# Set objective ONCE (this was a real bug/issue in your original structure)
+# Set objective
 m.setObjective(obj, GRB.MINIMIZE)
 print("Objective function created...")
 
@@ -310,7 +310,7 @@ if len(weather_dfs) > 0:
                             name=f"w_above_{i}_{k}_{frame_idx}_{r}")
 print("Weather constraints created...")
 
-# vi) define safety seperation constraints
+# vi) defin consne safety seperatiotraints
 for k in range(N_steps):
     for i in range(N_flights-1):
         for j in range(i+1,N_flights): # Loop over every pair of aircraft (i, j), without repeating pairs
@@ -381,7 +381,7 @@ if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optim
     aircraft_list = []
     for idx in range(N_flights):
         acId = flights.iloc[idx]['acId']
-        # Default to B737 if acType not available - you can modify this mapping as needed
+        # Default to B737 if acType not available
         acType = "B737"  # TODO: Add acType to flights dataframe if needed
         aircraft_list.append({"acId": acId, "acType": acType})
     
