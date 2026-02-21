@@ -30,8 +30,8 @@ DT = 480.0                                  # Time step seconds
 # Cost parameters
 CT = 1                                     # Time cost weight
 CF = 1.5                                   # Fuel cost weight
-CSMOOTH = 0.05                                   # NEW: smoothness weight (minimal change, tune if needed)
-ALPHA_Z = 0.25                                   # NEW: relative penalty on vertical changes
+CSMOOTH = 0.05                                   # smoothness weight
+ALPHA_Z = 0.25                                   # relative penalty on vertical changes
 
 # Constraint parameters
 BIG_M             = 1e5                    # Disjunction constant
