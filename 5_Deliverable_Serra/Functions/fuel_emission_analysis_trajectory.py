@@ -1,6 +1,6 @@
-###################################
+### ### ### ### ### ### ### ### ### ### ### ##
 # modified from OpenAP.top.cruise #
-###################################
+### ### ### ### ### ### ### ### ### ### ### ##
 #.conda/Lib/site-packeges/openap/top/cruise
 
 import warnings
@@ -24,10 +24,10 @@ class Cruise_with_Multi_Waypoints(Base):
         self.fix_alt = False
         self.fix_track = False
 
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         self.allow_descent = True #False
         # enabling descent at pre-TRACON region
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
     def fix_mach_number(self):
@@ -49,22 +49,22 @@ class Cruise_with_Multi_Waypoints(Base):
         xp_0, yp_0 = self.proj(self.lon1, self.lat1)
         xp_f, yp_f = self.proj(self.lon2, self.lat2)
 
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         z_0 = self.alt1 * ft
         z_f = self.alt2 * ft
         self.z_0 = z_0
         self.z_f = z_f
         # convert altitude from ft to meters
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         x_min = min(xp_0, xp_f) - 10000
         x_max = max(xp_0, xp_f) + 10000
         y_min = min(yp_0, yp_f) - 300000 #10000
         y_max = max(yp_0, yp_f) + 300000 #10000
         # increase playground size to let generated optimized trajectory not be restricted by bouaries of small 
         # optimization playground
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
         ts_min = 0
@@ -100,7 +100,7 @@ class Cruise_with_Multi_Waypoints(Base):
         self.u_lb = [0.5, -500 * fpm, psi - pi / 2]
         self.u_ub = [self.mach_max, 500 * fpm, psi + pi / 2]
 
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # Initial guess - states
         middle_waypoints = kwargs.get("middle_waypoints", [])
         full_waypoints = [self.origin] + middle_waypoints + [self.destination]
@@ -111,7 +111,7 @@ class Cruise_with_Multi_Waypoints(Base):
         #print(full_waypoints)
         #full_waypoints = [(self.lat1, self.lon1, self.alt1, )] + middle_waypoints + [(self.lat2, self.lon2, self.alt2)]
         #self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
         # Initial guess - controls
         self.u_guess = [0.7, 0, psi]
@@ -139,14 +139,14 @@ class Cruise_with_Multi_Waypoints(Base):
         """
 
 
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # Parse optional middle waypoint
         middle_waypoints = kwargs.get("middle_waypoints", [])  # list of tuples [(lat1, lon1, alt1), (lat2, lon2, alt2), ...]
         middle_radius = kwargs.get("middle_radius", 10_000)
         margin_alt = kwargs.get("middle_alt_margin", 10 * ft) # altitude tolerance # kwargs are defined in the brackets in function(...)
         # Add middle waipoint into to keyword arguments (kwargs) dictionary, so that optimizer can find middle 
         # point information from the kwargs dictionar later
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
         # Initialize conditions
@@ -272,7 +272,7 @@ class Cruise_with_Multi_Waypoints(Base):
         w0.append([self.range * 1000 / 200])
 
 
-        ############################################ Modified By Kuang ############################################        
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         from geopy.distance import geodesic
 
         def arc_length_along_waypoints(waypoints):
@@ -342,7 +342,7 @@ class Cruise_with_Multi_Waypoints(Base):
         #     time_penalty_weight = 1e4  # You can tune this, eg. 1e-3
         #     J += time_penalty_weight * (t_node - t_wp) ** 2
         # # assign waypoint constraint with proximity, and assign them at corresponding node in the trajectory
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
         # aircraft performane constraints
@@ -371,7 +371,7 @@ class Cruise_with_Multi_Waypoints(Base):
             lbg.append([0])
             ubg.append([ca.inf])
         
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # # ==================== Avoid TRACON Polygon Constraint ====================
         # from shapely.geometry import Polygon, Point
 
@@ -404,7 +404,7 @@ class Cruise_with_Multi_Waypoints(Base):
         #             g.append(dist_sq)
         #             lbg.append([(avoid_buffer)**2])
         #             ubg.append([ca.inf])
-        ##########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 
         # ts and dt should be consistent
         for k in range(self.nodes - 1):
@@ -425,7 +425,7 @@ class Cruise_with_Multi_Waypoints(Base):
         #     ubg.append([500 * fpm])  # to be tunned
 
 
-        ############################################ Modified By Kuang ############################################ 
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## 
         # # smooth heading change
         # for k in range(self.nodes - 1):
         #     g.append(U[k + 1][2] - U[k][2])
@@ -448,14 +448,14 @@ class Cruise_with_Multi_Waypoints(Base):
         # lbg.append([self.z_f - margin_alt])
         # ubg.append([self.z_f + margin_alt])
 
-        # # OPTIONAL: Hard constraint to prevent climbing (uncomment to enforce strict descent)
-        # # enforce_monotonic_descent = kwargs.get("enforce_monotonic_descent", True)
-        # # if enforce_monotonic_descent:
-        # #     for k in range(self.nodes - 1):
-        # #         # Force altitude to decrease or stay same: X[k+1][2] <= X[k][2]
-        # #         g.append(X[k + 1][2] - X[k][2])
-        # #         lbg.append([-ca.inf])  # Can decrease by any amount
-        # #         ubg.append([0])         # Cannot increase (max change = 0)
+        # OPTIONAL: Hard constraint to prevent climbing (uncomment to enforce strict descent)
+        enforce_monotonic_descent = kwargs.get("enforce_monotonic_descent", True)
+        if enforce_monotonic_descent:
+            for k in range(self.nodes - 1):
+                # Force altitude to decrease or stay same: X[k+1][2] <= X[k][2]
+                g.append(X[k + 1][2] - X[k][2])
+                lbg.append([-ca.inf])  # Can decrease by any amount
+                ubg.append([0])         # Cannot increase (max change = 0)
 
         # # --- Time constraint on final node ---
         # final_time = kwargs.get("final_time", None) # final_time = 1200 
@@ -466,10 +466,10 @@ class Cruise_with_Multi_Waypoints(Base):
         #     ubg.append([final_time + final_time_margin])
             
         # Added / Tunned Optimization Constraints
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
-        ############################################ Modified By Kuang ############################################ 
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## 
         # #Penalize heading rate change (optional but recommended for smoother turns)
         # penalty_weight_heading_rate = 1e-6d # small weight, tune as needed
         # for k in range(self.nodes - 1):
@@ -540,7 +540,7 @@ class Cruise_with_Multi_Waypoints(Base):
         # for k in range(1, self.nodes - 1):
         #     d2VS = U[k + 1][1] - 2 * U[k][1] + U[k - 1][1]
         #     J += w_d2vs * (d2VS ** 2)
-        ############################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
         # optional constraints
         if self.fix_mach:
@@ -578,10 +578,10 @@ class Cruise_with_Multi_Waypoints(Base):
             ubg.append([0])
 
         # Concatenate vectors
-        w = ca.vertcat(*w)
-        g = ca.vertcat(*g)
-        X = ca.horzcat(*X)
-        U = ca.horzcat(*U)
+        w = ca.vertcat(*w) # w is the vector of all decision variables (states and controls at all nodes, plus final time)
+        g = ca.vertcat(*g) # g is the vector of all constraints (dynamics, performance, waypoint, etc.)
+        X = ca.horzcat(*X) # X is the matrix of state variables at all nodes (each column corresponds to a node)
+        U = ca.horzcat(*U) # U is the matrix of control variables at all nodes (each column corresponds to a node)
         w0 = np.concatenate(w0)
         lbw = np.concatenate(lbw)
         ubw = np.concatenate(ubw)
@@ -620,8 +620,8 @@ class Cruise_with_Multi_Waypoints(Base):
         if return_failed:
             return df_copy
         
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         df.attrs["wp_node_indices"] = self.wp_node_indices #store critical nodes as global comment
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         return df
        

@@ -1,4 +1,6 @@
+import os
 import matplotlib
+matplotlib.use(os.environ.get("MPLBACKEND", "TkAgg"))
 from matplotlib import dates
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -118,9 +120,13 @@ def plot_2d_trajectories(
     ax.scatter(0, 0, color='#458A74', s=50, label='DTW', zorder=5)
 
     # Plot TRACON polygon
-    x, y = tracon_polygon
+    x, y, *_fix_named = tracon_polygon
     ax.plot(np.array(x) / 1000, np.array(y) / 1000,
             color='#018B38', linestyle='-', marker='o', markersize=4, label=tracon_label)
+    if _fix_named:
+        for fix_name, fx, fy in _fix_named[0]:
+            ax.text(fx / 1000, fy / 1000, fix_name, fontsize=7, color='#018B38',
+                    ha='left', va='bottom')
 
     # Plot Pre-TRACON circle
     x, y = preTracon_circle

@@ -1,6 +1,6 @@
-#################################
+### ### ### ### ### ### ### ### ### ### ###
 # modified from OpenAP.top.base #
-#################################
+### ### ### ### ### ### ### ### ### ### ###
 #.conda/Lib/site-packeges/openap/top/base
 
 import warnings
@@ -39,7 +39,7 @@ class Base:
             destination (Union[str, tuple]): ICAO or IATA code of airport, or tuple (lat, lon)
             m0 (float, optional): Takeoff mass factor. Defaults to 0.8 (of MTOW).
         """
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         if isinstance(origin, str):
             ap1 = openap.nav.airport(origin)
             self.lat1, self.lon1, self.alt1 = ap1["lat"], ap1["lon"], ap1["alt"]
@@ -54,7 +54,7 @@ class Base:
             self.lat2, self.lon2, self.alt2, self.t1 = destination
             self.destination = destination
         # also obtain alt1 and alt2 other than lat1, lon 1, lat2 and lon2
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         
         self.actype = actype
         self.aircraft = oc.prop.aircraft(self.actype, use_synonym=use_synonym)
@@ -96,10 +96,10 @@ class Base:
 
         self.debug = False
         
-        ############################################ Modified By Kuang ############################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         self.wp_node_indices = {}        # {wp_number: node_index}
         # record the critical waypoitns that are constrained during optimization
-        ###########################################################################################################
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
         self.setup()
 
@@ -134,7 +134,7 @@ class Base:
             return lon, lat
 
     # change initial guess duration and include waypoints in initial guess
-    ############################################ Modified By Kuang ############################################
+    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
     def initial_guess_through_waypoints(self, waypoints: list):
         """
         Create an initial guess trajectory that goes through the waypoints (in meters).
@@ -180,7 +180,7 @@ class Base:
 
         return np.vstack([xp_list, yp_list, h_list, m_guess, ts_guess]).T
 
-    ###########################################################################################################
+    ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
     
     def initial_guess(self, flight: pd.DataFrame = None): # not used any more
         m_guess = self.mass_init * np.ones(self.nodes + 1)
@@ -619,7 +619,7 @@ class Base:
 
         df = df.assign(fuel=fuel.round(2), mass=mass.round())
         
-        # ############################################ Modified By Kuang ############################################
+        # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # fuel_flow = fuelflow.enroute(mass, tas, alt, vertrate) # Fuel flow per step (kg/s)
         # fuel = self.dt * fuelflow.enroute(mass, tas, alt, vertrate) # Fuel used per step (kg)
         # fuel_used = fuel.cumsum() #Overall fuel used
@@ -627,7 +627,7 @@ class Base:
         # # record fuel_flow and fuel_used furing the process for plotting
 
         # df = df.assign(fuel_flow=fuel_flow.round(4), fuel_used=fuel_used.round(2), mass=mass.round())
-        # ###########################################################################################################
+        # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
         return df
