@@ -23,7 +23,7 @@ def compute_gamma(vs, tas, limit=True):
     
     # 1. calculate gamma
     # coding logic from openap.drag._cl
-    gamma = arctan2(vs, tas)
+    gamma = np.arctan2(vs, tas)
     # def f(u):  return math.atan(u)
     # lbx = -2
     # ubx =  2    
