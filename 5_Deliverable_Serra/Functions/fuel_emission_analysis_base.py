@@ -30,6 +30,7 @@ class Base:
         destination: Union[str, tuple],
         m0: float = 0.8,
         use_synonym=False,
+        wave_drag=False,
     ):
         """OpenAP trajectory optimizer.
 
@@ -68,12 +69,13 @@ class Base:
         self.mach_max = self.aircraft["mmo"]
 
         self.use_synonym = use_synonym
+        self.wave_drag = wave_drag  # True/False toggle for wave drag model
 
         self.thrust = oc.Thrust(actype, use_synonym=self.use_synonym)
         self.wrap = openap.WRAP(actype, use_synonym=self.use_synonym)
-        self.drag = oc.Drag(actype, wave_drag=True, use_synonym=self.use_synonym)
+        self.drag = oc.Drag(actype, wave_drag=self.wave_drag, use_synonym=self.use_synonym)
         self.fuelflow = oc.FuelFlow(
-            actype, wave_drag=True, use_synonym=self.use_synonym
+            actype, wave_drag=self.wave_drag, use_synonym=self.use_synonym
         )
         self.emission = oc.Emission(actype, use_synonym=self.use_synonym)
 
@@ -218,7 +220,7 @@ class Base:
         self.fuelflow = oc.FuelFlow(
             self.actype,
             engtype,
-            wave_drag=True,
+            wave_drag=self.wave_drag,
             use_synonym=self.use_synonym,
             force_engine=True,
         )
@@ -354,6 +356,13 @@ class Base:
             self.objective = self.obj_ci
         else:
             self.objective = getattr(self, f"obj_{objective}")
+        # Example:
+        # objective = "fuel"
+        # f"obj_{objective}"  →  "obj_fuel"
+        # getattr(self, "obj_fuel")  →  self.obj_fuel
+        # objective = "gwp100"
+        # f"obj_{objective}"  →  "obj_gwp100"
+        # getattr(self, "obj_gwp100")  →  self.obj_gwp100
 
         L = self.objective(self.x, self.u, self.dt, **kwargs)
 

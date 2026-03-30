@@ -104,8 +104,8 @@ class Cruise_with_Multi_Waypoints(Base):
         # Initial guess - states
         middle_waypoints = kwargs.get("middle_waypoints", [])
         full_waypoints = [self.origin] + middle_waypoints + [self.destination]
-        #self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
-        self.x_guess = self.initial_guess()
+        self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
+        # self.x_guess = self.initial_guess()
         # middle_waypoints = kwargs.get("middle_waypoints", [])
         # full_waypoints = [self.origin] + middle_waypoints + [self.destination]
         #print(full_waypoints)
@@ -239,12 +239,9 @@ class Cruise_with_Multi_Waypoints(Base):
                 # Add contribution to the end state
                 Xk_end = Xk_end + D[j] * Xc[j - 1]
 
-### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
-                # Add contribution to quadrature function — disabled; using smoothness objective
+                # Add contribution to quadrature function
                 # J = J + B[j] * qj * dt
-                # J = J + B[j] * qj
-### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
-
+                J = J + B[j] * qj
 
             # New NLP variable for state at end of interval
             Xk = ca.MX.sym("X_" + str(k + 1), nstates)
@@ -273,18 +270,6 @@ class Cruise_with_Multi_Waypoints(Base):
         lbw.append([0])
         ubw.append([ca.inf])
         w0.append([self.range * 1000 / 200])
-
-### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
-        # # Smooth trajectory objective: penalize squared control changes between nodes
-        # # Controls: U[k] = [mach (-), vertical_rate (m/s), heading (rad)]
-        W_MACH = 100.0   # Mach number smoothness weight
-        W_VS   = 1.0     # vertical rate smoothness weight
-        W_PSI  = 50.0    # heading smoothness weight
-        for k in range(self.nodes - 1):
-            J += W_MACH * (U[k + 1][0] - U[k][0]) ** 2
-            J += W_VS   * (U[k + 1][1] - U[k][1]) ** 2
-            J += W_PSI  * (U[k + 1][2] - U[k][2]) ** 2
-### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
@@ -323,19 +308,19 @@ class Cruise_with_Multi_Waypoints(Base):
             x_wp, y_wp = self.proj(lon_wp, lat_wp)
             alt_wp_m = alt_wp_ft * ft  # convert to meters
 
-            # Position constraints (x, y)
-            dx = X[wp_index][0] - x_wp
-            dy = X[wp_index][1] - y_wp
-            dist_squared = dx ** 2 + dy ** 2
-            g.append(dist_squared)
-            lbg.append([0])
-            ubg.append([middle_radius ** 2])
+            # # Position constraints (x, y)
+            # dx = X[wp_index][0] - x_wp
+            # dy = X[wp_index][1] - y_wp
+            # dist_squared = dx ** 2 + dy ** 2
+            # g.append(dist_squared)
+            # lbg.append([0])
+            # ubg.append([middle_radius ** 2])
 
-            # Altitude constraint (z)
-            # margin_alt = 1000 * ft  # ±1000 ft tolerance
-            g.append(X[wp_index][2])
-            lbg.append([alt_wp_m - margin_alt])
-            ubg.append([alt_wp_m + margin_alt])
+            # # Altitude constraint (z)
+            # # margin_alt = 1000 * ft  # ±1000 ft tolerance
+            # g.append(X[wp_index][2])
+            # lbg.append([alt_wp_m - margin_alt])
+            # ubg.append([alt_wp_m + margin_alt])
 
             # Altitude constraint on initial node
             g.append(X[0][2])
@@ -352,7 +337,11 @@ class Cruise_with_Multi_Waypoints(Base):
             # lbg.append([t_wp - time_margin])
             # ubg.append([t_wp + time_margin])
 
-
+            # # Soft time constraint penalty
+        #     t_node = X[wp_index][4]  # time at that node
+        #     time_penalty_weight = 1e4  # You can tune this, eg. 1e-3
+        #     J += time_penalty_weight * (t_node - t_wp) ** 2
+        # # assign waypoint constraint with proximity, and assign them at corresponding node in the trajectory
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
@@ -382,6 +371,40 @@ class Cruise_with_Multi_Waypoints(Base):
             lbg.append([0])
             ubg.append([ca.inf])
         
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+        # # ==================== Avoid TRACON Polygon Constraint ====================
+        # from shapely.geometry import Polygon, Point
+
+        # tracon_polygon = kwargs.get("forbidden_region", None)
+
+        # if tracon_polygon is not None:
+        #     # Project polygon into Cartesian coordinates
+        #     poly_lon, poly_lat = tracon_polygon.exterior.xy
+        #     poly_x, poly_y = self.proj(poly_lon, poly_lat)  # Same projection as X, Y
+        #     tracon_poly_xy = Polygon(zip(poly_x, poly_y))
+
+        #     avoid_buffer = 3000  # meters away from boundary
+        #     # Create polygon edges as line segments
+        #     edges = list(zip(poly_x, poly_y, poly_x[1:] + poly_x[:1], poly_y[1:] + poly_y[:1]))
+            
+        #     for k in range(self.nodes):
+        #         xk = X[k][0]
+        #         yk = X[k][1]
+                
+        #         for x1, y1, x2, y2 in edges:
+        #             # Use cross product for signed distance from line
+        #             dx = x2 - x1
+        #             dy = y2 - y1
+        #             norm_sq = dx**2 + dy**2 + 1e-6
+        #             proj = ((xk - x1)*dx + (yk - y1)*dy) / norm_sq
+        #             proj = ca.fmin(ca.fmax(proj, 0), 1)
+        #             x_proj = x1 + proj * dx
+        #             y_proj = y1 + proj * dy
+        #             dist_sq = (xk - x_proj)**2 + (yk - y_proj)**2
+        #             g.append(dist_sq)
+        #             lbg.append([(avoid_buffer)**2])
+        #             ubg.append([ca.inf])
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 
         # ts and dt should be consistent
         for k in range(self.nodes - 1):
@@ -403,6 +426,28 @@ class Cruise_with_Multi_Waypoints(Base):
 
 
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## 
+        # # smooth heading change
+        # for k in range(self.nodes - 1):
+        #     g.append(U[k + 1][2] - U[k][2])
+        #     # lbg.append([-45 * pi / 180]) 
+        #     # ubg.append([45 * pi / 180]) # tunned smooth heading rate change
+        #     lbg.append([-15 * pi / 180])
+        #     ubg.append([15 * pi / 180]) 
+    
+        # # Altitude Constraint on first node
+        # #alt_target_first = 35000 * ft  # desired altitude in meters
+        # # margin_first = 1000 * ft # soft constraint (within a range, e.g. ±1000 ft)
+        # g.append(X[0][2]) 
+        # lbg.append([self.z_0 - margin_alt])
+        # ubg.append([self.z_0 + margin_alt])
+
+        # # Altitude constraint on final node
+        # # alt_target_final = 15000 * ft  # desired altitude in meters
+        # # margin_final = 2000 * ft # soft constraint (within a range, e.g. ±1000 ft)
+        # g.append(X[self.nodes][2])
+        # lbg.append([self.z_f - margin_alt])
+        # ubg.append([self.z_f + margin_alt])
+
         # # OPTIONAL: Hard constraint to prevent climbing (uncomment to enforce strict descent)
         # enforce_monotonic_descent = kwargs.get("enforce_monotonic_descent", True)
         # if enforce_monotonic_descent:
@@ -431,6 +476,78 @@ class Cruise_with_Multi_Waypoints(Base):
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## 
+        # #Penalize heading rate change (optional but recommended for smoother turns)
+        # penalty_weight_heading_rate = 1e-6d # small weight, tune as needed
+        # for k in range(self.nodes - 1):
+        #     dpsi = U[k + 1][2] - U[k][2]
+        #     J += penalty_weight_heading_rate * (dpsi ** 2)
+
+        # # Penalize rapid change in heading (second derivative of heading angle)
+        # penalty_weight_heading_accel = 5 #5  # tune as needed
+        # for k in range(1, self.nodes - 1):
+        #     d2psi = U[k + 1][2] - 2 * U[k][2] + U[k - 1][2]
+        #     J += penalty_weight_heading_accel * (d2psi ** 2)
+        # # NEW: Penalize position acceleration (2nd derivative of x, y) to reduce zigzag
+        # penalty_weight_position_accel = 1000  # tune as needed (higher = smoother but potentially slower)
+        # for k in range(1, self.nodes - 1):
+        #     # x acceleration
+        #     d2x = X[k + 1][0] - 2 * X[k][0] + X[k - 1][0]
+        #     J += penalty_weight_position_accel * (d2x ** 2)
+        #     # y acceleration  
+        #     d2y = X[k + 1][1] - 2 * X[k][1] + X[k - 1][1]
+        #     J += penalty_weight_position_accel * (d2y ** 2)
+        # # penalize too small vertical rate (DESCENT only - we WANT descent)
+        # min_vrate = 1000 * fpm  # ~1.52 m/s — tune as needed
+        # penalty_weight_vrate = 0.2  # Tune based on importance
+        # for k in range(self.nodes):
+        #     vrate = U[k][1]
+        #     # Only penalize if NOT descending enough (vrate should be negative for descent)
+        #     J += penalty_weight_vrate * ca.fmax(0, min_vrate + vrate) ** 2  # Changed: penalize if vrate > -min_vrate
+
+        # # FIXED: Penalize CLIMBING (positive vertical rate)
+        # penalty_weight_climb = 5000  # Large penalty for climbing
+        # for k in range(self.nodes):
+        #     vrate = U[k][1]
+        #     # Heavily penalize positive vertical rates (climbing)
+        #     J += penalty_weight_climb * ca.fmax(0, vrate) ** 2
+        
+        # # FIXED: Penalize altitude increases between nodes
+        # penalty_weight_alt_increase = 10000  # Very large penalty
+        # for k in range(self.nodes - 1):
+        #     # Penalize if next altitude is higher than current
+        #     alt_increase = X[k + 1][2] - X[k][2]
+        #     J += penalty_weight_alt_increase * ca.fmax(0, alt_increase) ** 2
+        # # Added / Tunned Optimization Penalties
+
+        # # Encourage shorter flight time (faster route)
+        # time_weight = kwargs.get("time_weight", 0.0)  # set >0 in main to prioritize speed
+        # J += time_weight * self.ts_final
+
+        # # Smooth Mach changes (1st + 2nd differences)
+        # w_dmach = kwargs.get("w_dmach", 500.0)  # increased from 200.0
+        # w_d2mach = kwargs.get("w_d2mach", 200.0)  # increased from 50.0
+
+        # for k in range(self.nodes - 1):
+        #     dM = U[k + 1][0] - U[k][0]
+        #     J += w_dmach * (dM ** 2)
+
+        # for k in range(1, self.nodes - 1):
+        #     d2M = U[k + 1][0] - 2 * U[k][0] + U[k - 1][0]
+        #     J += w_d2mach * (d2M ** 2)
+
+        # # Smooth vertical speed changes (1st + 2nd differences)
+        # w_dvs = kwargs.get("w_dvs", 200.0)  # increased from 5.0
+        # w_d2vs = kwargs.get("w_d2vs", 100.0)  # increased from 1.0
+
+        # for k in range(self.nodes - 1):
+        #     dVS = U[k + 1][1] - U[k][1]
+        #     J += w_dvs * (dVS ** 2)
+
+        # for k in range(1, self.nodes - 1):
+        #     d2VS = U[k + 1][1] - 2 * U[k][1] + U[k - 1][1]
+        #     J += w_d2vs * (d2VS ** 2)
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
         # optional constraints
         if self.fix_mach:

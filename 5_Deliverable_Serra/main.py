@@ -1,3 +1,7 @@
+# Problems to be soved:
+# 1. entry_k=0 and N_steps=N_waypoints, definition seemed unclear
+# C_smooth = alpha, alpha_z = beta
+
 from gurobipy import *
 import numpy as np
 import pandas as pd
@@ -31,6 +35,7 @@ DT = 480.0                                  # Time step seconds
 CT = 1                                     # Time cost weight
 CF = 1.5                                   # Fuel cost weight
 CSMOOTH = 0.05                                   # smoothness weight
+CACCEL  = 2.0                                    # heading-rate penalty weight (penalizes direction changes between steps)
 ALPHA_Z = 0.25                                   # relative penalty on vertical changes
 
 # Constraint parameters
@@ -130,7 +135,7 @@ flights['flight_entry_timestep'] = (flights['rel_entry_time'] / DT).astype(int) 
                                                                                 # This will be used to enforce that separation constraints and fuel costs only apply after the flight has entered the simulation.
 
 N_steps  = int((tN - t0) / DT) + 1 # N_steps is both the number of time steps and the number of optimization steps.
-print("Time steps loaded...")
+print(f"Time steps = {N_steps} loaded...")
 print()
 print("Final flight data for optimization:")
 print(flights)
@@ -181,6 +186,10 @@ for i in range(N_flights):
 diffx = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="dx") # add variable difference_x, diffx[i,k] for ith flight at time step k will be defined with x[i][k] - x[i][k-1]
 diffy = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="dy") # add variable difference_y, diffy[i,k] for ith flight at time step k will be defined with y[i][k] - y[i][k-1]
 diffz = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="dz") # add variable difference_z, diffz[i,k] for ith flight at time step k will be defined with z[i][k] - z[i][k-1]
+ddx   = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="ddx") # change in lat-step: ddx[i,k] = diffx[i,k] - diffx[i,k-1]  (heading-rate proxy)
+ddy   = m.addVars(N_flights, N_steps, lb=-GRB.INFINITY, name="ddy") # change in lon-step: ddy[i,k] = diffy[i,k] - diffy[i,k-1]
+udx   = m.addVars(N_flights, N_steps, name="udx")                    # |ddx| — absolute heading rate in lat
+udy   = m.addVars(N_flights, N_steps, name="udy")                    # |ddy| — absolute heading rate in lon
 is_end = m.addVars(N_flights, N_steps, vtype=GRB.BINARY, name="is_end")  # add binary variable to indicate whether the flight has reached its chosen STAR fix at time step k, is_end[i,k] ∈ {0,1} for ith flight at time step k
                                                            # is_end[i,k] = 1 means the flight has reached its chosen STAR fix at time step k, and is_end[i,k] = 0 means it has not reached its chosen STAR fix at time step k.
 speed = m.addVars(N_flights, N_steps, name="speed") # add variable for speed at time step k for flight i, which will be defined with sqrt(diffx[i,k]^2 + diffy[i,k]^2)
@@ -218,11 +227,22 @@ for i in range(N_flights):
         )
         m.addGenConstrIndicator(is_end[i, k], 1, tfuel[i, k] == 0)
 
-        # cost for altitude smoothness
+        # cost for path smoothness
         active = 1 - is_end[i, k]
-        obj += CF * tfuel[i, k]
-        obj += CT * DT * active 
+        # obj += CF * tfuel[i, k]
+        obj += CT * DT * active
         obj += CSMOOTH * (ux[i][k-1] + uy[i][k-1] + ALPHA_Z * uz[i][k-1])
+
+        # heading-rate penalty: penalize changes in step direction to prevent staircase/zigzag
+        if k >= entry_k + 2:
+            m.addConstr(ddx[i, k] == diffx[i, k] - diffx[i, k-1])
+            m.addConstr(ddy[i, k] == diffy[i, k] - diffy[i, k-1])
+            m.addConstr(udx[i, k] == abs_(ddx[i, k]))
+            m.addConstr(udy[i, k] == abs_(ddy[i, k]))
+            obj += CACCEL * (udx[i, k] + udy[i, k])
+
+        # if k >= entry_k + 2:
+        #     obj += CACCEL * (ddx[i, k] * ddx[i, k] + ddy[i, k] * ddy[i, k])
 
 # Set objective
 m.setObjective(obj, GRB.MINIMIZE)
@@ -253,7 +273,7 @@ for i in range(N_flights):
         m.addConstr(x[i][k] == flights.iloc[i]['entry_lat'], f"c_pre_entry_x_{i}_t{k}")
         m.addConstr(y[i][k] == flights.iloc[i]['entry_lon'], f"c_pre_entry_y_{i}_t{k}")
         m.addConstr(z[i][k] == flights.iloc[i]['entry_alt'], f"c_pre_entry_z_{i}_t{k}")
-print("Entry point constraints created...")
+    print(f"Entry point constraints created, entry_k={entry_k}...")
 
 # iii) Add STAR fix (exit point) constraints
 for j in range(N_flights):
@@ -279,36 +299,36 @@ for i in range(N_flights): # for each flight i
 print("Max speed constraints created...")
 
 # v) Add weather constraints to each flight and each time step based on the weather frames loaded into memory.
-if len(weather_dfs) > 0:
-    last_idx = len(weather_dfs) - 1
+# if len(weather_dfs) > 0:
+#     last_idx = len(weather_dfs) - 1
 
-    for i in range(N_flights): # for each flight i
-        entry_k = flights.iloc[i]['flight_entry_timestep'] # flight enters airspace at timestep k
+#     for i in range(N_flights): # for each flight i
+#         entry_k = flights.iloc[i]['flight_entry_timestep'] # flight enters airspace at timestep k
 
-        for k in range(entry_k, N_steps): # start applying weather constraints from the entry time step k to final timestep N_steps
-            t_sec = k * DT # convert time step k to actual time in seconds
-            frame_idx = int(t_sec // WEATHER_STEP_SEC) # determine which weather frame index to use based on the actual time in seconds of current time step k
-            if frame_idx > last_idx: # if the computed frame index exceeds the available weather frames, hold it at the last available frame index to avoid index out of range errors. 
-                frame_idx = last_idx # This means that after we run out of new weather frames, we will keep applying the constraints of the last weather frame for all subsequent time steps.
+#         for k in range(entry_k, N_steps): # start applying weather constraints from the entry time step k to final timestep N_steps
+#             t_sec = k * DT # convert time step k to actual time in seconds
+#             frame_idx = int(t_sec // WEATHER_STEP_SEC) # determine which weather frame index to use based on the actual time in seconds of current time step k
+#             if frame_idx > last_idx: # if the computed frame index exceeds the available weather frames, hold it at the last available frame index to avoid index out of range errors. 
+#                 frame_idx = last_idx # This means that after we run out of new weather frames, we will keep applying the constraints of the last weather frame for all subsequent time steps.
 
-            dfw = weather_dfs[frame_idx] # get the weather DataFrame for the current time step k based on the computed frame index
-            if dfw.empty:
-                continue # if there are no weather constraints for this frame, skip to the next iteration without adding any constraints to avoid errors from trying to add constraints with an empty DataFrame
+#             dfw = weather_dfs[frame_idx] # get the weather DataFrame for the current time step k based on the computed frame index
+#             if dfw.empty:
+#                 continue # if there are no weather constraints for this frame, skip to the next iteration without adding any constraints to avoid errors from trying to add constraints with an empty DataFrame
 
-            # Force the aircraft point (x[i][k], y[i][k]) to be outside the weather rectangle
-            for r, row in dfw.iterrows():
-                out = m.addVars(4, vtype=GRB.BINARY, name=f"w_out_{i}_{k}_{frame_idx}_{r}") # Binary variables to determine which side of the weather rectangle the aircraft is on: left, right, below, or above. 
-                m.addConstr(out.sum() >= 1, name=f"w_outside_{i}_{k}_{frame_idx}_{r}") # force at least one side to be chosen
+#             # Force the aircraft point (x[i][k], y[i][k]) to be outside the weather rectangle
+#             for r, row in dfw.iterrows():
+#                 out = m.addVars(4, vtype=GRB.BINARY, name=f"w_out_{i}_{k}_{frame_idx}_{r}") # Binary variables to determine which side of the weather rectangle the aircraft is on: left, right, below, or above. 
+#                 m.addConstr(out.sum() >= 1, name=f"w_outside_{i}_{k}_{frame_idx}_{r}") # force at least one side to be chosen
 
-                m.addConstr(x[i][k] <= row['min_lat'] - WEATHER_EPS_DEG + BIG_M * (1 - out[0]), # out[0] is 0 -> forces x[i][k] to be less than or equal to row['min_lat'] - WEATHER_EPS_DEG -> meaning the aircraft must be on the left side of the left boundary of the weather rectangle.
-                            name=f"w_left_{i}_{k}_{frame_idx}_{r}")
-                m.addConstr(x[i][k] >= row['max_lat'] + WEATHER_EPS_DEG - BIG_M * (1 - out[1]), # out[1] is 0 -> forces x[i][k] to be greater than or equal to row['max_lat'] + WEATHER_EPS_DEG -> meaning the aircraft must be on the right side of the right boundary of the weather rectangle.
-                            name=f"w_right_{i}_{k}_{frame_idx}_{r}")
-                m.addConstr(y[i][k] <= row['min_lon'] - WEATHER_EPS_DEG + BIG_M * (1 - out[2]), # out[2] is 0 -> forces y[i][k] to be less than or equal to row['min_lon'] - WEATHER_EPS_DEG -> meaning the aircraft must be below the bottom boundary of the weather rectangle.
-                            name=f"w_below_{i}_{k}_{frame_idx}_{r}")
-                m.addConstr(y[i][k] >= row['max_lon'] + WEATHER_EPS_DEG - BIG_M * (1 - out[3]), # out[3] is 0 -> forces y[i][k] to be greater than or equal to row['max_lon'] + WEATHER_EPS_DEG -> meaning the aircraft must be above the top boundary of the weather rectangle.
-                            name=f"w_above_{i}_{k}_{frame_idx}_{r}")
-print("Weather constraints created...")
+#                 m.addConstr(x[i][k] <= row['min_lat'] - WEATHER_EPS_DEG + BIG_M * (1 - out[0]), # out[0] is 0 -> forces x[i][k] to be less than or equal to row['min_lat'] - WEATHER_EPS_DEG -> meaning the aircraft must be on the left side of the left boundary of the weather rectangle.
+#                             name=f"w_left_{i}_{k}_{frame_idx}_{r}")
+#                 m.addConstr(x[i][k] >= row['max_lat'] + WEATHER_EPS_DEG - BIG_M * (1 - out[1]), # out[1] is 0 -> forces x[i][k] to be greater than or equal to row['max_lat'] + WEATHER_EPS_DEG -> meaning the aircraft must be on the right side of the right boundary of the weather rectangle.
+#                             name=f"w_right_{i}_{k}_{frame_idx}_{r}")
+#                 m.addConstr(y[i][k] <= row['min_lon'] - WEATHER_EPS_DEG + BIG_M * (1 - out[2]), # out[2] is 0 -> forces y[i][k] to be less than or equal to row['min_lon'] - WEATHER_EPS_DEG -> meaning the aircraft must be below the bottom boundary of the weather rectangle.
+#                             name=f"w_below_{i}_{k}_{frame_idx}_{r}")
+#                 m.addConstr(y[i][k] >= row['max_lon'] + WEATHER_EPS_DEG - BIG_M * (1 - out[3]), # out[3] is 0 -> forces y[i][k] to be greater than or equal to row['max_lon'] + WEATHER_EPS_DEG -> meaning the aircraft must be above the top boundary of the weather rectangle.
+#                             name=f"w_above_{i}_{k}_{frame_idx}_{r}")
+# print("Weather constraints created...")
 
 # vi) defin consne safety seperatiotraints
 for k in range(N_steps):
@@ -367,14 +387,31 @@ if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optim
 
     df_wide = pd.DataFrame(rows) # convert pd into a DataFrame
 
-    # Save the results to a CSV file
+    # ii) Save the results to a CSV file
     output_dir = script_dir / "Output"
     output_dir.mkdir(parents=True, exist_ok=True) # create the output directory if it doesn't exist
     output_path = output_dir / "weathertrialstatic.csv" # define the output file path for the optimized trajectories CSV file
     df_wide.to_csv(output_path, index=False) # save the optimized trajectories to a CSV file without the index column
     print(f"Results saved to {output_path}")
     print()
-    
+
+    # iii) Print waypoint table for each flight
+    for i in range(N_flights):
+        flight_id = flights.iloc[i]['acId']
+        entry_k   = int(flights.iloc[i]['flight_entry_timestep'])
+        print(f"  Waypoints for {flight_id}:")
+        print(f"  {'Step':>4}  {'Time (s)':>9}  {'Lat':>10}  {'Lon':>11}  {'Alt (ft)':>10}  {'is_end':>6}")
+        print(f"  {'-'*4}  {'-'*9}  {'-'*10}  {'-'*11}  {'-'*10}  {'-'*6}")
+        for k in range(N_steps):
+            t_sec     = k * DT
+            lat_val   = x[i][k].X
+            lon_val   = y[i][k].X
+            alt_val   = z[i][k].X
+            end_val   = int(round(is_end[i, k].X)) if k >= entry_k else 0
+            marker    = " <-- entry" if k == entry_k else (" <-- ARRIVED" if end_val == 1 and (k == 0 or int(round(is_end[i, k-1].X)) == 0) else "")
+            print(f"  {k:>4}  {t_sec:>9.1f}  {lat_val:>10.4f}  {lon_val:>11.4f}  {alt_val:>10.1f}  {end_val:>6}{marker}")
+        print()
+
     # 3.3. Analyze and visualize optimized trajectory
     print(" === ANALYZING OPTIMIZED TRAJECTORY ===")
     # Prepare aircraft list with acId and acType
