@@ -1,0 +1,140 @@
+;;; Proof full_domain_soundness_lemma_fun2-1 for formula active_corner_certificate.full_domain_soundness_lemma_fun2
+(""
+ (SKEEP)
+ (SKOLETIN 1)
+ (FLATTEN)
+ (LEMMA "full_domain_soundness_lemma")
+ (INST -1 "x" "xo" "yo" "g_1")
+ (SPLIT -1)
+ (("1" (PROPAX)) ("2" (PROPAX)) ("3" (PROPAX)) ("4" (PROPAX)) ("5" (PROPAX))
+  ("6" (PROPAX)) ("7" (PROPAX)) ("8" (PROPAX)) ("9" (PROPAX)) ("10" (PROPAX))
+  ("11" (PROPAX)) ("12" (PROPAX)) ("13" (PROPAX)) ("14" (PROPAX))
+  ("15" (PROPAX)) ("16" (PROPAX))
+  ("17"
+   (HIDE-ALL-BUT 1)
+   (EXPAND "g_1")
+   (EXPAND "restrict")
+   (DERIVABLE)
+   (("1"
+     (CASE "(LAMBDA (s: (left_open(0))):
+             COND s <= 4 -> s ^ 2, ELSE -> 8 * s - 16 ENDCOND) = (LAMBDA (s: (left_open(0))):
+              s ^ 2)")
+     (("1"
+       (REPLACE -1)
+       (HIDE -1)
+       (DERIVABLE)
+       (LEMMA "left_open_dd")
+       (INST -1 "0"))
+      ("2"
+       (DECOMPOSE-EQUALITY 1)
+       (HIDE 2)
+       (TYPEPRED "x!1")
+       (EXPAND "left_open" -1)
+       (ASSERT))))
+    ("2" (LEMMA "left_open_dd") (INST -1 "0"))))
+  ("18"
+   (HIDE-ALL-BUT 1)
+   (EXPAND "g_1")
+   (EXPAND "restrict")
+   (CASE "(LAMBDA (s: (left_open(0))):
+             COND s <= 4 -> s ^ 2, ELSE -> 8 * s - 16 ENDCOND) = (LAMBDA (s: (left_open(0))):
+              s ^ 2)")
+   (("1"
+     (REPLACE -1)
+     (HIDE -1)
+     (SKEEP)
+     (DERIV)
+     (("1" (TYPEPRED "x!1") (EXPAND "left_open" -1) (ASSERT))
+      ("2" (LEMMA "left_open_dd") (INST -1 "0"))))
+    ("2"
+     (DECOMPOSE-EQUALITY 1)
+     (HIDE 2)
+     (TYPEPRED "x!1")
+     (EXPAND "left_open" -1)
+     (ASSERT))))
+  ("19"
+   (HIDE-ALL-BUT 1)
+   (EXPAND "g_1")
+   (EXPAND "restrict")
+   (CASE "(LAMBDA (s: (ci(0, 4))):
+             COND s <= 4 -> s ^ 2, ELSE -> 8 * s - 16 ENDCOND) = (LAMBDA(s:(ci(0,4))): s^2)")
+   (("1" (REPLACE -1) (HIDE -1) (DERIVABLE))
+    ("2"
+     (DECOMPOSE-EQUALITY 1)
+     (TYPEPRED "x!1")
+     (EXPAND "ci" -1)
+     (FLATTEN)
+     (ASSERT))))
+  ("20"
+   (HIDE-ALL-BUT 1)
+   (SKEEP)
+   (EXPAND "restrict" 1)
+   (EXPAND "g_1")
+   (CASE "(LAMBDA (s: (ci(0, 4))):
+             COND s <= 4 -> s ^ 2, ELSE -> 8 * s - 16 ENDCOND) = (LAMBDA(s:(ci(0,4))): s^2)")
+   (("1"
+     (REPLACE -1)
+     (HIDE -1)
+     (DERIV)
+     (TYPEPRED "x!1")
+     (EXPAND "ci" -1)
+     (PROPAX))
+    ("2"
+     (DECOMPOSE-EQUALITY 1)
+     (TYPEPRED "x!2")
+     (EXPAND "ci" -1)
+     (FLATTEN)
+     (ASSERT))))
+  ("21"
+   (HIDE-ALL-BUT 1)
+   (SKEEP)
+   (EXPAND "g_1")
+   (EXPAND "restrict")
+   (CASE "(LAMBDA (s: (ci(0, 4))):
+             COND s <= 4 -> s ^ 2, ELSE -> 8 * s - 16 ENDCOND) = (LAMBDA(s:(ci(0,4))): s^2)")
+   (("1"
+     (REPLACE -1)
+     (HIDE -1)
+     (DERIV)
+     (TYPEPRED "x!1")
+     (EXPAND "ci" -1)
+     (PROPAX))
+    ("2"
+     (DECOMPOSE-EQUALITY 1)
+     (TYPEPRED "x!2")
+     (EXPAND "ci" -1)
+     (ASSERT)
+     (FLATTEN)
+     (ASSERT))))
+  ("22"
+   (HIDE-ALL-BUT 1)
+   (EXPAND "g_1")
+   (EXPAND "restrict")
+   (CASE " (LAMBDA (s: (right_open(4))):
+             COND s <= 4 -> s ^ 2, ELSE -> 8 * s - 16 ENDCOND) = (LAMBDA(s: (right_open(4))):  8 * s - 16)")
+   (("1" (REPLACE -1) (DERIVABLE))
+    ("2"
+     (DECOMPOSE-EQUALITY 1)
+     (TYPEPRED "x!1")
+     (EXPAND "right_open" -1)
+     (ASSERT)
+     (HIDE 2)
+     (CASE "x!1=4")
+     (("1" (ASSERT) (GRIND)) ("2" (ASSERT))))))
+  ("23"
+   (HIDE-ALL-BUT 1)
+   (EXPAND "g_1")
+   (EXPAND "restrict")
+   (SKEEP)
+   (CASE " (LAMBDA (s: (right_open(4))):
+             COND s <= 4 -> s ^ 2, ELSE -> 8 * s - 16 ENDCOND) = (LAMBDA(s: (right_open(4))):  8 * s - 16)")
+   (("1" (REPLACE -1) (DERIV))
+    ("2"
+     (DECOMPOSE-EQUALITY 1)
+     (TYPEPRED "x!2")
+     (EXPAND "right_open")
+     (CASE "x!2=4")
+     (("1" (REPLACE -1) (ASSERT) (HIDE 2) (EVAL-EXPR 1) (ASSERT))
+      ("2" (ASSERT))))))
+  ("24" (PROPAX)) ("25" (PROPAX)) ("26" (PROPAX)) ("27" (PROPAX))
+  ("28" (PROPAX)) ("29" (PROPAX))))

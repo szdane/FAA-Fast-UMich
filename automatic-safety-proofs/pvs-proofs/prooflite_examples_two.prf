@@ -1,0 +1,200 @@
+(|prooflite_examples_two|
+ (|mvt_gen_ge_TCC1| 0
+  (|mvt_gen_ge_TCC1-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.D)].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|mvt_gen_ge_TCC2| 0
+  (|mvt_gen_ge_TCC2-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.D)].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|mvt_gen_ge_lo_TCC1| 0
+  (|mvt_gen_ge_lo_TCC1-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge_lo| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.left_open(prooflite_examples_two.C))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|mvt_gen_ge_lo_TCC2| 0
+  (|mvt_gen_ge_lo_TCC2-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge_lo| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.left_open(prooflite_examples_two.C))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|mvt_gen_ge_ro_TCC1| 0
+  (|mvt_gen_ge_ro_TCC1-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge_ro| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.right_open(prooflite_examples_two.C))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|mvt_gen_ge_ro_TCC2| 0
+  (|mvt_gen_ge_ro_TCC2-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge_ro| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.right_open(prooflite_examples_two.C))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|mvt_gen_ge_ci_TCC1| 0
+  (|mvt_gen_ge_ci_TCC1-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge_ci| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.ci(prooflite_examples_two.d1, prooflite_examples_two.d2))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|mvt_gen_ge_ci_TCC2| 0
+  (|mvt_gen_ge_ci_TCC2-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|mvt_gen_ge_ci| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.ci(prooflite_examples_two.d1, prooflite_examples_two.d2))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|le_lo_case_0_TCC1| 0
+  (|le_lo_case_0_TCC1-1| NIL 3963962637 ("" (COND-DISJOINT-TCC) NIL NIL) NIL
+   NIL
+   (|le_lo_case_0| DISJOINTNESS
+    "COND reals.<=(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(prooflite_examples_two.x), reals.>(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(0) ENDCOND"
+    "NIL")))
+ (|le_lo_case_0_TCC2| 0
+  (|le_lo_case_0_TCC2-1| NIL 3963962637 ("" (COND-COVERAGE-TCC) NIL NIL) NIL
+   NIL
+   (|le_lo_case_0| COVERAGE
+    "COND reals.<=(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(prooflite_examples_two.x), reals.>(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(0) ENDCOND"
+    "NIL")))
+ (|le_lo_case_0_TCC3| 0
+  (|le_lo_case_0_TCC3-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|le_lo_case_0| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.left_open(0))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|le_lo_case_0_TCC4| 0
+  (|le_lo_case_0_TCC4-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|le_lo_case_0| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.left_open(0))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|le_lo_case_0| 0
+  (|le_lo_case_0-1| NIL 3963962637
+   ("" (SKEEP*)
+    (("" (SKOLETIN*)
+      (("" (FLATTEN)
+        (("" (SKEEP)
+          (("" (CASE "xo + 2 <= 0")
+            (("1" (LEMMA "mvt_gen_le_lo")
+              (("1" (INST -1 "f" "0" "0" "xo + 2" "x")
+                (("1" (SPLIT -1)
+                  (("1" (ASSERT)
+                    (("1" (LEMMA "mvt_gen_le_lo")
+                      (("1" (INST -1 "f" "0" "0" "x" "xo - 2")
+                        (("1" (ASSERT) NIL NIL)
+                         ("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL))
+                          NIL)
+                         ("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (PROPAX) NIL NIL) ("3" (PROPAX) NIL NIL)
+                   ("4" (PROPAX) NIL NIL))
+                  NIL)
+                 ("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL)) NIL)
+                 ("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL)) NIL))
+                NIL))
+              NIL)
+             ("2" (LEMMA "mvt_gen_le_lo")
+              (("2" (INST -1 "f" "0" "0" "0" "x")
+                (("1" (SPLIT -1)
+                  (("1" (ASSERT)
+                    (("1" (LEMMA "mvt_gen_le_lo")
+                      (("1" (INST -1 "f" "0" "0" "x" "xo - 2")
+                        (("1" (EXPAND "f")
+                          (("1" (SPLIT -1)
+                            (("1" (ASSERT) NIL NIL) ("2" (PROPAX) NIL NIL))
+                            NIL))
+                          NIL)
+                         ("2" (EXPAND "f")
+                          (("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL))
+                            NIL))
+                          NIL)
+                         ("3" (EXPAND "f")
+                          (("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL))
+                            NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (PROPAX) NIL NIL) ("3" (ASSERT) NIL NIL)
+                   ("4" (PROPAX) NIL NIL))
+                  NIL)
+                 ("2" (EXPAND "f")
+                  (("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL)) NIL))
+                  NIL)
+                 ("3" (EXPAND "f")
+                  (("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL)) NIL))
+                  NIL))
+                NIL))
+              NIL))
+            NIL))
+          NIL))
+        NIL))
+      NIL))
+    NIL)
+   ((|minus_real_is_real| APPLICATION-JUDGEMENT "real" |reals| NIL)
+    (|minus_nzint_is_nzint| APPLICATION-JUDGEMENT "nzint" |integers| NIL)
+    (|deriv_fun| TYPE-EQ-DECL NIL |derivatives| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (>= CONST-DECL "bool" |reals| NIL)
+    (|numfield| NONEMPTY-TYPE-EQ-DECL NIL |number_fields| NIL)
+    (+ CONST-DECL "[numfield, numfield -> numfield]" |number_fields| NIL)
+    (- CONST-DECL "[numfield -> numfield]" |number_fields| NIL)
+    (- CONST-DECL "[numfield, numfield -> numfield]" |number_fields| NIL)
+    (OR CONST-DECL "[bool, bool -> bool]" |booleans| NIL)
+    (IFF CONST-DECL "[bool, bool -> bool]" |booleans| NIL)
+    (AND CONST-DECL "[bool, bool -> bool]" |booleans| NIL)
+    (|number| NONEMPTY-TYPE-DECL NIL |numbers| NIL)
+    (|number_field_pred| CONST-DECL "[number -> boolean]" |number_fields| NIL)
+    (|number_field| NONEMPTY-TYPE-FROM-DECL NIL |number_fields| NIL)
+    (|real_pred| CONST-DECL "[number_field -> boolean]" |reals| NIL)
+    (|real| NONEMPTY-TYPE-FROM-DECL NIL |reals| NIL)
+    (IMPLIES CONST-DECL "[bool, bool -> bool]" |booleans| NIL)
+    (= CONST-DECL "[T, T -> boolean]" |equalities| NIL)
+    (IF CONST-DECL
+        "[boolean, T, T -> T]"
+        |if_def|
+        NIL)
+    (<= CONST-DECL "bool" |reals| NIL)
+    (NOT CONST-DECL "[bool -> bool]" |booleans| NIL)
+    (|left_open| CONST-DECL "bool" |prooflite_examples_two| NIL)
+    (|deriv_domain?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives| |analysis|)
+    (|restrict| CONST-DECL "R" |restrict| NIL)
+    (|real_plus_real_is_real| APPLICATION-JUDGEMENT "real" |reals| NIL)
+    (|real_minus_real_is_real| APPLICATION-JUDGEMENT "real" |reals| NIL)
+    (|bijective?| CONST-DECL "bool" |functions| NIL)
+    (|id| CONST-DECL "(bijective?[T, T])" |identity| NIL)
+    (|f| SKOLEM-CONST-DECL "[real -> real]" |prooflite_examples_two| NIL)
+    (|mvt_gen_le_lo| FORMULA-DECL NIL |prooflite_examples_two| NIL)
+    (|real_le_is_total_order| NAME-JUDGEMENT "(total_order?[real])"
+     |real_props| NIL)
+    (|real_times_real_is_real| APPLICATION-JUDGEMENT "real" |reals| NIL)
+    (|real_ge_is_total_order| NAME-JUDGEMENT "(total_order?[real])"
+     |real_props| NIL)
+    (NIL APPLICATION-JUDGEMENT "above(n)" |exp2| NIL)
+    (|x| SKOLEM-CONST-DECL "real" |prooflite_examples_two| NIL)
+    (|xo| SKOLEM-CONST-DECL "real" |prooflite_examples_two| NIL)
+    (|boolean| NONEMPTY-TYPE-DECL NIL |booleans| NIL)
+    (|bool| NONEMPTY-TYPE-EQ-DECL NIL |booleans| NIL)
+    (TRUE CONST-DECL "bool" |booleans| NIL))
+   NIL))
+ (|ge_ro_case_1_TCC1| 0
+  (|ge_ro_case_1_TCC1-1| NIL 3963962637 ("" (COND-DISJOINT-TCC) NIL NIL) NIL
+   NIL
+   (|ge_ro_case_1| DISJOINTNESS
+    "COND reals.<(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(0), reals.>=(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(prooflite_examples_two.x) ENDCOND"
+    "NIL")))
+ (|ge_ro_case_1_TCC2| 0
+  (|ge_ro_case_1_TCC2-1| NIL 3963962637 ("" (COND-COVERAGE-TCC) NIL NIL) NIL
+   NIL
+   (|ge_ro_case_1| COVERAGE
+    "COND reals.<(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(0), reals.>=(prooflite_examples_two.x, 0) -> prooflite_examples_two.g(prooflite_examples_two.x) ENDCOND"
+    "NIL")))
+ (|ge_ro_case_1_TCC3| 0
+  (|ge_ro_case_1_TCC3-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|ge_ro_case_1| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.right_open(0))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|ge_ro_case_1_TCC4| 0
+  (|ge_ro_case_1_TCC4-1| NIL 3963962637 ("" (ASSUMING-TCC) NIL NIL) NIL NIL
+   (|ge_ro_case_1| ASSUMING
+    "analysis@derivatives[(prooflite_examples_two.right_open(0))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"))))
+

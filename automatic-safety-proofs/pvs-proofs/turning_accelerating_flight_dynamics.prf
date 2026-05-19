@@ -1,0 +1,54 @@
+(|turning_accelerating_flight_dynamics|
+ (|fly_simp_TCC1| 0
+  (|fly_simp_TCC1-1| NIL 3920707352
+   ("" (SKEEP) (("" (TYPEPRED "a") (("" (DL-MAPEXPR_INJ) NIL NIL)) NIL)) NIL)
+   ((|cons| ADT-CONSTRUCTOR-DECL "[[T, list] -> (cons?)]" |list_adt| NIL)
+    (|cons?| ADT-RECOGNIZER-DECL "[list -> boolean]" |list_adt| NIL)
+    (|pairwise_distinct_vars?| DEF-DECL "{b: bool |
+   b =
+    FORALL (i, j: below(length(l))):
+      i /= j IMPLIES NOT dlvar_index(nth(l, i)) = dlvar_index(nth(l, j))}"
+     |hp_def| |dL|)
+    (|nth| DEF-DECL "T" |list_props| NIL)
+    (|below| TYPE-EQ-DECL NIL |nat_types| NIL)
+    (|dlvar_index| ADT-ACCESSOR-DECL "[dLVar -> nat]" |hp_def| |dL|)
+    (/= CONST-DECL "boolean" |notequal| NIL)
+    (IMPLIES CONST-DECL "[bool, bool -> bool]" |booleans| NIL)
+    (|below| TYPE-EQ-DECL NIL |naturalnumbers| NIL)
+    (|length| DEF-DECL "nat" |list_props| NIL)
+    (< CONST-DECL "bool" |reals| NIL)
+    (|nat| NONEMPTY-TYPE-EQ-DECL NIL |naturalnumbers| NIL)
+    (>= CONST-DECL "bool" |reals| NIL)
+    (|int| NONEMPTY-TYPE-EQ-DECL NIL |integers| NIL)
+    (|integer_pred| CONST-DECL "[rational -> boolean]" |integers| NIL)
+    (|rational| NONEMPTY-TYPE-FROM-DECL NIL |rationals| NIL)
+    (|rational_pred| CONST-DECL "[real -> boolean]" |rationals| NIL)
+    (|real| NONEMPTY-TYPE-FROM-DECL NIL |reals| NIL)
+    (|real_pred| CONST-DECL "[number_field -> boolean]" |reals| NIL)
+    (|number_field| NONEMPTY-TYPE-FROM-DECL NIL |number_fields| NIL)
+    (|number_field_pred| CONST-DECL "[number -> boolean]" |number_fields| NIL)
+    (|number| NONEMPTY-TYPE-DECL NIL |numbers| NIL)
+    (= CONST-DECL "[T, T -> boolean]" |equalities| NIL)
+    (|list| TYPE-DECL NIL |list_adt| NIL) (|dLVar| TYPE-DECL NIL |hp_def| |dL|)
+    (NOT CONST-DECL "[bool -> bool]" |booleans| NIL)
+    (|bool| NONEMPTY-TYPE-EQ-DECL NIL |booleans| NIL)
+    (|boolean| NONEMPTY-TYPE-DECL NIL |booleans| NIL)
+    (|mapexpr_inj_distinct_vars| FORMULA-DECL NIL |hp_def| |dL|)
+    (|map| ADT-DEF-DECL "list[T1]" |list_adt_map| NIL)
+    (|distinct_var?| DEF-DECL "{b: bool |
+   b =
+    FORALL (i: below(length(l))):
+      NOT dlvar_index(nth(l, i)) = dlvar_index(v)}"
+     |hp_def| |dL|)
+    (TRUE CONST-DECL "bool" |booleans| NIL)
+    (|val| CONST-DECL "real" |hp_def| |dL|)
+    (|cnst| CONST-DECL "real" |hp_def| |dL|)
+    (- CONST-DECL "[T -> real]" |real_fun_ops| |reals|)
+    (|MapExpr| TYPE-EQ-DECL NIL |hp_def| |dL|)
+    (|RealExpr| TYPE-EQ-DECL NIL |hp_def| |dL|)
+    (|Environment| TYPE-EQ-DECL NIL |hp_def| |dL|))
+   NIL
+   (|fly_simp| SUBTYPE
+    "(: (turning_accelerating_flight_dynamics.r, (real_fun_ops[Environment].-)(hp_def.cnst(turning_accelerating_flight_dynamics.rv))), (turning_accelerating_flight_dynamics.h, (real_fun_ops[Environment].-)(hp_def.val(turning_accelerating_flight_dynamics.v))), (turning_accelerating_flight_dynamics.v, hp_def.val(turning_accelerating_flight_dynamics.a)) :)"
+    "ODEs"))))
+

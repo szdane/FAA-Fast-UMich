@@ -1,0 +1,12 @@
+top  % [ parameters ]
+		: THEORY
+
+  BEGIN
+
+  % ASSUMING
+   % assuming declarations
+  % ENDASSUMING
+
+  %This is where theories will go for the top file
+
+  END top

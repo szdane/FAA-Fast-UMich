@@ -1,0 +1,335 @@
+(finite_start_square_proof
+ (IsSoundAlphaFiniteStart 0
+  (IsSoundAlphaFiniteStart-1 nil 3868096232
+   ("" (skeep)
+    (("" (expand "SoundnessAlphaFiniteStart")
+      (("" (flatten)
+        (("" (label "notch" 1)
+          (("" (label "alphapos" 2)
+            (("" (label "alphaneg" 3)
+              (("" (hide (1 2 3))
+                (("" (skeep)
+                  (("" (label "init" -)
+                    (("" (copy -5)
+                      (("" (copy -5)
+                        (("" (copy -5)
+                          (("" (copy -5)
+                            (("" (copy -5)
+                              ((""
+                                (hide init)
+                                ((""
+                                  (name "eps" "xo - x")
+                                  ((""
+                                    (replace -1)
+                                    ((""
+                                      (assert)
+                                      ((""
+                                        (move-terms -1 l 2)
+                                        ((""
+                                          (move-terms -1 r 1)
+                                          ((""
+                                            (swap-rel -1)
+                                            ((""
+                                              (replace -1 (-5 -6))
+                                              ((""
+                                                (assert)
+                                                ((""
+                                                  (move-terms -5 r 1)
+                                                  ((""
+                                                    (move-terms -6 r 1)
+                                                    ((""
+                                                      (move-terms
+                                                       -5
+                                                       l
+                                                       1)
+                                                      ((""
+                                                        (move-terms
+                                                         -6
+                                                         l
+                                                         1)
+                                                        ((""
+                                                          (assert)
+                                                          ((""
+                                                            (mult-by
+                                                             (-5 -6)
+                                                             "-1"
+                                                             -)
+                                                            ((""
+                                                              (assert)
+                                                              ((""
+                                                                (swap-rel
+                                                                 (-1
+                                                                  -2))
+                                                                ((""
+                                                                  (assert)
+                                                                  ((""
+                                                                    (mult-by
+                                                                     (-5
+                                                                      -6)
+                                                                     "alpha")
+                                                                    ((""
+                                                                      (case
+                                                                       "NOT (-1 +(alpha * xo) - yo) <= alpha")
+                                                                      (("1"
+                                                                        (assert)
+                                                                        nil
+                                                                        nil)
+                                                                       ("2"
+                                                                        (case
+                                                                         "NOT (1 + alpha*xo - yo) >= -alpha")
+                                                                        (("1"
+                                                                          (assert)
+                                                                          nil
+                                                                          nil)
+                                                                         ("2"
+                                                                          (hide
+                                                                           (-5
+                                                                            -6))
+                                                                          (("2"
+                                                                            (hide
+                                                                             (-3
+                                                                              -4
+                                                                              -5))
+                                                                            (("2"
+                                                                              (move-terms
+                                                                               -1
+                                                                               r
+                                                                               1)
+                                                                              (("2"
+                                                                                (move-terms
+                                                                                 -2
+                                                                                 r
+                                                                                 1)
+                                                                                (("2"
+                                                                                  (mult-by
+                                                                                   -2
+                                                                                   "1 + alpha * xo - yo - -alpha"
+                                                                                   +)
+                                                                                  (("2"
+                                                                                    (hide
+                                                                                     -2)
+                                                                                    (("2"
+                                                                                      (reveal
+                                                                                       alphapos)
+                                                                                      (("2"
+                                                                                        (split
+                                                                                         1)
+                                                                                        (("1"
+                                                                                          (reveal
+                                                                                           notch)
+                                                                                          (("1"
+                                                                                            (flip-ineq
+                                                                                             2)
+                                                                                            (("1"
+                                                                                              (assert)
+                                                                                              (("1"
+                                                                                                (reveal
+                                                                                                 init)
+                                                                                                (("1"
+                                                                                                  (case
+                                                                                                   "NOT yo >= -1")
+                                                                                                  (("1"
+                                                                                                    (move-terms
+                                                                                                     -5
+                                                                                                     l
+                                                                                                     2)
+                                                                                                    (("1"
+                                                                                                      (mult-by
+                                                                                                       -8
+                                                                                                       "alpha")
+                                                                                                      (("1"
+                                                                                                        (assert)
+                                                                                                        nil
+                                                                                                        nil))
+                                                                                                      nil))
+                                                                                                    nil)
+                                                                                                   ("2"
+                                                                                                    (assert)
+                                                                                                    nil
+                                                                                                    nil))
+                                                                                                  nil))
+                                                                                                nil))
+                                                                                              nil))
+                                                                                            nil))
+                                                                                          nil)
+                                                                                         ("2"
+                                                                                          (assert)
+                                                                                          nil
+                                                                                          nil))
+                                                                                        nil))
+                                                                                      nil))
+                                                                                    nil))
+                                                                                  nil))
+                                                                                nil))
+                                                                              nil))
+                                                                            nil))
+                                                                          nil))
+                                                                        nil))
+                                                                      nil))
+                                                                    nil))
+                                                                  nil))
+                                                                nil))
+                                                              nil))
+                                                            nil))
+                                                          nil))
+                                                        nil))
+                                                      nil))
+                                                    nil))
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   ((real_times_real_is_real application-judgement "real" reals nil)
+    (posreal_times_posreal_is_posreal application-judgement "posreal"
+     real_types nil)
+    (real_minus_real_is_real application-judgement "real" reals nil)
+    (real_plus_real_is_real application-judgement "real" reals nil)
+    (nzreal_times_nzreal_is_nzreal application-judgement "nzreal"
+     real_types nil)
+    (SoundnessAlphaFiniteStart const-decl "bool"
+     finite_start_square_proof nil)
+    (real nonempty-type-from-decl nil reals nil)
+    (real_pred const-decl "[number_field -> boolean]" reals nil)
+    (number_field nonempty-type-from-decl nil number_fields nil)
+    (- const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (numfield nonempty-type-eq-decl nil number_fields nil)
+    (number_field_pred const-decl "[number -> boolean]" number_fields
+     nil)
+    (= const-decl "[T, T -> boolean]" equalities nil)
+    (boolean nonempty-type-decl nil booleans nil)
+    (number nonempty-type-decl nil numbers nil)
+    (real_le_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (real_ge_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (posreal nonempty-type-eq-decl nil real_types nil)
+    (> const-decl "bool" reals nil)
+    (nonneg_real nonempty-type-eq-decl nil real_types nil)
+    (>= const-decl "bool" reals nil)
+    (* const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (<= const-decl "bool" reals nil)
+    (minus_real_is_real application-judgement "real" reals nil)
+    (NOT const-decl "[bool -> bool]" booleans nil)
+    (nnreal_times_nnreal_is_nnreal application-judgement "nnreal"
+     real_types nil)
+    (real_lt_is_strict_total_order name-judgement
+     "(strict_total_order?[real])" real_props nil)
+    (< const-decl "bool" reals nil)
+    (minus_nzreal_is_nzreal application-judgement "nzreal" real_types
+     nil)
+    (both_sides_times_pos_ge1_imp formula-decl nil extra_real_props
+     nil)
+    (both_sides_times_pos_le1_imp formula-decl nil extra_real_props
+     nil)
+    (both_sides_times_neg_ge1_imp formula-decl nil extra_real_props
+     nil)
+    (nonpos_real nonempty-type-eq-decl nil real_types nil)
+    (both_sides_times_neg_le1_imp formula-decl nil extra_real_props
+     nil)
+    (- const-decl "[numfield -> numfield]" number_fields nil)
+    (bool nonempty-type-eq-decl nil booleans nil)
+    (IFF const-decl "[bool, bool -> bool]" booleans nil)
+    (+ const-decl "[numfield, numfield -> numfield]" number_fields
+       nil))
+   shostak))
+ (IsSoundAlphaFiniteStartFiniteEnd 0
+  (IsSoundAlphaFiniteStartFiniteEnd-1 nil 3868110287
+   ("" (skeep)
+    (("" (lemma "IsSoundAlphaFiniteStart")
+      (("" (inst -1 "xo" "yo" "alpha")
+        (("" (expand "SoundnessAlphaFiniteStart")
+          (("" (assert)
+            (("" (expand "SoundnessAlphaFiniteStartFiniteEnd")
+              (("" (assert)
+                (("" (flatten)
+                  (("" (skeep)
+                    (("" (assert)
+                      (("" (split -1)
+                        (("1" (propax) nil nil)
+                         ("2" (flatten)
+                          (("2" (assert)
+                            (("2" (assert)
+                              (("2"
+                                (move-terms -4 l 2)
+                                (("2"
+                                  (move-terms -6 l 2)
+                                  (("2"
+                                    (move-terms -7 l 2)
+                                    (("2"
+                                      (mult-by -3 "alpha")
+                                      (("2"
+                                        (assert)
+                                        (("2" (postpone) nil nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil)
+                         ("3" (postpone) nil nil)
+                         ("4" (postpone) nil nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   ((IsSoundAlphaFiniteStart formula-decl nil finite_start_square_proof
+     nil)
+    (real_times_real_is_real application-judgement "real" reals nil)
+    (posreal_times_posreal_is_posreal application-judgement "posreal"
+     real_types nil)
+    (real_minus_real_is_real application-judgement "real" reals nil)
+    (real_plus_real_is_real application-judgement "real" reals nil)
+    (nzreal_times_nzreal_is_nzreal application-judgement "nzreal"
+     real_types nil)
+    (SoundnessAlphaFiniteStart const-decl "bool"
+     finite_start_square_proof nil)
+    (SoundnessAlphaFiniteStartFiniteEnd const-decl "bool"
+     finite_start_square_proof nil)
+    (minus_real_is_real application-judgement "real" reals nil)
+    (real_le_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (real_ge_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (posreal nonempty-type-eq-decl nil real_types nil)
+    (> const-decl "bool" reals nil)
+    (nonneg_real nonempty-type-eq-decl nil real_types nil)
+    (>= const-decl "bool" reals nil)
+    (bool nonempty-type-eq-decl nil booleans nil)
+    (real nonempty-type-from-decl nil reals nil)
+    (real_pred const-decl "[number_field -> boolean]" reals nil)
+    (number_field nonempty-type-from-decl nil number_fields nil)
+    (number_field_pred const-decl "[number -> boolean]" number_fields
+     nil)
+    (boolean nonempty-type-decl nil booleans nil)
+    (number nonempty-type-decl nil numbers nil))
+   shostak)))
+

@@ -1,0 +1,116 @@
+(THEN
+ (SKEEP*)
+ (LEMMA "mvt_gen_ge")
+ (INST?)
+ (ASSERT)
+ (SPREAD
+  (SPLIT -1)
+  (THEN
+   (ASSERT)
+   (INST -1 "xo + 2" "x")
+   (ASSERT)
+   (INST -1 "x" "xo - 2")
+   (ASSERT))
+  (PROPAX)))
+
+
+# correctly parenthesized
+(THEN 
+  (SKEEP*) 
+  (LEMMA "mvt_gen_ge") 
+  (INST?) 
+  (ASSERT)
+  (SPREAD 
+    (SPLIT -1)
+    (
+      (THEN 
+        (ASSERT) 
+        (INST -1 "xo + 2" "x") 
+        (ASSERT) 
+        (LEMMA "mvt_gen_ge") 
+        (INST?) 
+        (ASSERT)
+        (SPREAD 
+          (SPLIT -1) 
+          (
+            (THEN 
+              (INST -1 "x" "xo - 2") 
+              (ASSERT)
+            ) 
+            (PROPAX)
+          )
+        )
+      )
+      (PROPAX)
+    )
+  )
+)
+
+# most recently generated
+
+bound13_rect_function : PROOF
+(THEN
+    (SKEEP*)
+    (LEMMA "mvt_gen_ge")
+    (INST?)
+    (ASSERT)
+    (SPREAD
+        (SPLIT -1)
+        (
+            (THEN
+                (ASSERT)
+                (INST -1 "xo + 2" "x")
+                (ASSERT)
+                (LEMMA "mvt_gen_ge")
+                (INST?)
+                (ASSERT)
+                (SPREAD
+                    (SPLIT -1)
+                    (
+                        (THEN
+                            (INST -1 "x" "xo - 2")
+                            (ASSERT)
+                        ) 
+                        (PROPAX)
+                    )
+                )
+            ) 
+            (PROPAX)
+        )
+    )
+)
+QED bound13_rect_function
+
+# from pvs
+bound11_rect_function : PROOF
+(THEN 
+    (SKEEP*)
+    (LEMMA "mvt_gen_ge")
+    (INST?) 
+    (ASSERT)
+    (SPREAD 
+        (SPLIT -1)
+        (
+            (THEN 
+                (ASSERT) 
+                (INST -1 "xo + 2" "x") 
+                (ASSERT) 
+                (LEMMA "mvt_gen_ge") 
+                (INST?)
+                (ASSERT)
+                (SPREAD 
+                    (SPLIT -1) 
+                    (
+                        (THEN 
+                            (INST -1 "x" "xo - 2") 
+                            (ASSERT)
+                        ) 
+                        (PROPAX)
+                    )
+                )
+            )
+            (PROPAX)
+        )
+    )
+)
+QED bound11_rect_function

@@ -1,0 +1,37 @@
+(diamond_example_proof
+ (IsSoundDiamond 0
+  (IsSoundDiamond-1 nil 3868008137
+   ("" (skeep)
+    (("" (expand "DiamondSoundness")
+      (("" (flatten) (("" (skeep) (("" (postpone) nil nil)) nil)) nil))
+      nil))
+    nil)
+   nil shostak))
+ (IsSoundDiamondNewEps 0
+  (IsSoundDiamondNewEps-1 nil 3868029495
+   ("" (skeep)
+    (("" (expand "DiamondSoundness")
+      (("" (flatten)
+        (("" (label "alphalarge" 1)
+          (("" (label "alphasmall" 2)
+            (("" (hide alphalarge)
+              (("" (hide alphasmall)
+                (("" (skeep)
+                  (("" (name "eps" "- x - yo + alpha*x")
+                    (("" (move-terms -1 l 2)
+                      (("" (move-terms (-4 -5) r 1)
+                        (("" (move-terms -5 r 1)
+                          (("" (postpone) nil nil)) nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   nil shostak)))
+

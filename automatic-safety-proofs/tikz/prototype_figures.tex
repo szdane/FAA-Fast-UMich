@@ -1,0 +1,118 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usetikzlibrary{calc}
+\usetikzlibrary{patterns}
+\usetikzlibrary{math}
+
+% Custom colors for safety proofs
+\definecolor{safe}{RGB}{34, 139, 34}      % Forest green
+\definecolor{unsafe}{RGB}{220, 20, 60}    % Crimson red
+\definecolor{boundary}{RGB}{255, 165, 0}  % Orange
+\definecolor{trajectory}{RGB}{0, 0, 255}  % Blue
+\definecolor{region}{RGB}{135, 206, 235}  % Sky blue
+
+\begin{document}
+
+\title{Prototype Figures for Safety Proofs}
+\author{Author Name}
+\maketitle
+
+\tikzmath{\curv=1;\grayctr=0.6;}
+\begin{figure}
+    \centering
+
+    \begin{tikzpicture}[scale=1.5, thick]
+        % vertical “x=0” axis
+        \draw[gray,dashed] (0,-0.25) node[below right] {$x=0$} -- (0,2.5) ;
+
+        % corners of the main rectangle
+        \coordinate (SW) at (-1,0);
+        \coordinate (NW) at (-1,1);
+        \coordinate (NE) at ( 1,1);
+        \coordinate (SE) at ( 1,0);
+
+        % draw black rectangle
+        \draw[thick] (SW) rectangle (NE);
+
+
+        % new gray rectangle centered on blue path at t=0.5
+        \coordinate (Gctr) at (\grayctr, \curv*\grayctr*\grayctr + 0.5);
+        \draw[gray!30]
+        ($(Gctr) + (-1.0,-0.5)$) rectangle ($(Gctr) + (1.0,0.5)$);
+
+        % Shade only the area below the orange line, inside the gray rectangle, above y=1
+        % \begin{scope}
+        %     % Clip to the gray rectangle
+        %     \clip ($(Gctr)+(-1.0,-0.5)$) rectangle ($(Gctr)+(1.0,0.5)$);
+        %     % Only above y=1
+        %     \clip (-2,1) rectangle (2,3);
+        %     % Fill below the orange line: y < \curv*(x-1)^2, for x in [Gctr_x-1, Gctr_x+1]
+        %     \fill[pattern color=purple,pattern=north east lines, opacity=0.7]
+        %     plot[domain={\grayctr-1.0}:{\grayctr+1.0}, variable=\x]
+        %     ({\x},{min(\curv*(\x-1)*(\x-1),1.5)}) -- % orange curve (capped at top of rect)
+        %     ({\grayctr+1.0},1) --
+        %     ({\grayctr-1.0},1) -- cycle;
+        % \end{scope}
+
+        % Shade the region from x = -1 to x = 0, above y = 1, below both orange and blue parabolas
+        \begin{scope}
+            % Clip to the region of interest: x from -1 to 0, y above 1
+            \clip (-1,1) rectangle (0,3);
+
+            % Fill the region below both parabolas
+            \fill[pattern color=purple,pattern=north east lines, opacity=0.7]
+            plot[domain=-1:0, variable=\x]
+            ({\x}, {min(\curv*(\x-1)*(\x-1), \curv*(\x+1)*(\x+1) + 1)}) -- % lower of the two parabolas
+            (0, 1) -- % right boundary at y=1
+            (-1, 1) -- cycle; % left boundary at y=1
+        \end{scope}
+
+        % redraw gray border on top
+        \draw[gray!60, thick] ($(Gctr)+(-1.0,-0.5)$) rectangle ($(Gctr)+(1.0,0.5)$);
+
+        % ascending trajectory (right of x=0)
+        % \draw[blue, very thick] (C) -- ++(2, 2);
+        \draw[purple, very thick] plot[domain=-1.5:1.5] ({\x}, {\curv*\x*\x + 0.5});
+
+        % blue NE
+        % \draw[blue,dashed] plot[domain=-1.5+1:1.5+1] ({\x}, {\curv*(\x - 1)*(\x - 1) + 1});
+        % blue SW
+        % \draw[blue,dashed] plot[domain=-1.5-1:1.5-1] ({\x}, {\curv*(\x + 1)*(\x + 1)});
+
+        % main orange ray
+        % \draw[orange,very thick] plot[domain=-1.5:0] ({\x}, {\curv*\x*\x + 0.5});
+
+        % orange SE parabola: clipped to constant left of vertex (x=1), parabola right of vertex
+        \draw[orange,dashed] (-0.5, 0) -- (1, 0); % constant line to left of vertex
+        \draw[orange,dashed] plot[domain=1:2.3] ({\x}, {\curv*(\x - 1)*(\x - 1)}); % parabola to right of vertex
+
+        % blue NW parabola: clipped to constant left of vertex (x=-1), parabola right of vertex  
+        \draw[blue,dashed] (-2, 1) -- (-1, 1); % constant line to left of vertex
+        \draw[blue,dashed] plot[domain=-1:0.3] ({\x}, {\curv*(\x + 1)*(\x + 1) + 1}); % parabola to right of vertex
+
+        % \draw[green!60!black!50] (NW) -- (SE) -- ++(0.5, -0.25);
+
+        % % base
+        % \draw[gray,dashed] (0,-1) -- (0,3);
+        % \draw[thick] (-1,0) rectangle (1,1);
+        % \coordinate (C) at (0,0.5);
+
+        % % blue trajectory + parallels
+        % \draw[blue,very thick] (C) -- ++(1,1);
+        % \draw[blue,dashed] (NW) -- ++(1,1);
+        % \draw[blue,dashed] (SE) -- ++(1,1);
+        % \draw[orange,very thick] (C) -- ++(-1,-1);
+        % \draw[orange,dashed] (SW) -- ++(-1,-1);
+        % \draw[orange,dashed] (NE) -- ++(-1,-1);
+    \end{tikzpicture}
+    \caption{Proof counterexample necessitating clipping.}
+    \label{fig:notch-case-proof}
+\end{figure}
+
+\end{document}

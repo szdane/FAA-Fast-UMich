@@ -1,0 +1,43 @@
+fly_st_ex1: LEMMA
+  LET f: [real -> real] =
+    LAMBDA (x_1: real): COND x_1 < 0 -> 0, ELSE -> x_1 ENDCOND
+  IN
+  (
+    NOT 
+    (
+      (
+        (ho - f(ro - 2) - 1 >= 0) AND (ho - f(ro + 2) + 1 <= 0)
+      ) OR 
+      (
+        (ho - f(ro - 2) + 1 >= 0) AND (ho - f(ro + 2) - 1 <= 0)
+      ) OR 
+      (
+        (ho - f(ro + 2) - 1 >= 0) AND (ho - f(ro - 2) + 1 <= 0)
+      ) OR 
+      (
+        (ho - f(ro + 2) + 1 >= 0) AND (ho - f(ro - 2) - 1 <= 0)
+      ) OR 
+      (
+        (ro + 2 >= 0) AND 
+        (ro - 2 <= 0) AND 
+        (ho - f(0) + 1 >= 0) AND 
+        (ho - f(0) - 1 <= 0)
+      )
+    )
+  )
+IMPLIES
+(
+  (: val(r)=cnst(0) AND val(h)=cnst(0) :) |-
+  ALLRUNS(
+    DIFF(
+      (:
+        (r, -cnst(10)), 
+        (h, cnst(10)):)
+    ),
+    DLNOT(
+      cnst(ro) + val(r) >= cnst(-2) AND
+      cnst(ro) + val(r) <= cnst(2) AND
+      -val(h) + cnst(ho) <= cnst(1) AND
+      -val(h) + cnst(ho) >= cnst(-1))
+  )
+)

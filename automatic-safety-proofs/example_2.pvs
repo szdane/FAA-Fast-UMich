@@ -1,0 +1,1233 @@
+active_corner_certificate  % [ parameters ]
+		: THEORY
+
+  BEGIN
+
+  IMPORTING analysis@strategies
+
+  left_open(c:real)(x:real): bool =  c >= x
+  right_open(c:real)(x:real): bool = c <= x
+  ci(d1,d2:real)(x:real): bool =( d1 <= x AND  x <= d2)
+
+  left_open_connected: LEMMA FORALL(c:real):
+  connected?[(left_open(c))]
+
+%|- left_open_connected : PROOF
+%|- (THEN (SKEEP) (EXPAND "connected?") (SKEEP) (TYPEPRED "x" "y")
+%|-  (EXPAND "left_open") (ASSERT))
+%|- QED left_open_connected
+
+  left_open_noe: LEMMA FORALL(c:real):
+  not_one_element?[(left_open(c))]
+
+%|- left_open_noe : PROOF
+%|- (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP)
+%|-  (SPREAD (INST 1 "x-1")
+%|-   ((ASSERT) (THEN (TYPEPRED "x") (EXPAND "left_open") (ASSERT)))))
+%|- QED left_open_noe
+
+  left_open_dd: LEMMA FORALL(c:real):
+  deriv_domain?[(left_open(c))]
+
+%|- left_open_dd : PROOF
+%|- (THEN (SKEEP) (LEMMA "connected_deriv_domain[(left_open(c))]") (ASSERT)
+%|-  (HIDE 2) (LEMMA " left_open_connected") (LEMMA " left_open_noe") (INST?)
+%|-  (INST?) (ASSERT))
+%|- QED left_open_dd
+
+  right_open_connected: LEMMA FORALL(c:real):
+  connected?[(right_open(c))]
+
+%|- right_open_connected : PROOF
+%|- (THEN (SKEEP) (EXPAND "connected?") (SKEEP) (TYPEPRED "x" "y")
+%|-  (EXPAND "right_open") (ASSERT))
+%|- QED right_open_connected
+
+  right_open_noe: LEMMA FORALL(c:real):
+  not_one_element?[(right_open(c))]
+
+%|- right_open_noe : PROOF
+%|- (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP)
+%|-  (SPREAD (INST 1 "x+1")
+%|-   ((ASSERT) (THEN (TYPEPRED "x") (ASSERT) (EXPAND "right_open") (ASSERT)))))
+%|- QED right_open_noe
+
+  right_open_dd: LEMMA FORALL(c:real):
+  deriv_domain?[(right_open(c))]
+
+%|- right_open_dd : PROOF
+%|- (THEN (SKEEP) (LEMMA "connected_deriv_domain[(right_open(c))]") (ASSERT)
+%|-  (HIDE 2) (LEMMA " right_open_connected") (LEMMA " right_open_noe") (INST?)
+%|-  (INST?) (ASSERT))
+%|- QED right_open_dd
+
+  ci_noe: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  not_one_element?[(ci(d1, d2))]
+
+%|- ci_noe : PROOF
+%|- (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP) (TYPEPRED "x")
+%|-  (SPREAD (INST-CP 2 "d1")
+%|-   ((SPREAD (INST 2 "d2") ((ASSERT) (THEN (EXPAND "ci") (ASSERT))))
+%|-    (THEN (EXPAND "ci") (ASSERT) (FLATTEN) (ASSERT)))))
+%|- QED ci_noe
+
+  ci_connected: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  connected?[(ci(d1, d2))]
+
+%|- ci_connected : PROOF
+%|- (THEN (SKEEP) (EXPAND "connected?" 2) (SKEEP) (TYPEPRED "x" "y" "z")
+%|-  (EXPAND "ci") (ASSERT) (FLATTEN) (ASSERT))
+%|- QED ci_connected
+
+  ci_dd: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  deriv_domain?[(ci(d1, d2))]
+
+%|- ci_dd : PROOF
+%|- (THEN (SKEEP) (LEMMA "connected_deriv_domain[(ci(d1,d2))]") (ASSERT) (HIDE 2)
+%|-  (LEMMA " ci_connected") (LEMMA " ci_noe") (TYPEPRED "d1" "d2") (REVEAL +)
+%|-  (INST -3 "d1" "d2") (INST -4 "d1" "d2") (ASSERT))
+%|- QED ci_dd
+
+  mvt_gen_ge: LEMMA
+  FORALL(f:[real-> real],D:{DD:[real -> bool] | connected?[(DD)] AND not_one_element?[(DD)] }, c:real,a,b:(D)):
+  (derivable?[(D)](f) AND a >= b AND
+  FORALL(x:(D)): deriv[(D)](f)(x) >= c)
+  IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge : PROOF
+%|- (THEN (SKEEP)
+%|-  (SPREAD (CASE "a=b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "mean_value[(D)]") (INST -1 "b" "a" "f") (ASSERT) (SKEEP)
+%|-     (INST -6 "c!1") (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT)
+%|-     (EXPAND "restrict") (ASSERT)))))
+%|- QED mvt_gen_ge
+
+  mvt_gen_le: LEMMA
+  FORALL(f:[real-> real],D:{DD:[real -> bool] | connected?[(DD)] AND not_one_element?[(DD)] }, c:real,a,b:(D)):
+  (derivable?[(D)](f)  AND a >= b AND
+  FORALL(x:(D)): deriv[(D)](f)(x) <= c) IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le : PROOF
+%|- (THEN (SKEEP)
+%|-  (SPREAD (CASE "a=b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "mean_value[(D)]") (INST -1 "b" "a" "f") (ASSERT) (SKEEP)
+%|-     (INST -6 "c!1") (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT)
+%|-     (EXPAND "restrict") (ASSERT)))))
+%|- QED mvt_gen_le
+
+%% left open
+
+  mvt_gen_ge_lo: LEMMA
+  FORALL(f:[real-> real], C, c:real,a,b:(left_open(C))):
+  (derivable?[(left_open(C))](f)  AND a >= b  AND
+  FORALL(x:(left_open(C))): deriv[(left_open(C))](f)(x) >= c) IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge_lo : PROOF
+%|- (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "left_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "left_open_noe") (LEMMA " left_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_ge_lo
+
+  mvt_gen_le_lo: LEMMA
+  FORALL(f:[real-> real], C, c:real,a,b:(left_open(C))):
+  (derivable?[(left_open(C))](f)  AND a >= b  AND
+  FORALL(x:(left_open(C))): deriv[(left_open(C))](f)(x) <= c)
+  IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le_lo : PROOF
+%|- (THEN (LEMMA "mvt_gen_le") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "left_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "left_open_noe") (LEMMA " left_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_le_lo
+
+%% right open
+
+  mvt_gen_ge_ro: LEMMA
+  FORALL(f:[real-> real],C, c:real,a,b:(right_open(C))):
+  (derivable?[(right_open(C))](f)  AND a >= b  AND
+  FORALL(x:(right_open(C))): deriv[(right_open(C))](f)(x) >= c) IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge_ro : PROOF
+%|- (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "right_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "right_open_noe") (LEMMA "right_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_ge_ro
+
+  mvt_gen_le_ro: LEMMA
+  FORALL(f:[real-> real],C, c:real,a,b:[(right_open(C))]):
+  (derivable?[(right_open(C))](f)  AND a >= b  AND
+  FORALL(x:[(right_open(C))]): deriv[(right_open(C))](f)(x) <= c) IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le_ro : PROOF
+%|- (THEN (LEMMA "mvt_gen_le") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "right_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "right_open_noe") (LEMMA "right_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_le_ro
+
+%% closed_interval
+
+  mvt_gen_ge_ci: LEMMA
+  FORALL(f:[real-> real], d1,d2,c:real,a,b:(ci(d1,d2))):
+  (d1 < d2 AND derivable?[(ci(d1,d2))](f)  AND a >= b  AND
+  FORALL(x:(ci(d1,d2))): deriv[(ci(d1,d2))](f)(x) >= c) IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge_ci : PROOF
+%|- (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "ci(d1,d2)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "ci_noe") (LEMMA " ci_connected") (INST -1 "d1" "d2")
+%|-     (INST -2 "d1" "d2") (ASSERT)))))
+%|- QED mvt_gen_ge_ci
+
+  mvt_gen_le_ci: LEMMA
+  FORALL(f:[real-> real], d1,d2,c:real,a,b:(ci(d1,d2))):
+  (d1 < d2 AND derivable?[(ci(d1,d2))](f)  AND a >= b  AND
+  FORALL(x:(ci(d1,d2))): deriv[(ci(d1,d2))](f)(x) <= c) IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le_ci : PROOF
+%|- (THEN (LEMMA "mvt_gen_le") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "ci(d1,d2)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "ci_noe") (LEMMA " ci_connected") (INST -1 "d1" "d2")
+%|-     (INST -2 "d1" "d2") (ASSERT)))))
+%|- QED mvt_gen_le_ci
+
+
+%% reals
+
+mvt_gen_ge_real: LEMMA
+  FORALL(f:[real-> real], c:real,a,b:real):
+  (derivable?[real](f)  AND a >= b  AND
+  FORALL(x:real): deriv[real](f)(x) >= c) IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge_real : PROOF
+%|- (SPREAD (LEMMA "mean_value[real]")
+%|-  ((THEN (SKEEP) (INST -1 "b" "a" "f") (ASSERT) (SKEEP) (INST -6 "c!1")
+%|-    (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT))
+%|-   (THEN (ASSERT) (LEMMA "connected_real") (PROPAX))))
+%|- QED mvt_gen_ge_real
+
+mvt_gen_le_real: LEMMA
+  FORALL(f:[real-> real], c:real,a,b:real):
+  (derivable?[real](f)  AND a >= b  AND
+  FORALL(x:real): deriv[real](f)(x) <= c) IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le_real : PROOF
+%|- (SPREAD (LEMMA "mean_value[real]")
+%|-  ((THEN (SKEEP) (INST -1 "b" "a" "f") (ASSERT) (SKEEP) (INST -6 "c!1")
+%|-    (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT))
+%|-   (THEN (ASSERT) (LEMMA "connected_real") (PROPAX))))
+%|- QED mvt_gen_le_real
+
+ge_ci_case_0: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 0 -> g(0),
+            x >= 0 AND x <= 1 -> g(x),
+            ELSE -> g(1)
+        ENDCOND
+    IN 
+    derivable?[(ci(0, 1))](f) AND (FORALL(x:(ci(0, 1))): deriv[(ci(0, 1))](f)(x) >= 0) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 0 AND x <= 1 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo >= 0) AND
+     (xo - 2 <= 0) AND
+     (yo - f(1) + 1 >= 0) AND
+     (yo - f(1) - 1 <= 0)) OR
+    ((xo + 1 >= 0) AND
+     (xo - 1 <= 0) AND
+     (yo - f(0) + 1 >= 0) AND
+     (yo - f(0) - 1 <= 0)))
+
+%|- ge_ci_case_0 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 0 AND xo + 1 <= 1")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-     (SPREAD (INST -1 "f" "0" "1" "0" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "0" "1" "0" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 0 AND xo + 1 <= 1")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-       (SPREAD (INST -1 "f" "0" "1" "0" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-            (SPREAD (INST -1 "f" "0" "1" "0" "x" "0")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 0 AND xo + 1 > 1")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "0" "1" "0" "1" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_ge_ci")
+%|-               (SPREAD (INST -1 "f" "0" "1" "0" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 0 AND xo + 1 > 1") ((GRIND) (GRIND))))))))))))
+%|- QED ge_ci_case_0
+
+
+le_ci_case_1: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 1 -> g(1),
+            x >= 1 AND x <= 2 -> g(x),
+            ELSE -> g(2)
+        ENDCOND
+    IN 
+    derivable?[(ci(1, 2))](f) AND (FORALL(x:(ci(1, 2))): deriv[(ci(1, 2))](f)(x) <= 0) AND (FORALL(x:(ci(1, 2))): deriv[(ci(1, 2))](f)(x) >= -122.100000000000) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 1 AND x <= 2 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo >= 0) AND
+     (xo - 2 <= 0) AND
+     (yo - f(1) + 1 >= 0) AND
+     (yo - f(1) - 1 <= 0)) OR
+    ((xo - 1 >= 0) AND
+     (xo - 3 <= 0) AND
+     (yo - f(2) + 1 >= 0) AND
+     (yo - f(2) - 1 <= 0)))
+
+%|- le_ci_case_1 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 1 AND xo + 1 <= 2")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-     (SPREAD (INST -1 "f" "1" "2" "0" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "1" "2" "0" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 1 AND xo + 1 <= 2")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-       (SPREAD (INST -1 "f" "1" "2" "0" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-            (SPREAD (INST -1 "f" "1" "2" "0" "x" "1")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 1 AND xo + 1 > 2")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "1" "2" "0" "2" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_le_ci")
+%|-               (SPREAD (INST -1 "f" "1" "2" "0" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 1 AND xo + 1 > 2") ((GRIND) (GRIND))))))))))))
+%|- QED le_ci_case_1
+
+
+le_ci_case_2: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 2 -> g(2),
+            x >= 2 AND x <= 3 -> g(x),
+            ELSE -> g(3)
+        ENDCOND
+    IN 
+    derivable?[(ci(2, 3))](f) AND (FORALL(x:(ci(2, 3))): deriv[(ci(2, 3))](f)(x) <= -122.100000000000) AND (FORALL(x:(ci(2, 3))): deriv[(ci(2, 3))](f)(x) >= 0) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 2 AND x <= 3 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 2 >= 0) AND
+     (xo - 4 <= 0) AND
+     (yo - f(3) + 1 >= 0) AND
+     (yo - f(3) - 1 <= 0)) OR
+    ((xo - 1 >= 0) AND
+     (xo - 3 <= 0) AND
+     (yo - f(2) + 1 >= 0) AND
+     (yo - f(2) - 1 <= 0)))
+
+%|- le_ci_case_2 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 2 AND xo + 1 <= 3")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-     (SPREAD (INST -1 "f" "2" "3" "-122.100000000000" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "2" "3" "-122.100000000000" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 2 AND xo + 1 <= 3")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-       (SPREAD (INST -1 "f" "2" "3" "-122.100000000000" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-            (SPREAD (INST -1 "f" "2" "3" "-122.100000000000" "x" "2")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 2 AND xo + 1 > 3")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "2" "3" "-122.100000000000" "3" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_le_ci")
+%|-               (SPREAD (INST -1 "f" "2" "3" "-122.100000000000" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 2 AND xo + 1 > 3") ((GRIND) (GRIND))))))))))))
+%|- QED le_ci_case_2
+
+
+le_ci_case_3: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 3 -> g(3),
+            x >= 3 AND x <= 7 -> g(x),
+            ELSE -> g(7)
+        ENDCOND
+    IN 
+    derivable?[(ci(3, 7))](f) AND (FORALL(x:(ci(3, 7))): deriv[(ci(3, 7))](f)(x) <= 0) AND (FORALL(x:(ci(3, 7))): deriv[(ci(3, 7))](f)(x) >= 35.6000000000000) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 3 AND x <= 7 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 6 >= 0) AND
+     (xo - 8 <= 0) AND
+     (yo - f(7) + 1 >= 0) AND
+     (yo - f(7) - 1 <= 0)) OR
+    ((xo - 2 >= 0) AND
+     (xo - 4 <= 0) AND
+     (yo - f(3) + 1 >= 0) AND
+     (yo - f(3) - 1 <= 0)))
+
+%|- le_ci_case_3 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 3 AND xo + 1 <= 7")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-     (SPREAD (INST -1 "f" "3" "7" "0" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "3" "7" "0" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 3 AND xo + 1 <= 7")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-       (SPREAD (INST -1 "f" "3" "7" "0" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-            (SPREAD (INST -1 "f" "3" "7" "0" "x" "3")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 3 AND xo + 1 > 7")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "3" "7" "0" "7" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_le_ci")
+%|-               (SPREAD (INST -1 "f" "3" "7" "0" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 3 AND xo + 1 > 7") ((GRIND) (GRIND))))))))))))
+%|- QED le_ci_case_3
+
+
+ge_ci_case_4: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 7 -> g(7),
+            x >= 7 AND x <= 8 -> g(x),
+            ELSE -> g(8)
+        ENDCOND
+    IN 
+    derivable?[(ci(7, 8))](f) AND (FORALL(x:(ci(7, 8))): deriv[(ci(7, 8))](f)(x) >= 35.6000000000000) AND (FORALL(x:(ci(7, 8))): deriv[(ci(7, 8))](f)(x) <= -182.000000000000) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 7 AND x <= 8 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 7 >= 0) AND
+     (xo - 9 <= 0) AND
+     (yo - f(8) + 1 >= 0) AND
+     (yo - f(8) - 1 <= 0)) OR
+    ((xo - 6 >= 0) AND
+     (xo - 8 <= 0) AND
+     (yo - f(7) + 1 >= 0) AND
+     (yo - f(7) - 1 <= 0)))
+
+%|- ge_ci_case_4 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 7 AND xo + 1 <= 8")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-     (SPREAD (INST -1 "f" "7" "8" "35.6000000000000" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "7" "8" "35.6000000000000" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 7 AND xo + 1 <= 8")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-       (SPREAD (INST -1 "f" "7" "8" "35.6000000000000" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-            (SPREAD (INST -1 "f" "7" "8" "35.6000000000000" "x" "7")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 7 AND xo + 1 > 8")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "7" "8" "35.6000000000000" "8" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_ge_ci")
+%|-               (SPREAD (INST -1 "f" "7" "8" "35.6000000000000" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 7 AND xo + 1 > 8") ((GRIND) (GRIND))))))))))))
+%|- QED ge_ci_case_4
+
+
+le_ci_case_5: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 8 -> g(8),
+            x >= 8 AND x <= 9 -> g(x),
+            ELSE -> g(9)
+        ENDCOND
+    IN 
+    derivable?[(ci(8, 9))](f) AND (FORALL(x:(ci(8, 9))): deriv[(ci(8, 9))](f)(x) <= -182.000000000000) AND (FORALL(x:(ci(8, 9))): deriv[(ci(8, 9))](f)(x) >= 146.400000000000) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 8 AND x <= 9 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 8 >= 0) AND
+     (xo - 10 <= 0) AND
+     (yo - f(9) + 1 >= 0) AND
+     (yo - f(9) - 1 <= 0)) OR
+    ((xo - 7 >= 0) AND
+     (xo - 9 <= 0) AND
+     (yo - f(8) + 1 >= 0) AND
+     (yo - f(8) - 1 <= 0)))
+
+%|- le_ci_case_5 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 8 AND xo + 1 <= 9")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-     (SPREAD (INST -1 "f" "8" "9" "-182.000000000000" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "8" "9" "-182.000000000000" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 8 AND xo + 1 <= 9")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-       (SPREAD (INST -1 "f" "8" "9" "-182.000000000000" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-            (SPREAD (INST -1 "f" "8" "9" "-182.000000000000" "x" "8")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 8 AND xo + 1 > 9")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "8" "9" "-182.000000000000" "9" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_le_ci")
+%|-               (SPREAD (INST -1 "f" "8" "9" "-182.000000000000" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 8 AND xo + 1 > 9") ((GRIND) (GRIND))))))))))))
+%|- QED le_ci_case_5
+
+
+ge_ci_case_6: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 9 -> g(9),
+            x >= 9 AND x <= 10 -> g(x),
+            ELSE -> g(10)
+        ENDCOND
+    IN 
+    derivable?[(ci(9, 10))](f) AND (FORALL(x:(ci(9, 10))): deriv[(ci(9, 10))](f)(x) >= 146.400000000000) AND (FORALL(x:(ci(9, 10))): deriv[(ci(9, 10))](f)(x) <= 0) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 9 AND x <= 10 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 9 >= 0) AND
+     (xo - 11 <= 0) AND
+     (yo - f(10) + 1 >= 0) AND
+     (yo - f(10) - 1 <= 0)) OR
+    ((xo - 8 >= 0) AND
+     (xo - 10 <= 0) AND
+     (yo - f(9) + 1 >= 0) AND
+     (yo - f(9) - 1 <= 0)))
+
+%|- ge_ci_case_6 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 9 AND xo + 1 <= 10")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-     (SPREAD (INST -1 "f" "9" "10" "146.400000000000" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "9" "10" "146.400000000000" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 9 AND xo + 1 <= 10")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-       (SPREAD (INST -1 "f" "9" "10" "146.400000000000" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-            (SPREAD (INST -1 "f" "9" "10" "146.400000000000" "x" "9")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 9 AND xo + 1 > 10")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "9" "10" "146.400000000000" "10" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_ge_ci")
+%|-               (SPREAD (INST -1 "f" "9" "10" "146.400000000000" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 9 AND xo + 1 > 10") ((GRIND) (GRIND))))))))))))
+%|- QED ge_ci_case_6
+
+
+le_ci_case_7: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 10 -> g(10),
+            x >= 10 AND x <= 11 -> g(x),
+            ELSE -> g(11)
+        ENDCOND
+    IN 
+    derivable?[(ci(10, 11))](f) AND (FORALL(x:(ci(10, 11))): deriv[(ci(10, 11))](f)(x) <= 0) AND (FORALL(x:(ci(10, 11))): deriv[(ci(10, 11))](f)(x) >= -59.9000000000000) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 10 AND x <= 11 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 10 >= 0) AND
+     (xo - 12 <= 0) AND
+     (yo - f(11) + 1 >= 0) AND
+     (yo - f(11) - 1 <= 0)) OR
+    ((xo - 9 >= 0) AND
+     (xo - 11 <= 0) AND
+     (yo - f(10) + 1 >= 0) AND
+     (yo - f(10) - 1 <= 0)))
+
+%|- le_ci_case_7 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 10 AND xo + 1 <= 11")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-     (SPREAD (INST -1 "f" "10" "11" "0" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "10" "11" "0" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 10 AND xo + 1 <= 11")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-       (SPREAD (INST -1 "f" "10" "11" "0" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-            (SPREAD (INST -1 "f" "10" "11" "0" "x" "10")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 10 AND xo + 1 > 11")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "10" "11" "0" "11" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_le_ci")
+%|-               (SPREAD (INST -1 "f" "10" "11" "0" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 10 AND xo + 1 > 11") ((GRIND) (GRIND))))))))))))
+%|- QED le_ci_case_7
+
+
+le_ci_case_8: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 11 -> g(11),
+            x >= 11 AND x <= 12 -> g(x),
+            ELSE -> g(12)
+        ENDCOND
+    IN 
+    derivable?[(ci(11, 12))](f) AND (FORALL(x:(ci(11, 12))): deriv[(ci(11, 12))](f)(x) <= -59.9000000000000) AND (FORALL(x:(ci(11, 12))): deriv[(ci(11, 12))](f)(x) >= 0) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 11 AND x <= 12 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 11 >= 0) AND
+     (xo - 13 <= 0) AND
+     (yo - f(12) + 1 >= 0) AND
+     (yo - f(12) - 1 <= 0)) OR
+    ((xo - 10 >= 0) AND
+     (xo - 12 <= 0) AND
+     (yo - f(11) + 1 >= 0) AND
+     (yo - f(11) - 1 <= 0)))
+
+%|- le_ci_case_8 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 11 AND xo + 1 <= 12")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-     (SPREAD (INST -1 "f" "11" "12" "-59.9000000000000" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "11" "12" "-59.9000000000000" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 11 AND xo + 1 <= 12")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-       (SPREAD (INST -1 "f" "11" "12" "-59.9000000000000" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-            (SPREAD (INST -1 "f" "11" "12" "-59.9000000000000" "x" "11")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 11 AND xo + 1 > 12")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "11" "12" "-59.9000000000000" "12" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_le_ci")
+%|-               (SPREAD (INST -1 "f" "11" "12" "-59.9000000000000" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 11 AND xo + 1 > 12") ((GRIND) (GRIND))))))))))))
+%|- QED le_ci_case_8
+
+
+le_ci_case_9: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 12 -> g(12),
+            x >= 12 AND x <= 13 -> g(x),
+            ELSE -> g(13)
+        ENDCOND
+    IN 
+    derivable?[(ci(12, 13))](f) AND (FORALL(x:(ci(12, 13))): deriv[(ci(12, 13))](f)(x) <= 0) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    x >= 12 AND x <= 13 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo - 1) - 1 >= 0) AND
+     (yo - f(xo + 1) + 1 <= 0)) OR
+    ((yo - f(xo - 1) + 1 >= 0) AND
+     (yo - f(xo + 1) - 1 <= 0)) OR
+    ((yo - f(xo + 1) - 1 >= 0) AND
+     (yo - f(xo - 1) + 1 <= 0)) OR
+    ((yo - f(xo + 1) + 1 >= 0) AND
+     (yo - f(xo - 1) - 1 <= 0))OR
+    (((xo - 12 >= 0) AND
+     (xo - 14 <= 0) AND
+     (yo - f(13) + 1 >= 0) AND
+     (yo - f(13) - 1 <= 0)) OR
+    ((xo - 11 >= 0) AND
+     (xo - 13 <= 0) AND
+     (yo - f(12) + 1 >= 0) AND
+     (yo - f(12) - 1 <= 0)))
+
+%|- le_ci_case_9 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo - 1 >= 12 AND xo + 1 <= 13")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-     (SPREAD (INST -1 "f" "12" "13" "0" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "12" "13" "0" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo - 1 < 12 AND xo + 1 <= 13")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-       (SPREAD (INST -1 "f" "12" "13" "0" "xo + 1" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_le_ci")
+%|-            (SPREAD (INST -1 "f" "12" "13" "0" "x" "12")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 1 >= 12 AND xo + 1 > 13")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_le_ci")
+%|-          (SPREAD (INST -1 "f" "12" "13" "0" "13" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_le_ci")
+%|-               (SPREAD (INST -1 "f" "12" "13" "0" "x" "xo - 1")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT))
+%|-                 (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 1 < 12 AND xo + 1 > 13") ((GRIND) (GRIND))))))))))))
+%|- QED le_ci_case_9
+
+
+full_domain_soundness_lemma: LEMMA
+    FORALL(x,xo,yo:real):
+    LET
+        g = LAMBDA(x:real): COND (x < 1.0) AND
+     (x >= 0) -> 182.0*x, (x >= 1.0) AND
+     (x < 2.0) -> 182.000000000000, (x >= 2.0) AND
+     (x < 3.0) -> 426.2 - 122.1*x, (x >= 3.0) AND
+     (x < 7.0) -> 59.9000000000000, (x >= 7.0) AND
+     (x < 8.0) -> 35.6*x - 189.3, (x >= 8.0) AND
+     (x < 9.0) -> 1551.5 - 182.0*x, (x >= 9.0) AND
+     (x < 10.0) -> 146.4*x - 1404.1, (x >= 10.0) AND
+     (x < 11.0) -> 59.9000000000000, (x >= 11.0) AND
+     (x < 12.0) -> 718.8 - 59.9*x, ELSE -> 0 ENDCOND
+    IN
+    (((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (yo - g(x) + 1 >= 0) AND
+     (yo - g(x) - 1 <= 0)) AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f0(g)(xo - 1) - 1 >= 0) AND
+     (yo - f0(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f0(g)(xo - 1) + 1 >= 0) AND
+     (yo - f0(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f0(g)(xo + 1) - 1 >= 0) AND
+     (yo - f0(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f0(g)(xo + 1) + 1 >= 0) AND
+     (yo - f0(g)(xo - 1) - 1 <= 0)) OR
+((yo - f1(g)(xo - 1) - 1 >= 0) AND
+     (yo - f1(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f1(g)(xo - 1) + 1 >= 0) AND
+     (yo - f1(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f1(g)(xo + 1) - 1 >= 0) AND
+     (yo - f1(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f1(g)(xo + 1) + 1 >= 0) AND
+     (yo - f1(g)(xo - 1) - 1 <= 0)) OR
+((yo - f2(g)(xo - 1) - 1 >= 0) AND
+     (yo - f2(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f2(g)(xo - 1) + 1 >= 0) AND
+     (yo - f2(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f2(g)(xo + 1) - 1 >= 0) AND
+     (yo - f2(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f2(g)(xo + 1) + 1 >= 0) AND
+     (yo - f2(g)(xo - 1) - 1 <= 0)) OR
+((yo - f3(g)(xo - 1) - 1 >= 0) AND
+     (yo - f3(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f3(g)(xo - 1) + 1 >= 0) AND
+     (yo - f3(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f3(g)(xo + 1) - 1 >= 0) AND
+     (yo - f3(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f3(g)(xo + 1) + 1 >= 0) AND
+     (yo - f3(g)(xo - 1) - 1 <= 0)) OR
+((yo - f4(g)(xo - 1) - 1 >= 0) AND
+     (yo - f4(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f4(g)(xo - 1) + 1 >= 0) AND
+     (yo - f4(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f4(g)(xo + 1) - 1 >= 0) AND
+     (yo - f4(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f4(g)(xo + 1) + 1 >= 0) AND
+     (yo - f4(g)(xo - 1) - 1 <= 0)) OR
+((yo - f5(g)(xo - 1) - 1 >= 0) AND
+     (yo - f5(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f5(g)(xo - 1) + 1 >= 0) AND
+     (yo - f5(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f5(g)(xo + 1) - 1 >= 0) AND
+     (yo - f5(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f5(g)(xo + 1) + 1 >= 0) AND
+     (yo - f5(g)(xo - 1) - 1 <= 0)) OR
+((yo - f6(g)(xo - 1) - 1 >= 0) AND
+     (yo - f6(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f6(g)(xo - 1) + 1 >= 0) AND
+     (yo - f6(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f6(g)(xo + 1) - 1 >= 0) AND
+     (yo - f6(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f6(g)(xo + 1) + 1 >= 0) AND
+     (yo - f6(g)(xo - 1) - 1 <= 0)) OR
+((yo - f7(g)(xo - 1) - 1 >= 0) AND
+     (yo - f7(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f7(g)(xo - 1) + 1 >= 0) AND
+     (yo - f7(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f7(g)(xo + 1) - 1 >= 0) AND
+     (yo - f7(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f7(g)(xo + 1) + 1 >= 0) AND
+     (yo - f7(g)(xo - 1) - 1 <= 0)) OR
+((yo - f8(g)(xo - 1) - 1 >= 0) AND
+     (yo - f8(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f8(g)(xo - 1) + 1 >= 0) AND
+     (yo - f8(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f8(g)(xo + 1) - 1 >= 0) AND
+     (yo - f8(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f8(g)(xo + 1) + 1 >= 0) AND
+     (yo - f8(g)(xo - 1) - 1 <= 0)) OR
+((yo - f9(g)(xo - 1) - 1 >= 0) AND
+     (yo - f9(g)(xo + 1) + 1 <= 0)) OR
+    ((yo - f9(g)(xo - 1) + 1 >= 0) AND
+     (yo - f9(g)(xo + 1) - 1 <= 0)) OR
+    ((yo - f9(g)(xo + 1) - 1 >= 0) AND
+     (yo - f9(g)(xo - 1) + 1 <= 0)) OR
+    ((yo - f9(g)(xo + 1) + 1 >= 0) AND
+     (yo - f9(g)(xo - 1) - 1 <= 0)) OR
+    (((xo >= 0) AND
+     (xo - 2 <= 0) AND
+     (yo - g(1) + 1 >= 0) AND
+     (yo - g(1) - 1 <= 0)) OR
+    ((xo + 1 >= 0) AND
+     (xo - 1 <= 0) AND
+     (yo - g(0) + 1 >= 0) AND
+     (yo - g(0) - 1 <= 0))) OR
+    (((xo >= 0) AND
+     (xo - 2 <= 0) AND
+     (yo - g(1) + 1 >= 0) AND
+     (yo - g(1) - 1 <= 0)) OR
+    ((xo - 1 >= 0) AND
+     (xo - 3 <= 0) AND
+     (yo - g(2) + 1 >= 0) AND
+     (yo - g(2) - 1 <= 0))) OR
+    (((xo - 2 >= 0) AND
+     (xo - 4 <= 0) AND
+     (yo - g(3) + 1 >= 0) AND
+     (yo - g(3) - 1 <= 0)) OR
+    ((xo - 1 >= 0) AND
+     (xo - 3 <= 0) AND
+     (yo - g(2) + 1 >= 0) AND
+     (yo - g(2) - 1 <= 0))) OR
+    (((xo - 6 >= 0) AND
+     (xo - 8 <= 0) AND
+     (yo - g(7) + 1 >= 0) AND
+     (yo - g(7) - 1 <= 0)) OR
+    ((xo - 2 >= 0) AND
+     (xo - 4 <= 0) AND
+     (yo - g(3) + 1 >= 0) AND
+     (yo - g(3) - 1 <= 0))) OR
+    (((xo - 7 >= 0) AND
+     (xo - 9 <= 0) AND
+     (yo - g(8) + 1 >= 0) AND
+     (yo - g(8) - 1 <= 0)) OR
+    ((xo - 6 >= 0) AND
+     (xo - 8 <= 0) AND
+     (yo - g(7) + 1 >= 0) AND
+     (yo - g(7) - 1 <= 0))) OR
+    (((xo - 8 >= 0) AND
+     (xo - 10 <= 0) AND
+     (yo - g(9) + 1 >= 0) AND
+     (yo - g(9) - 1 <= 0)) OR
+    ((xo - 7 >= 0) AND
+     (xo - 9 <= 0) AND
+     (yo - g(8) + 1 >= 0) AND
+     (yo - g(8) - 1 <= 0))) OR
+    (((xo - 9 >= 0) AND
+     (xo - 11 <= 0) AND
+     (yo - g(10) + 1 >= 0) AND
+     (yo - g(10) - 1 <= 0)) OR
+    ((xo - 8 >= 0) AND
+     (xo - 10 <= 0) AND
+     (yo - g(9) + 1 >= 0) AND
+     (yo - g(9) - 1 <= 0))) OR
+    (((xo - 10 >= 0) AND
+     (xo - 12 <= 0) AND
+     (yo - g(11) + 1 >= 0) AND
+     (yo - g(11) - 1 <= 0)) OR
+    ((xo - 9 >= 0) AND
+     (xo - 11 <= 0) AND
+     (yo - g(10) + 1 >= 0) AND
+     (yo - g(10) - 1 <= 0))) OR
+    (((xo - 11 >= 0) AND
+     (xo - 13 <= 0) AND
+     (yo - g(12) + 1 >= 0) AND
+     (yo - g(12) - 1 <= 0)) OR
+    ((xo - 10 >= 0) AND
+     (xo - 12 <= 0) AND
+     (yo - g(11) + 1 >= 0) AND
+     (yo - g(11) - 1 <= 0))) OR
+    (((xo - 12 >= 0) AND
+     (xo - 14 <= 0) AND
+     (yo - g(13) + 1 >= 0) AND
+     (yo - g(13) - 1 <= 0)) OR
+    ((xo - 11 >= 0) AND
+     (xo - 13 <= 0) AND
+     (yo - g(12) + 1 >= 0) AND
+     (yo - g(12) - 1 <= 0)))
+
+
+
+%|- *TCC* : PROOF (THEN (ASSERT) (GRIND)) QED
+
+%|- mvt_gen_ge_TCC1 : PROOF (THEN (SKEEP) (LEMMA "connected_deriv_domain[(D)]") (ASSERT)) QED
+
+%|- mvt_gen_ge_lo_TCC1 : PROOF (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "C") (ASSERT) (GRIND)) QED
+
+%|- mvt_gen_ge_lo_TCC2 : PROOF (THEN (SKEEP) (LEMMA "left_open_noe") (INST -1 "C") (ASSERT) (GRIND)) QED
+
+%|- mvt_gen_ge_ro_TCC1 : PROOF (THEN (SKEEP) (LEMMA "right_open_dd") (INST -1 "C") (ASSERT) (GRIND)) QED
+
+%|- mvt_gen_ge_ro_TCC2 : PROOF (THEN (SKEEP) (LEMMA "right_open_noe") (INST -1 "C") (ASSERT) (GRIND)) QED
+
+%|- mvt_gen_ge_ci_TCC1 : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "d1" "d2") (ASSERT) (GRIND)) QED
+
+%|- mvt_gen_ge_ci_TCC2 : PROOF (THEN (SKEEP) (LEMMA "ci_noe") (INST -1 "d1" "d2") (ASSERT) (GRIND)) QED
+
+%|- ge_ci_case_0_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "0" "1") (LEMMA "ci_noe") (INST -1 "0" "1") (ASSERT) (GRIND)) QED
+
+%|- le_ci_case_1_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "1" "2") (LEMMA "ci_noe") (INST -1 "1" "2") (ASSERT) (GRIND)) QED
+
+%|- le_ci_case_2_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "2" "3") (LEMMA "ci_noe") (INST -1 "2" "3") (ASSERT) (GRIND)) QED
+
+%|- le_ci_case_3_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "3" "7") (LEMMA "ci_noe") (INST -1 "3" "7") (ASSERT) (GRIND)) QED
+
+%|- ge_ci_case_4_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "7" "8") (LEMMA "ci_noe") (INST -1 "7" "8") (ASSERT) (GRIND)) QED
+
+%|- le_ci_case_5_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "8" "9") (LEMMA "ci_noe") (INST -1 "8" "9") (ASSERT) (GRIND)) QED
+
+%|- ge_ci_case_6_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "9" "10") (LEMMA "ci_noe") (INST -1 "9" "10") (ASSERT) (GRIND)) QED
+
+%|- le_ci_case_7_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "10" "11") (LEMMA "ci_noe") (INST -1 "10" "11") (ASSERT) (GRIND)) QED
+
+%|- le_ci_case_8_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "11" "12") (LEMMA "ci_noe") (INST -1 "11" "12") (ASSERT) (GRIND)) QED
+
+%|- le_ci_case_9_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "12" "13") (LEMMA "ci_noe") (INST -1 "12" "13") (ASSERT) (GRIND)) QED
+
+%|- full_domain_soundness_lemma_helper_TCC* : PROOF (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "0" "1") (LEMMA "ci_noe") (INST -1 "0" "1") (LEMMA "ci_dd") (INST -1 "1" "2") (LEMMA "ci_noe") (INST -1 "1" "2") (LEMMA "ci_dd") (INST -1 "2" "3") (LEMMA "ci_noe") (INST -1 "2" "3") (LEMMA "ci_dd") (INST -1 "3" "7") (LEMMA "ci_noe") (INST -1 "3" "7") (LEMMA "ci_dd") (INST -1 "7" "8") (LEMMA "ci_noe") (INST -1 "7" "8") (LEMMA "ci_dd") (INST -1 "8" "9") (LEMMA "ci_noe") (INST -1 "8" "9") (LEMMA "ci_dd") (INST -1 "9" "10") (LEMMA "ci_noe") (INST -1 "9" "10") (LEMMA "ci_dd") (INST -1 "10" "11") (LEMMA "ci_noe") (INST -1 "10" "11") (LEMMA "ci_dd") (INST -1 "11" "12") (LEMMA "ci_noe") (INST -1 "11" "12") (LEMMA "ci_dd") (INST -1 "12" "13") (LEMMA "ci_noe") (INST -1 "12" "13") (ASSERT) (GRIND)) QED
+
+end active_corner_certificate

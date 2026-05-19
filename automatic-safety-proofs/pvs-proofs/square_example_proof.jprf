@@ -1,0 +1,2004 @@
+{
+ "square_example_proof.IsEquiv": [
+  {
+   "info": {
+    "theory": "square_example_proof",
+    "formula": "IsEquiv",
+    "status": "unfinished",
+    "prover": "PVS 7.1.0 (Allegro CL Enterprise Edition)",
+    "shasum": "fbbc0fdfc28b0945c7cb34af0ac9b1f7deb7af2476b04e12670db92fc332755d"
+   },
+   "origin": ".prf",
+   "proofTree": {
+    "branch": "",
+    "name": "IsEquiv",
+    "type": "root",
+    "rules": [
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(expand \"Equiv\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(case \"xo=2 AND yo=4\")",
+      "type": "proof-command",
+      "rules": [
+       {
+        "branch": "1",
+        "name": "(1)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "1",
+          "name": "(flatten)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "1",
+          "name": "(replaces -1)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "1",
+          "name": "(split)",
+          "type": "proof-command",
+          "rules": [
+           {
+            "branch": "1.1",
+            "name": "(1.1)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "1.1",
+              "name": "(flatten)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "1.1",
+              "name": "(eval-formula 1)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           },
+           {
+            "branch": "1.2",
+            "name": "(1.2)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "1.2",
+              "name": "(flatten)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "1.2",
+              "name": "(tarski 1)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "branch": "2",
+        "name": "(2)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "2",
+          "name": "(postpone)",
+          "type": "proof-command",
+          "rules": []
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "branch": "",
+      "name": "(replaces -1)",
+      "type": "proof-command",
+      "rules": []
+     }
+    ]
+   }
+  }
+ ],
+ "square_example_proof.IsSoundAlpha": [
+  {
+   "info": {
+    "theory": "square_example_proof",
+    "formula": "IsSoundAlpha",
+    "status": "proved",
+    "prover": "PVS 7.1.0 (Allegro CL Enterprise Edition)",
+    "shasum": "cc9bf9df2eca8f6d77f8be1736fd11196f565186d90a3a8f66755ca816bdf289"
+   },
+   "origin": ".prf",
+   "proofTree": {
+    "branch": "",
+    "name": "IsSoundAlpha",
+    "type": "root",
+    "rules": [
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(expand \"SoundnessAlpha\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(flatten)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(label \"alphapos\" 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(label \"alphaneg\" 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(hide alphapos)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(hide alphaneg)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(name \"eps\" \"1 - xo + x\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -1 l 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -1 l 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(replace -1 -2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(replace -1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -4 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -5 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -2 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -3 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(case \"NOT eps >= 0\")",
+      "type": "proof-command",
+      "rules": [
+       {
+        "branch": "1",
+        "name": "(1)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "1",
+          "name": "(assert)",
+          "type": "proof-command",
+          "rules": []
+         }
+        ]
+       },
+       {
+        "branch": "2",
+        "name": "(2)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "2",
+          "name": "(hide -3)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "2",
+          "name": "(case \"NOT eps <= 2\")",
+          "type": "proof-command",
+          "rules": [
+           {
+            "branch": "2.1",
+            "name": "(2.1)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.1",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           },
+           {
+            "branch": "2.2",
+            "name": "(2.2)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.2",
+              "name": "(hide -4)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(move-terms -4 l 2)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(move-terms -5 l 2)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(case \"alpha >= 0\")",
+              "type": "proof-command",
+              "rules": [
+               {
+                "branch": "2.2.1",
+                "name": "(2.2.1)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.2.1",
+                  "name": "(mult-by -2 \"alpha\")",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.1",
+                  "name": "(mult-by -3 \"alpha\")",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.1",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.1",
+                  "name": "(case \"NOT -(xo) * alpha - 1 + alpha + yo <= 2*alpha\")",
+                  "type": "proof-command",
+                  "rules": [
+                   {
+                    "branch": "2.2.1.1",
+                    "name": "(2.2.1.1)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.2.1.1",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     }
+                    ]
+                   },
+                   {
+                    "branch": "2.2.1.2",
+                    "name": "(2.2.1.2)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.2.1.2",
+                      "name": "(hide -6)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "2.2.1.2",
+                      "name": "(move-terms -1 r 1)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "2.2.1.2",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "2.2.1.2",
+                      "name": "(case \"NOT 1 + -(xo) * alpha + alpha + yo >= 0\")",
+                      "type": "proof-command",
+                      "rules": [
+                       {
+                        "branch": "2.2.1.2.1",
+                        "name": "(2.2.1.2.1)",
+                        "type": "proof-branch",
+                        "rules": [
+                         {
+                          "branch": "2.2.1.2.1",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         }
+                        ]
+                       },
+                       {
+                        "branch": "2.2.1.2.2",
+                        "name": "(2.2.1.2.2)",
+                        "type": "proof-branch",
+                        "rules": [
+                         {
+                          "branch": "2.2.1.2.2",
+                          "name": "(hide -7)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.1.2.2",
+                          "name": "(mult-by -1 \"-1 - alpha + -(xo) * alpha + yo\" -)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.1.2.2",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.1.2.2",
+                          "name": "(reveal alphapos)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.1.2.2",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               },
+               {
+                "branch": "2.2.2",
+                "name": "(2.2.2)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.2.2",
+                  "name": "(mult-by -1 \"alpha\" -)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.2",
+                  "name": "(mult-by -2 \"alpha\" -)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.2",
+                  "name": "(case \"NOT -(xo) * alpha - 1 + alpha + yo <= 0\")",
+                  "type": "proof-command",
+                  "rules": [
+                   {
+                    "branch": "2.2.2.1",
+                    "name": "(2.2.2.1)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.2.2.1",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     }
+                    ]
+                   },
+                   {
+                    "branch": "2.2.2.2",
+                    "name": "(2.2.2.2)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.2.2.2",
+                      "name": "(hide -5)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "2.2.2.2",
+                      "name": "(case \"NOT 1 + -(xo) * alpha + alpha + yo >= 2*alpha\")",
+                      "type": "proof-command",
+                      "rules": [
+                       {
+                        "branch": "2.2.2.2.1",
+                        "name": "(2.2.2.2.1)",
+                        "type": "proof-branch",
+                        "rules": [
+                         {
+                          "branch": "2.2.2.2.1",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         }
+                        ]
+                       },
+                       {
+                        "branch": "2.2.2.2.2",
+                        "name": "(2.2.2.2.2)",
+                        "type": "proof-branch",
+                        "rules": [
+                         {
+                          "branch": "2.2.2.2.2",
+                          "name": "(hide -6)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.2.2.2",
+                          "name": "(move-terms -1 r 1)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.2.2.2",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.2.2.2",
+                          "name": "(mult-by -1 \"-(xo) * alpha - 1 + alpha + yo\" -)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.2.2.2",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.2.2.2",
+                          "name": "(reveal alphaneg)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.2.2.2.2",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "square_example_proof.IsSoundSimple": [
+  {
+   "info": {
+    "theory": "square_example_proof",
+    "formula": "IsSoundSimple",
+    "status": "proved",
+    "prover": "PVS 7.1.0 (Allegro CL Enterprise Edition)",
+    "shasum": "cc9bf9df2eca8f6d77f8be1736fd11196f565186d90a3a8f66755ca816bdf289"
+   },
+   "origin": ".prf",
+   "proofTree": {
+    "branch": "",
+    "name": "IsSoundSimple",
+    "type": "root",
+    "rules": [
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(expand \"SoundnessSimple\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(lemma IsSoundAlpha)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(inst -1 xo yo 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(expand \"SoundnessAlpha\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(flatten)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(split)",
+      "type": "proof-command",
+      "rules": [
+       {
+        "branch": "1",
+        "name": "(1)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "1",
+          "name": "(propax)",
+          "type": "proof-command",
+          "rules": []
+         }
+        ]
+       },
+       {
+        "branch": "2",
+        "name": "(2)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "2",
+          "name": "(assert)",
+          "type": "proof-command",
+          "rules": []
+         }
+        ]
+       },
+       {
+        "branch": "3",
+        "name": "(3)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "3",
+          "name": "(inst?)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "3",
+          "name": "(assert)",
+          "type": "proof-command",
+          "rules": []
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "square_example_proof.IsSoundAlphaCenterEpsilon": [
+  {
+   "info": {
+    "theory": "square_example_proof",
+    "formula": "IsSoundAlphaCenterEpsilon",
+    "status": "proved",
+    "prover": "PVS 7.1.0 (Allegro CL Enterprise Edition)",
+    "shasum": "cc9bf9df2eca8f6d77f8be1736fd11196f565186d90a3a8f66755ca816bdf289"
+   },
+   "origin": ".prf",
+   "proofTree": {
+    "branch": "",
+    "name": "IsSoundAlphaCenterEpsilon",
+    "type": "root",
+    "rules": [
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(expand \"SoundnessAlpha\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(flatten)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(label \"alphapos\" 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(label \"alphaneg\" 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(hide alphapos alphaneg)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(name \"eps\" \"x-xo\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -1 l 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(replace -1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(mult-by (-2 -3) \"-1\" -)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -4 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -5 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -4 l 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -5 l 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(case \"alpha >= 0\")",
+      "type": "proof-command",
+      "rules": [
+       {
+        "branch": "1",
+        "name": "(1)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "1",
+          "name": "(mult-by -2 \"alpha\")",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "1",
+          "name": "(mult-by -3 \"alpha\")",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "1",
+          "name": "(assert)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "1",
+          "name": "(case \"NOT -(alpha * xo) - 1 + yo <= alpha\")",
+          "type": "proof-command",
+          "rules": [
+           {
+            "branch": "1.1",
+            "name": "(1.1)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "1.1",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           },
+           {
+            "branch": "1.2",
+            "name": "(1.2)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "1.2",
+              "name": "(move-terms -1 r 1)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "1.2",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "1.2",
+              "name": "(case \"NOT 1 + -(alpha * xo) + yo >= -alpha\")",
+              "type": "proof-command",
+              "rules": [
+               {
+                "branch": "1.2.1",
+                "name": "(1.2.1)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "1.2.1",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 }
+                ]
+               },
+               {
+                "branch": "1.2.2",
+                "name": "(1.2.2)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "1.2.2",
+                  "name": "(move-terms -1 r 1)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "1.2.2",
+                  "name": "(mult-by -1 \"-(alpha * xo) - 1 - alpha + yo\" -)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "1.2.2",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "1.2.2",
+                  "name": "(reveal alphapos)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "1.2.2",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "branch": "2",
+        "name": "(2)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "2",
+          "name": "(mult-by -1 \"alpha\" -)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "2",
+          "name": "(mult-by -2 \"alpha\" -)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "2",
+          "name": "(assert)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "2",
+          "name": "(case \"NOT -(alpha * xo) - 1 + yo <= -alpha\")",
+          "type": "proof-command",
+          "rules": [
+           {
+            "branch": "2.1",
+            "name": "(2.1)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.1",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           },
+           {
+            "branch": "2.2",
+            "name": "(2.2)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.2",
+              "name": "(move-terms -1 r 1)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(case \"NOT 1 + -(alpha * xo) + yo >= alpha\")",
+              "type": "proof-command",
+              "rules": [
+               {
+                "branch": "2.2.1",
+                "name": "(2.2.1)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.2.1",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 }
+                ]
+               },
+               {
+                "branch": "2.2.2",
+                "name": "(2.2.2)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.2.2",
+                  "name": "(move-terms -1 r 1)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.2",
+                  "name": "(mult-by -1 \"-(alpha * xo) - 1 - -alpha + yo\" -)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.2",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.2",
+                  "name": "(reveal alphaneg)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.2.2",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "square_example_proof.IsSoundAlphaNoEpsilon": [
+  {
+   "info": {
+    "theory": "square_example_proof",
+    "formula": "IsSoundAlphaNoEpsilon",
+    "status": "unfinished",
+    "prover": "PVS 7.1.0 (Allegro CL Enterprise Edition)",
+    "shasum": "2a1c4dc865afad91dcf403efbda4198fc3466751a0f16da900753105604f625c"
+   },
+   "origin": ".prf",
+   "proofTree": {
+    "branch": "",
+    "name": "IsSoundAlphaNoEpsilon",
+    "type": "root",
+    "rules": [
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(expand \"SoundnessAlpha\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(flatten)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -3 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -3 l 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(case \"NOT x <= xo+1\")",
+      "type": "proof-command",
+      "rules": [
+       {
+        "branch": "1",
+        "name": "(1)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "1",
+          "name": "(assert)",
+          "type": "proof-command",
+          "rules": []
+         }
+        ]
+       },
+       {
+        "branch": "2",
+        "name": "(2)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "2",
+          "name": "(mult-by -1 \"alpha\")",
+          "type": "proof-command",
+          "rules": [
+           {
+            "branch": "2.1",
+            "name": "(2.1)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.1",
+              "name": "(swap \"alpha\" * \"x\")",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.1",
+              "name": "(case \"NOT yo - 1 <= (xo + 1) * alpha\")",
+              "type": "proof-command",
+              "rules": [
+               {
+                "branch": "2.1.1",
+                "name": "(2.1.1)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.1.1",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 }
+                ]
+               },
+               {
+                "branch": "2.1.2",
+                "name": "(2.1.2)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.1.2",
+                  "name": "(move-terms -3 l 1)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(mult-by -3 \"-1\" -)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(move-terms -2 r 1)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(move-terms -2 r 1)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(move-terms -6 r 1)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(move-terms -6 l 2)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "2.1.2",
+                  "name": "(case \"NOT x >= xo - 1\")",
+                  "type": "proof-command",
+                  "rules": [
+                   {
+                    "branch": "2.1.2.1",
+                    "name": "(2.1.2.1)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.1.2.1",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     }
+                    ]
+                   },
+                   {
+                    "branch": "2.1.2.2",
+                    "name": "(2.1.2.2)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.1.2.2",
+                      "name": "(case \"NOT 1+yo >= (xo-1)*alpha\")",
+                      "type": "proof-command",
+                      "rules": [
+                       {
+                        "branch": "2.1.2.2.1",
+                        "name": "(2.1.2.2.1)",
+                        "type": "proof-branch",
+                        "rules": [
+                         {
+                          "branch": "2.1.2.2.1",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.1",
+                          "name": "(mult-by -1 \"alpha\")",
+                          "type": "proof-command",
+                          "rules": [
+                           {
+                            "branch": "2.1.2.2.1.1",
+                            "name": "(2.1.2.2.1.1)",
+                            "type": "proof-branch",
+                            "rules": [
+                             {
+                              "branch": "2.1.2.2.1.1",
+                              "name": "(case \"NOT 1+yo >= (xo-1)*alpha\")",
+                              "type": "proof-command",
+                              "rules": [
+                               {
+                                "branch": "2.1.2.2.1.1.1",
+                                "name": "(2.1.2.2.1.1.1)",
+                                "type": "proof-branch",
+                                "rules": [
+                                 {
+                                  "branch": "2.1.2.2.1.1.1",
+                                  "name": "(assert)",
+                                  "type": "proof-command",
+                                  "rules": []
+                                 }
+                                ]
+                               },
+                               {
+                                "branch": "2.1.2.2.1.1.2",
+                                "name": "(2.1.2.2.1.1.2)",
+                                "type": "proof-branch",
+                                "rules": [
+                                 {
+                                  "branch": "2.1.2.2.1.1.2",
+                                  "name": "(move-terms -1 r 1)",
+                                  "type": "proof-command",
+                                  "rules": []
+                                 },
+                                 {
+                                  "branch": "2.1.2.2.1.1.2",
+                                  "name": "(assert)",
+                                  "type": "proof-command",
+                                  "rules": []
+                                 }
+                                ]
+                               }
+                              ]
+                             }
+                            ]
+                           },
+                           {
+                            "branch": "2.1.2.2.1.2",
+                            "name": "(2.1.2.2.1.2)",
+                            "type": "proof-branch",
+                            "rules": [
+                             {
+                              "branch": "2.1.2.2.1.2",
+                              "name": "(case \"alpha >= 0\")",
+                              "type": "proof-command",
+                              "rules": [
+                               {
+                                "branch": "2.1.2.2.1.2.1",
+                                "name": "(2.1.2.2.1.2.1)",
+                                "type": "proof-branch",
+                                "rules": [
+                                 {
+                                  "branch": "2.1.2.2.1.2.1",
+                                  "name": "(propax)",
+                                  "type": "proof-command",
+                                  "rules": []
+                                 }
+                                ]
+                               },
+                               {
+                                "branch": "2.1.2.2.1.2.2",
+                                "name": "(2.1.2.2.1.2.2)",
+                                "type": "proof-branch",
+                                "rules": [
+                                 {
+                                  "branch": "2.1.2.2.1.2.2",
+                                  "name": "(mult-by -1 \"alpha\" -)",
+                                  "type": "proof-command",
+                                  "rules": []
+                                 },
+                                 {
+                                  "branch": "2.1.2.2.1.2.2",
+                                  "name": "(hide (1 2 3))",
+                                  "type": "proof-command",
+                                  "rules": []
+                                 },
+                                 {
+                                  "branch": "2.1.2.2.1.2.2",
+                                  "name": "(case \"NOT yo-1 <= (xo-1)*alpha\")",
+                                  "type": "proof-command",
+                                  "rules": [
+                                   {
+                                    "branch": "2.1.2.2.1.2.2.1",
+                                    "name": "(2.1.2.2.1.2.2.1)",
+                                    "type": "proof-branch",
+                                    "rules": [
+                                     {
+                                      "branch": "2.1.2.2.1.2.2.1",
+                                      "name": "(assert)",
+                                      "type": "proof-command",
+                                      "rules": []
+                                     }
+                                    ]
+                                   },
+                                   {
+                                    "branch": "2.1.2.2.1.2.2.2",
+                                    "name": "(2.1.2.2.1.2.2.2)",
+                                    "type": "proof-branch",
+                                    "rules": [
+                                     {
+                                      "branch": "2.1.2.2.1.2.2.2",
+                                      "name": "(move-terms -1 r 1)",
+                                      "type": "proof-command",
+                                      "rules": []
+                                     },
+                                     {
+                                      "branch": "2.1.2.2.1.2.2.2",
+                                      "name": "(case \"NOT xo-1<=x\")",
+                                      "type": "proof-command",
+                                      "rules": [
+                                       {
+                                        "branch": "2.1.2.2.1.2.2.2.1",
+                                        "name": "(2.1.2.2.1.2.2.2.1)",
+                                        "type": "proof-branch",
+                                        "rules": [
+                                         {
+                                          "branch": "2.1.2.2.1.2.2.2.1",
+                                          "name": "(assert)",
+                                          "type": "proof-command",
+                                          "rules": []
+                                         }
+                                        ]
+                                       },
+                                       {
+                                        "branch": "2.1.2.2.1.2.2.2.2",
+                                        "name": "(2.1.2.2.1.2.2.2.2)",
+                                        "type": "proof-branch",
+                                        "rules": [
+                                         {
+                                          "branch": "2.1.2.2.1.2.2.2.2",
+                                          "name": "(hide -4)",
+                                          "type": "proof-command",
+                                          "rules": []
+                                         },
+                                         {
+                                          "branch": "2.1.2.2.1.2.2.2.2",
+                                          "name": "(move-terms -6 l 2)",
+                                          "type": "proof-command",
+                                          "rules": []
+                                         },
+                                         {
+                                          "branch": "2.1.2.2.1.2.2.2.2",
+                                          "name": "(move-terms -6 r 1)",
+                                          "type": "proof-command",
+                                          "rules": []
+                                         },
+                                         {
+                                          "branch": "2.1.2.2.1.2.2.2.2",
+                                          "name": "(assert)",
+                                          "type": "proof-command",
+                                          "rules": []
+                                         },
+                                         {
+                                          "branch": "2.1.2.2.1.2.2.2.2",
+                                          "name": "(mult-by -6 \"alpha\" -)",
+                                          "type": "proof-command",
+                                          "rules": []
+                                         },
+                                         {
+                                          "branch": "2.1.2.2.1.2.2.2.2",
+                                          "name": "(case \"NOT 1+yo > (xo+1)*alpha\")",
+                                          "type": "proof-command",
+                                          "rules": [
+                                           {
+                                            "branch": "2.1.2.2.1.2.2.2.2.1",
+                                            "name": "(2.1.2.2.1.2.2.2.2.1)",
+                                            "type": "proof-branch",
+                                            "rules": [
+                                             {
+                                              "branch": "2.1.2.2.1.2.2.2.2.1",
+                                              "name": "(assert)",
+                                              "type": "proof-command",
+                                              "rules": []
+                                             }
+                                            ]
+                                           },
+                                           {
+                                            "branch": "2.1.2.2.1.2.2.2.2.2",
+                                            "name": "(2.1.2.2.1.2.2.2.2.2)",
+                                            "type": "proof-branch",
+                                            "rules": [
+                                             {
+                                              "branch": "2.1.2.2.1.2.2.2.2.2",
+                                              "name": "(move-terms -1 r 1)",
+                                              "type": "proof-command",
+                                              "rules": []
+                                             },
+                                             {
+                                              "branch": "2.1.2.2.1.2.2.2.2.2",
+                                              "name": "(mult-by -1 \"-1 - alpha * xo + alpha + yo\" -)",
+                                              "type": "proof-command",
+                                              "rules": []
+                                             },
+                                             {
+                                              "branch": "2.1.2.2.1.2.2.2.2.2",
+                                              "name": "(assert)",
+                                              "type": "proof-command",
+                                              "rules": []
+                                             }
+                                            ]
+                                           }
+                                          ]
+                                         }
+                                        ]
+                                       }
+                                      ]
+                                     }
+                                    ]
+                                   }
+                                  ]
+                                 }
+                                ]
+                               }
+                              ]
+                             }
+                            ]
+                           }
+                          ]
+                         }
+                        ]
+                       },
+                       {
+                        "branch": "2.1.2.2.2",
+                        "name": "(2.1.2.2.2)",
+                        "type": "proof-branch",
+                        "rules": [
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(move-terms -6 l 2)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(move-terms -6 r 1)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(assert)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(hide -3)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(grind)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(grind-reals)",
+                          "type": "proof-command",
+                          "rules": []
+                         },
+                         {
+                          "branch": "2.1.2.2.2",
+                          "name": "(postpone)",
+                          "type": "proof-command",
+                          "rules": []
+                         }
+                        ]
+                       }
+                      ]
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "branch": "2.2",
+            "name": "(2.2)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.2",
+              "name": "(postpone)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "square_example_proof.IsSoundAlphaNoEpsilonSecondTry": [
+  {
+   "info": {
+    "theory": "square_example_proof",
+    "formula": "IsSoundAlphaNoEpsilonSecondTry",
+    "status": "proved",
+    "prover": "PVS 7.1.0 (Allegro CL Enterprise Edition)",
+    "shasum": "cc9bf9df2eca8f6d77f8be1736fd11196f565186d90a3a8f66755ca816bdf289"
+   },
+   "origin": ".prf",
+   "proofTree": {
+    "branch": "",
+    "name": "IsSoundAlphaNoEpsilonSecondTry",
+    "type": "root",
+    "rules": [
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(expand \"SoundnessAlpha\")",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(flatten)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(skeep)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -1 l 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -1 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -2 l 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -2 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -3 l 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -4 l 2)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -3 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(move-terms -4 r 1)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(assert)",
+      "type": "proof-command",
+      "rules": []
+     },
+     {
+      "branch": "",
+      "name": "(case \"alpha >= 0\")",
+      "type": "proof-command",
+      "rules": [
+       {
+        "branch": "1",
+        "name": "(1)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "1",
+          "name": "(mult-by -3 \"alpha\")",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "1",
+          "name": "(case \"NOT yo - 1 <= alpha * (1 + xo)\")",
+          "type": "proof-command",
+          "rules": [
+           {
+            "branch": "1.1",
+            "name": "(1.1)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "1.1",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           },
+           {
+            "branch": "1.2",
+            "name": "(1.2)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "1.2",
+              "name": "(mult-by -4 \"alpha\")",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "1.2",
+              "name": "(case \"NOT 1 + yo >= x * alpha\")",
+              "type": "proof-command",
+              "rules": [
+               {
+                "branch": "1.2.1",
+                "name": "(1.2.1)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "1.2.1",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 }
+                ]
+               },
+               {
+                "branch": "1.2.2",
+                "name": "(1.2.2)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "1.2.2",
+                  "name": "(hide -7)",
+                  "type": "proof-command",
+                  "rules": []
+                 },
+                 {
+                  "branch": "1.2.2",
+                  "name": "(case \"NOT 1 + yo >= (xo-1)*alpha\")",
+                  "type": "proof-command",
+                  "rules": [
+                   {
+                    "branch": "1.2.2.1",
+                    "name": "(1.2.2.1)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "1.2.2.1",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     }
+                    ]
+                   },
+                   {
+                    "branch": "1.2.2.2",
+                    "name": "(1.2.2.2)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "1.2.2.2",
+                      "name": "(move-terms -1 r 1)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "1.2.2.2",
+                      "name": "(move-terms -4 r 1)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "1.2.2.2",
+                      "name": "(mult-by -1 \"yo - 1 - alpha * (1 + xo)\" -)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "1.2.2.2",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "branch": "2",
+        "name": "(2)",
+        "type": "proof-branch",
+        "rules": [
+         {
+          "branch": "2",
+          "name": "(assert)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "2",
+          "name": "(mult-by -1 \"alpha\" -)",
+          "type": "proof-command",
+          "rules": []
+         },
+         {
+          "branch": "2",
+          "name": "(case \"NOT yo - 1 <= (xo - 1) * alpha\")",
+          "type": "proof-command",
+          "rules": [
+           {
+            "branch": "2.1",
+            "name": "(2.1)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.1",
+              "name": "(assert)",
+              "type": "proof-command",
+              "rules": []
+             }
+            ]
+           },
+           {
+            "branch": "2.2",
+            "name": "(2.2)",
+            "type": "proof-branch",
+            "rules": [
+             {
+              "branch": "2.2",
+              "name": "(move-terms -1 r 1)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(mult-by -3 \"alpha\" -)",
+              "type": "proof-command",
+              "rules": []
+             },
+             {
+              "branch": "2.2",
+              "name": "(case \"NOT 1+yo >= x * alpha\")",
+              "type": "proof-command",
+              "rules": [
+               {
+                "branch": "2.2.1",
+                "name": "(2.2.1)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.2.1",
+                  "name": "(assert)",
+                  "type": "proof-command",
+                  "rules": []
+                 }
+                ]
+               },
+               {
+                "branch": "2.2.2",
+                "name": "(2.2.2)",
+                "type": "proof-branch",
+                "rules": [
+                 {
+                  "branch": "2.2.2",
+                  "name": "(case \"NOT 1+yo >= (1+xo)*alpha\")",
+                  "type": "proof-command",
+                  "rules": [
+                   {
+                    "branch": "2.2.2.1",
+                    "name": "(2.2.2.1)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.2.2.1",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     }
+                    ]
+                   },
+                   {
+                    "branch": "2.2.2.2",
+                    "name": "(2.2.2.2)",
+                    "type": "proof-branch",
+                    "rules": [
+                     {
+                      "branch": "2.2.2.2",
+                      "name": "(move-terms -1 r 1)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "2.2.2.2",
+                      "name": "(mult-by -1 \" yo - 1 - (xo - 1) * alpha\" -)",
+                      "type": "proof-command",
+                      "rules": []
+                     },
+                     {
+                      "branch": "2.2.2.2",
+                      "name": "(assert)",
+                      "type": "proof-command",
+                      "rules": []
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

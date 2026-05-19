@@ -1,0 +1,58 @@
+turning_accelerating_flight_dynamics  % [ parameters ]
+		: THEORY
+
+  BEGIN
+
+  % ASSUMING
+   % assuming declarations
+  % ENDASSUMING
+  IMPORTING dL@top 
+
+ r,h,v,w  : VAR dLVar
+ rp,hp,alo,vlo      : VAR real
+
+abs_re(x:RealExpr)(env:Environment): real = abs(x(env))
+max_re(x,y:RealExpr)(env:Environment): real = max(x(env),y(env))
+
+%% flying dynamics
+fly_simp(r,h,v:dLVar, a: dLVar | pairwise_distinct_vars?((:r,h,v,a:)),rv:real)(Q:BoolExpr): HP =
+ DIFF( (: (r, -cnst(rv)), (h, -val(v)), (v, val(a)) :), Q)
+
+%% Bool expr in flying dynamics
+
+bound_va(v,a: dLVar, w: dLVar |pairwise_distinct_vars?((:v,a,w:)), vlo,alo:real): BoolExpr =
+ val(w)*val(v) >= val(w)*cnst(vlo) AND val(w)*val(a) >= cnst(alo)
+
+%% Limpl
+
+Avolume(r,h,v:dLVar, w: dLVar | pairwise_distinct_vars?((:r,h,v,w:)),
+  alo,vlo,t,hn:real): BoolExpr =
+  (cnst(0) <= cnst(t)
+   AND cnst(t) < max_re(cnst(0),val(w)*(cnst(vlo)-val(v)))/cnst(alo)
+   AND cnst(hn) = val(w)*cnst(alo)/cnst(2) * cnst(t)^2 + val(v)*cnst(t))
+   OR
+  (cnst(t) >= max_re(0,val(w)*(cnst(vlo)-val(v)))/cnst(alo)
+   AND
+   cnst(hn) = cnst(vlo)*cnst(t) - val(w)*max_re(cnst(0),val(w)*(cnst(vlo)-val(v)))^2/(cnst(2)*cnst(alo)))
+
+ Linvimp(r,h,v:dLVar, w: dLVar | pairwise_distinct_vars?((:r,h,v,w:)),
+  rv,t,rp,hp:real): BoolExpr = DLFORALL(LAMBDA(t:real): DLFORALL( LAMBDA(rn: real): DLFORALL(LAMBDA(hn:real):
+ cnst(rn) = cnst(rv)*cnst(t) AND
+ DLTRUE IMPLIES
+
+(abs_re(val(r)-cnst(rn)) > cnst(rp) OR
+  val(w)*(val(h)-cnst(hn)) < cnst(hp)))))
+
+%%% General statement
+turn_acc_general: LEMMA
+FORALL(rp,hp,rv,alo,t:real,r,h,v,w:dLVar):
+(rp >= 0 AND hp >= 0 AND rv >= 0 AND alo > 0)
+AND
+(val(w) = 1 OR val(w) = -1)
+AND
+Linvimp(r,h,v,w,rv,t,rp,hp)
+IMPLIES
+ALLRUNS(STAR(SEQ(UNION(TEST(DLTRUE),TEST(DLTRUE)),TEST(DLTRUE))),DLTRUE) 
+
+
+  END turning_accelerating_flight_dynamics

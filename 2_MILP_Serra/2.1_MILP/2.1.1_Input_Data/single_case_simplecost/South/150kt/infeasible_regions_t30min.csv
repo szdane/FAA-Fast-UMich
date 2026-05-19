@@ -1,0 +1,2 @@
+region_id,n_pixels,min_lat,max_lat,min_lon,max_lon,centroid_lat,centroid_lon,t_minutes,shift_meters
+1077,2469,40.37925716186289,40.78934650801558,-84.74,-84.27,40.61881133317372,-84.494186,30,138900.0

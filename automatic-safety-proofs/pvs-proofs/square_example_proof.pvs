@@ -1,0 +1,37 @@
+%%
+% @theory: square_example_proof
+% @author: nkheterp
+% @date: Wed, 27 Jul 2022 15:57:13 GMT
+%%
+square_example_proof: THEORY
+  BEGIN 
+    IMPORTING sym_polygon_def, Tarski@top
+
+    Equiv(xo: real, yo: real) : bool = 
+        (∃ (x : real) : ((xo - x) <= 1 AND (xo-x) >= -1 AND (yo-x) <= 1 AND (yo-x) >= -1)) IFF ((yo - xo - 2) * (yo-xo+2) <= 0)
+
+    EquivAlpha(xo: real, yo: real, alpha: real) : bool = 
+        (∃ (x : real) : ((xo - x) <= 1 AND (xo - x) >= -1 AND (yo - alpha*x) <= 1 AND (yo - alpha*x) >= -1)) IFF (((yo - alpha*xo - alpha - 1) * (yo - alpha*xo + alpha + 1) <= 0) OR ((yo - alpha*xo - alpha + 1) * (yo - alpha*xo + alpha - 1) <= 0))
+
+    SoundnessSimple(xo: real, yo: real) : bool = 
+        (∃ (x : real) : ((xo - x) <= 1 AND (xo-x) >= -1 AND (yo-x) <= 1 AND (yo-x) >= -1)) IMPLIES ((yo - xo - 2) * (yo-xo+2) <= 0)
+
+    SoundnessAlpha(xo: real, yo: real, alpha: real) : bool = 
+        (∃ (x : real) : ((xo - x) <= 1 AND (xo - x) >= -1 AND (yo - alpha*x) <= 1 AND (yo - alpha*x) >= -1)) IMPLIES (((yo - alpha*xo - alpha - 1) * (yo - alpha*xo + alpha + 1) <= 0) OR ((yo - alpha*xo - alpha + 1) * (yo - alpha*xo + alpha - 1) <= 0))
+
+
+    % @QED IsSoundAlpha proved by nkheterp on Wed, 27 Jul 2022 19:58:23 GMT
+    IsSoundAlpha: LEMMA ∀ (xo, yo, alpha: real) : SoundnessAlpha(xo, yo, alpha)
+
+    % @QED IsSoundAlphaCenterEpsilon proved by nkheterp on Wed, 27 Jul 2022 20:28:01 GMT
+    IsSoundAlphaCenterEpsilon: LEMMA ∀ (xo, yo, alpha: real) : SoundnessAlpha(xo, yo, alpha)
+
+    % @QED IsSoundSimple proved by nkheterp on Wed, 27 Jul 2022 20:02:24 GMT
+    IsSoundSimple: LEMMA ∀ (xo, yo: real) : SoundnessSimple(xo, yo)
+
+    IsSoundAlphaNoEpsilon: LEMMA ∀ (xo, yo, alpha: real) : SoundnessAlpha(xo, yo, alpha)
+
+    % @QED IsSoundAlphaNoEpsilonSecondTry proved by nkheterp on Thu, 08 Sep 2022 19:04:57 GMT
+    IsSoundAlphaNoEpsilonSecondTry: LEMMA ∀ (xo, yo, alpha: real) : SoundnessAlpha(xo, yo, alpha)
+
+  END square_example_proof

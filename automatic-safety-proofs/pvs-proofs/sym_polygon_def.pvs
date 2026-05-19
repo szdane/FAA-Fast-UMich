@@ -1,0 +1,31 @@
+%%
+% @theory: sym_polygon_def
+% @author: jslagel
+% @date: Tue, 26 Jul 2022 20:35:42 GMT
+%%
+sym_polygon_def: THEORY
+  BEGIN 
+   
+IMPORTING PolyCARP@convex_polygon_containment
+
+poly_inj?(N:posnat,p:polygon_2D(N)): bool = 
+  FORALL(i,j:below(N)): i/=j IMPLIES
+   p(i) /= p(j)
+
+% poly_inj?(3,LAMBDA(i:below(3)):IF i=0 THEN (# x:=1, y:=0 #) ELSIF i=1 THEN (# x:=0, y:=1 #) ELSE (# x:=0,y:=0 #) ENDIF);
+
+% Define sym
+sym?(N:posnat,p:polygon_2D(N)): bool =
+  FORALL(i:below(N)): 
+    % EXISTS(j:below(N)| i /= j):
+    EXISTS(j:below(N)):
+      i /= j AND
+        p(i)`x = -p(j)`x AND
+        p(i)`y = -p(j)`y
+
+  % sym?(3,LAMBDA(i:below(3)):IF i=0 THEN (# x:=1, y:=0 #) ELSIF i=1 THEN (# x:=0, y:=1 #) ELSE (# x:=0,y:=0 #) ENDIF);
+  
+  % sym?(4,LAMBDA(i:below(4)):IF i=0 THEN (# x:=1, y:=0 #) ELSIF i=1 THEN (# x:=0, y:=1 #) ELSIF i=2 THEN (# x:=-1, y:=0  #) ELSE (# x:=0,y:=-1 #) ENDIF);
+  
+
+  END sym_polygon_def

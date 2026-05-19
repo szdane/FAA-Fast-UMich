@@ -1,0 +1,504 @@
+(|active_corner_certificate|
+ (|left_open_connected| 0
+  (|left_open_connected-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (EXPAND "connected?") (SKEEP) (TYPEPRED "x" "y")
+     (EXPAND "left_open") (ASSERT))
+    NIL)
+   ((|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)) SHOSTAK))
+ (|left_open_noe| 0
+  (|left_open_noe-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP)
+     (SPREAD (INST 1 "x-1")
+      ((ASSERT) (THEN (TYPEPRED "x") (EXPAND "left_open") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|left_open_dd| 0
+  (|left_open_dd-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (LEMMA "connected_deriv_domain[(left_open(c))]") (ASSERT)
+     (HIDE 2) (LEMMA " left_open_connected") (LEMMA " left_open_noe") (INST?)
+     (INST?) (ASSERT))
+    NIL)
+   ((|connected_deriv_domain| FORMULA-DECL NIL |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|right_open_connected| 0
+  (|right_open_connected-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (EXPAND "connected?") (SKEEP) (TYPEPRED "x" "y")
+     (EXPAND "right_open") (ASSERT))
+    NIL)
+   ((|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)) SHOSTAK))
+ (|right_open_noe| 0
+  (|right_open_noe-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP)
+     (SPREAD (INST 1 "x+1")
+      ((ASSERT)
+       (THEN (TYPEPRED "x") (ASSERT) (EXPAND "right_open") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|right_open_dd| 0
+  (|right_open_dd-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (LEMMA "connected_deriv_domain[(right_open(c))]") (ASSERT)
+     (HIDE 2) (LEMMA " right_open_connected") (LEMMA " right_open_noe") (INST?)
+     (INST?) (ASSERT))
+    NIL)
+   ((|connected_deriv_domain| FORMULA-DECL NIL |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|ci_noe| 0
+  (|ci_noe-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP) (TYPEPRED "x")
+     (SPREAD (INST-CP 2 "d1")
+      ((SPREAD (INST 2 "d2") ((ASSERT) (THEN (EXPAND "ci") (ASSERT))))
+       (THEN (EXPAND "ci") (ASSERT) (FLATTEN) (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|ci_connected| 0
+  (|ci_connected-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (EXPAND "connected?" 2) (SKEEP) (TYPEPRED "x" "y" "z")
+     (EXPAND "ci") (ASSERT) (FLATTEN) (ASSERT))
+    NIL)
+   ((|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)) SHOSTAK))
+ (|ci_dd| 0
+  (|ci_dd-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (LEMMA "connected_deriv_domain[(ci(d1,d2))]") (ASSERT)
+     (HIDE 2) (LEMMA " ci_connected") (LEMMA " ci_noe") (TYPEPRED "d1" "d2")
+     (REVEAL +) (INST -3 "d1" "d2") (INST -4 "d1" "d2") (ASSERT))
+    NIL)
+   ((|connected_deriv_domain| FORMULA-DECL NIL |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_ge_TCC1| 0
+  (|mvt_gen_ge_TCC1-1| NIL 3966252021
+   ("" (THEN (SKEEP) (LEMMA "connected_deriv_domain[(D)]") (ASSERT)) NIL)
+   ((|connected_deriv_domain| FORMULA-DECL NIL |deriv_domain_def| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   NIL
+   (|mvt_gen_ge| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.D)].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (93 3 93 18))))
+ (|mvt_gen_ge_TCC2| 0
+  (|mvt_gen_ge_TCC2-1| NIL 3966252021 ("" (THEN (ASSERT) (GRIND)) NIL) NIL NIL
+   (|mvt_gen_ge| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.D)].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (93 3 93 18))))
+ (|mvt_gen_ge| 0
+  (|mvt_gen_ge-1| NIL 3966252021
+   (""
+    (THEN (SKEEP)
+     (SPREAD (CASE "a=b")
+      ((ASSERT)
+       (THEN (LEMMA "mean_value[(D)]") (INST -1 "b" "a" "f") (ASSERT) (SKEEP)
+        (INST -6 "c!1") (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b")
+        (ASSERT) (EXPAND "restrict") (ASSERT)))))
+    NIL)
+   ((|mean_value| FORMULA-DECL NIL |derivative_props| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives_def| |analysis|)
+    (|deriv| CONST-DECL "real" |derivatives_def| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_le| 0
+  (|mvt_gen_le-1| NIL 3966252021
+   (""
+    (THEN (SKEEP)
+     (SPREAD (CASE "a=b")
+      ((ASSERT)
+       (THEN (LEMMA "mean_value[(D)]") (INST -1 "b" "a" "f") (ASSERT) (SKEEP)
+        (INST -6 "c!1") (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b")
+        (ASSERT) (EXPAND "restrict") (ASSERT)))))
+    NIL)
+   ((|mean_value| FORMULA-DECL NIL |derivative_props| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives_def| |analysis|)
+    (|deriv| CONST-DECL "real" |derivatives_def| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_ge_lo_TCC1| 0
+  (|mvt_gen_ge_lo_TCC1-1| NIL 3966252021
+   ("" (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "C") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|mvt_gen_ge_lo| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.left_open(active_corner_certificate.C))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (126 3 126 29))))
+ (|mvt_gen_ge_lo_TCC2| 0
+  (|mvt_gen_ge_lo_TCC2-1| NIL 3966252021
+   ("" (THEN (SKEEP) (LEMMA "left_open_noe") (INST -1 "C") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|mvt_gen_ge_lo| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.left_open(active_corner_certificate.C))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (126 3 126 29))))
+ (|mvt_gen_ge_lo| 0
+  (|mvt_gen_ge_lo-1| NIL 3966252021
+   (""
+    (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+     (SPREAD (INST -1 "f" "left_open(C)" "c" "a" "b")
+      ((ASSERT)
+       (THEN (LEMMA "left_open_noe") (LEMMA " left_open_connected")
+        (INST -1 "C") (INST -2 "C") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_le_lo| 0
+  (|mvt_gen_le_lo-1| NIL 3966252021
+   (""
+    (THEN (LEMMA "mvt_gen_le") (SKEEP)
+     (SPREAD (INST -1 "f" "left_open(C)" "c" "a" "b")
+      ((ASSERT)
+       (THEN (LEMMA "left_open_noe") (LEMMA " left_open_connected")
+        (INST -1 "C") (INST -2 "C") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_ge_ro_TCC1| 0
+  (|mvt_gen_ge_ro_TCC1-1| NIL 3966252021
+   ("" (THEN (SKEEP) (LEMMA "right_open_dd") (INST -1 "C") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|mvt_gen_ge_ro| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.right_open(active_corner_certificate.C))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (157 3 157 30))))
+ (|mvt_gen_ge_ro_TCC2| 0
+  (|mvt_gen_ge_ro_TCC2-1| NIL 3966252021
+   ("" (THEN (SKEEP) (LEMMA "right_open_noe") (INST -1 "C") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|mvt_gen_ge_ro| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.right_open(active_corner_certificate.C))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (157 3 157 30))))
+ (|mvt_gen_ge_ro| 0
+  (|mvt_gen_ge_ro-1| NIL 3966252021
+   (""
+    (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+     (SPREAD (INST -1 "f" "right_open(C)" "c" "a" "b")
+      ((ASSERT)
+       (THEN (LEMMA "right_open_noe") (LEMMA "right_open_connected")
+        (INST -1 "C") (INST -2 "C") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_le_ro| 0
+  (|mvt_gen_le_ro-1| NIL 3966252021
+   (""
+    (THEN (LEMMA "mvt_gen_le") (SKEEP)
+     (SPREAD (INST -1 "f" "right_open(C)" "c" "a" "b")
+      ((ASSERT)
+       (THEN (LEMMA "right_open_noe") (LEMMA "right_open_connected")
+        (INST -1 "C") (INST -2 "C") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_ge_ci_TCC1| 0
+  (|mvt_gen_ge_ci_TCC1-1| NIL 3966252021
+   ("" (THEN (SKEEP) (LEMMA "ci_dd") (INST -1 "d1" "d2") (ASSERT) (GRIND)) NIL)
+   NIL NIL
+   (|mvt_gen_ge_ci| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.ci(active_corner_certificate.d1, active_corner_certificate.d2))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (187 15 187 38))))
+ (|mvt_gen_ge_ci_TCC2| 0
+  (|mvt_gen_ge_ci_TCC2-1| NIL 3966252021
+   ("" (THEN (SKEEP) (LEMMA "ci_noe") (INST -1 "d1" "d2") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|mvt_gen_ge_ci| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.ci(active_corner_certificate.d1, active_corner_certificate.d2))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (187 15 187 38))))
+ (|mvt_gen_ge_ci| 0
+  (|mvt_gen_ge_ci-1| NIL 3966252021
+   (""
+    (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+     (SPREAD (INST -1 "f" "ci(d1,d2)" "c" "a" "b")
+      ((ASSERT)
+       (THEN (LEMMA "ci_noe") (LEMMA " ci_connected") (INST -1 "d1" "d2")
+        (INST -2 "d1" "d2") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_le_ci| 0
+  (|mvt_gen_le_ci-1| NIL 3966252021
+   (""
+    (THEN (LEMMA "mvt_gen_le") (SKEEP)
+     (SPREAD (INST -1 "f" "ci(d1,d2)" "c" "a" "b")
+      ((ASSERT)
+       (THEN (LEMMA "ci_noe") (LEMMA " ci_connected") (INST -1 "d1" "d2")
+        (INST -2 "d1" "d2") (ASSERT)))))
+    NIL)
+   ((|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_ge_real_TCC1| 0
+  (|mvt_gen_ge_real_TCC1-1| NIL 3977615147 ("" (THEN (ASSERT) (GRIND)) NIL)
+   ((|deriv_domain_real| FORMULA-DECL NIL |deriv_domain| |analysis|)) NIL
+   (|mvt_gen_ge_real| ASSUMING "analysis@derivatives[real].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (218 3 218 19))))
+ (|mvt_gen_ge_real_TCC2| 0
+  (|mvt_gen_ge_real_TCC2-1| NIL 3977615147 ("" (THEN (ASSERT) (GRIND)) NIL)
+   ((|not_one_element_real| FORMULA-DECL NIL |deriv_domain| |analysis|)) NIL
+   (|mvt_gen_ge_real| ASSUMING "analysis@derivatives[real].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (218 3 218 19))))
+ (|mvt_gen_ge_real| 0
+  (|mvt_gen_ge_real-1| NIL 3977615148
+   (""
+    (SPREAD (LEMMA "mean_value[real]")
+     ((THEN (SKEEP) (INST -1 "b" "a" "f") (ASSERT) (SKEEP) (INST -6 "c!1")
+       (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT))
+      (THEN (ASSERT) (LEMMA "connected_real") (PROPAX))))
+    NIL)
+   ((|mean_value| FORMULA-DECL NIL |derivative_props| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives_def| |analysis|)
+    (|deriv| CONST-DECL "real" |derivatives_def| |analysis|)
+    (|connected_real| FORMULA-DECL NIL |deriv_domain| |analysis|))
+   SHOSTAK))
+ (|mvt_gen_le_real| 0
+  (|mvt_gen_le_real-1| NIL 3977615148
+   (""
+    (SPREAD (LEMMA "mean_value[real]")
+     ((THEN (SKEEP) (INST -1 "b" "a" "f") (ASSERT) (SKEEP) (INST -6 "c!1")
+       (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT))
+      (THEN (ASSERT) (LEMMA "connected_real") (PROPAX))))
+    NIL)
+   ((|mean_value| FORMULA-DECL NIL |derivative_props| |analysis|)
+    (|connected?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|deriv| CONST-DECL "real" |derivatives_def| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives_def| |analysis|)
+    (|connected_real| FORMULA-DECL NIL |deriv_domain| |analysis|))
+   SHOSTAK))
+ (|ge_lo_case_0_TCC1| 0
+  (|ge_lo_case_0_TCC1-1| NIL 3977618754
+   (""
+    (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "4") (LEMMA "left_open_noe")
+     (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|ge_lo_case_0| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.left_open(4))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (250 4 250 30))))
+ (|ge_lo_case_0_TCC2| 0
+  (|ge_lo_case_0_TCC2-1| NIL 3977618754
+   (""
+    (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "4") (LEMMA "left_open_noe")
+     (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|ge_lo_case_0| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.left_open(4))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (250 4 250 30))))
+ (|ge_lo_case_0| 0
+  (|ge_lo_case_0-1| NIL 3977618755
+   (""
+    (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+     (SPREAD (CASE "xo + 2 <= 4")
+      ((THEN (LEMMA "mvt_gen_ge_lo")
+        (SPREAD (INST -1 "f" "4" "73" "xo + 2" "x")
+         ((SPREAD (SPLIT -1)
+           ((THEN (ASSERT) (LEMMA "mvt_gen_ge_lo")
+             (SPREAD (INST -1 "f" "4" "73" "x" "xo - 2")
+              ((ASSERT) (THEN (EXPAND "left_open") (ASSERT))
+               (THEN (EXPAND "left_open") (ASSERT)))))
+            (PROPAX) (PROPAX) (PROPAX)))
+          (THEN (EXPAND "left_open") (ASSERT))
+          (THEN (EXPAND "left_open") (ASSERT)))))
+       (THEN (LEMMA "mvt_gen_ge_lo")
+        (SPREAD (INST -1 "f" "4" "73" "4" "x")
+         ((SPREAD (SPLIT -1)
+           ((THEN (ASSERT) (LEMMA "mvt_gen_ge_lo")
+             (SPREAD (INST -1 "f" "4" "73" "x" "xo - 2")
+              ((THEN (EXPAND "f") (EXPAND "left_open")
+                (SPREAD (SPLIT -1) ((ASSERT) (PROPAX))))
+               (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT))
+               (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT)))))
+            (THEN (ASSERT) (PROPAX)) (THEN (ASSERT) (PROPAX))
+            (THEN (ASSERT) (PROPAX))))
+          (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT))
+          (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT))))))))
+    NIL)
+   NIL SHOSTAK))
+ (|ge_ro_case_1_TCC1| 0
+  (|ge_ro_case_1_TCC1-1| NIL 3977762813
+   (""
+    (THEN (SKEEP) (LEMMA "right_open_dd") (INST -1 "4")
+     (LEMMA "right_open_noe") (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|ge_ro_case_1| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.right_open(4))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (307 4 307 31))))
+ (|ge_ro_case_1_TCC2| 0
+  (|ge_ro_case_1_TCC2-1| NIL 3977762813
+   (""
+    (THEN (SKEEP) (LEMMA "right_open_dd") (INST -1 "4")
+     (LEMMA "right_open_noe") (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|ge_ro_case_1| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.right_open(4))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (307 4 307 31))))
+ (|ge_ro_case_1| 0
+  (|ge_ro_case_1-1| NIL 3977762814
+   (""
+    (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+     (SPREAD (CASE "xo - 2 >= 4")
+      ((THEN (LEMMA "mvt_gen_ge_ro")
+        (SPREAD (INST -1 "f" "4" "73" "xo + 2" "x")
+         ((SPREAD (SPLIT -1)
+           ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ro")
+             (SPREAD (INST -1 "f" "4" "73" "x" "xo - 2")
+              ((ASSERT) (THEN (EXPAND "right_open") (ASSERT))
+               (THEN (EXPAND "right_open") (ASSERT)))))
+            (PROPAX) (PROPAX) (PROPAX)))
+          (THEN (EXPAND "right_open") (ASSERT))
+          (THEN (EXPAND "right_open") (ASSERT)))))
+       (THEN (LEMMA "mvt_gen_ge_ro")
+        (SPREAD (INST -1 "f" "4" "73" "xo + 2" "x")
+         ((SPREAD (SPLIT -1)
+           ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ro")
+             (SPREAD (INST -1 "f" "4" "73" "x" "4")
+              ((THEN (EXPAND "f") (EXPAND "right_open")
+                (SPREAD (SPLIT -1) ((ASSERT) (PROPAX))))
+               (THEN (EXPAND "f") (EXPAND "right_open") (ASSERT))
+               (THEN (EXPAND "f") (EXPAND "right_open") (ASSERT)))))
+            (THEN (ASSERT) (PROPAX)) (THEN (ASSERT) (PROPAX))
+            (THEN (ASSERT) (PROPAX))))
+          (THEN (EXPAND "f") (EXPAND "right_open") (ASSERT))
+          (THEN (EXPAND "f") (EXPAND "right_open") (ASSERT))))))))
+    NIL)
+   NIL SHOSTAK))
+ (|full_domain_soundness_lemma_helper_TCC1| 0
+  (|full_domain_soundness_lemma_helper_TCC1-1| NIL 3977615147
+   (""
+    (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "4") (LEMMA "left_open_noe")
+     (INST -1 "4") (LEMMA "right_open_dd") (INST -1 "4")
+     (LEMMA "right_open_noe") (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|full_domain_soundness_lemma_helper| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.left_open(4))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (362 4 362 30))))
+ (|full_domain_soundness_lemma_helper_TCC2| 0
+  (|full_domain_soundness_lemma_helper_TCC2-1| NIL 3977615147
+   (""
+    (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "4") (LEMMA "left_open_noe")
+     (INST -1 "4") (LEMMA "right_open_dd") (INST -1 "4")
+     (LEMMA "right_open_noe") (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|full_domain_soundness_lemma_helper| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.left_open(4))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (362 4 362 30))))
+ (|full_domain_soundness_lemma_helper_TCC3| 0
+  (|full_domain_soundness_lemma_helper_TCC3-1| NIL 3977615147
+   (""
+    (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "4") (LEMMA "left_open_noe")
+     (INST -1 "4") (LEMMA "right_open_dd") (INST -1 "4")
+     (LEMMA "right_open_noe") (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|full_domain_soundness_lemma_helper| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.right_open(4))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?"
+    (364 4 364 31))))
+ (|full_domain_soundness_lemma_helper_TCC4| 0
+  (|full_domain_soundness_lemma_helper_TCC4-1| NIL 3977615147
+   (""
+    (THEN (SKEEP) (LEMMA "left_open_dd") (INST -1 "4") (LEMMA "left_open_noe")
+     (INST -1 "4") (LEMMA "right_open_dd") (INST -1 "4")
+     (LEMMA "right_open_noe") (INST -1 "4") (ASSERT) (GRIND))
+    NIL)
+   NIL NIL
+   (|full_domain_soundness_lemma_helper| ASSUMING
+    "analysis@derivatives[(active_corner_certificate.right_open(4))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?"
+    (364 4 364 31))))
+ (|full_domain_soundness_lemma_helper| 0
+  (|full_domain_soundness_lemma_helper-1| NIL 3977615148
+   (""
+    (THEN (SKEEP) (SKOLETIN*) (FLATTEN)
+     (SPREAD (CASE "x<=4")
+      ((THEN (LEMMA "ge_lo_case_0") (INST -1 "xo" "yo" "g") (ASSERT)
+        (EXPAND "f0") (ASSERT)
+        (SPREAD
+         (CASE
+             "restrict[real, (left_open(4)), real](g) = (restrict[real, (left_open(4)), real] (LAMBDA(x:real): COND x <= 4 -> g(x), ELSE -> g(4) ENDCOND))")
+         ((SPREAD (SPLIT -2)
+           ((PROPAX) (PROPAX) (PROPAX) (PROPAX) (PROPAX) (ASSERT) (ASSERT)
+            (THEN (INST 1 "x") (ASSERT))))
+          (THEN (DECOMPOSE-EQUALITY 1) (HIDE-ALL-BUT 1) (TYPEPRED "x!1")
+           (GRIND)))))
+       (THEN (LEMMA "ge_ro_case_1") (INST -1 "xo" "yo" "g") (ASSERT)
+        (EXPAND "f1")
+        (SPREAD
+         (CASE
+             "(restrict[real, (right_open(4)), real] (LAMBDA(x:real): COND x < 4 -> g(4), ELSE -> g(x) ENDCOND)) = (restrict[real, (right_open(4)), real](g))")
+         ((SPREAD (SPLIT -2)
+           ((ASSERT) (ASSERT) (ASSERT) (ASSERT) (ASSERT) (ASSERT) (ASSERT)
+            (THEN (INST 1 "x") (ASSERT))))
+          (THEN (HIDE-ALL-BUT 1) (DECOMPOSE-EQUALITY 1) (TYPEPRED "x!1")
+           (GRIND))))))))
+    NIL)
+   NIL SHOSTAK))
+ (|full_domain_soundness_lemma| 0
+  (|full_domain_soundness_lemma-1| NIL 3966252021
+   (""
+    (THEN (SKEEP) (SKOLETIN*) (FLATTEN)
+     (LEMMA "full_domain_soundness_lemma_helper") (INST -1 "x" "xo" "yo" "g_1")
+     (SPREAD (SPLIT -1)
+      ((PROPAX) (PROPAX) (PROPAX) (PROPAX) (PROPAX) (PROPAX) (PROPAX) (PROPAX)
+       (PROPAX) (PROPAX)
+       (THEN (ASSERT) (HIDE-ALL-BUT (-7 1)) (REPLACE -1) (EXPAND "restrict")
+        (WITH-TCCS (DERIVABLE 1)) (LEMMA "left_open_dd") (INST -1 "4"))
+       (THEN (HIDE-ALL-BUT (-7 1)) (REPLACE -1) (EXPAND "restrict") (SKEEP)
+        (SPREAD (DERIV)
+         ((THEN (TYPEPRED "x!1") (EXPAND "left_open") (ASSERT))
+          (THEN (LEMMA "left_open_dd") (INST -1 "4")))))
+       (THEN (HIDE-ALL-BUT (-7 1)) (REPLACE -1) (EXPAND "restrict")
+        (DERIVABLE))
+       (THEN (HIDE-ALL-BUT (-7 1)) (REPLACE -1) (EXPAND "restrict") (SKEEP)
+        (DERIV) (TYPEPRED "x!1") (EXPAND "right_open") (ASSERT))
+       (PROPAX) (PROPAX) (PROPAX) (PROPAX) (PROPAX) (PROPAX))))
+    NIL)
+   ((|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|deriv_fun| TYPE-EQ-DECL NIL |derivatives| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|deriv_domain?| CONST-DECL "bool" |deriv_domain_def| |analysis|))
+   SHOSTAK)))
+

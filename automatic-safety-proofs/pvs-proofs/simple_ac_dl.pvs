@@ -1,0 +1,12 @@
+simple_ac_dl  % [ parameters ]
+		: THEORY
+
+  BEGIN
+
+  % ASSUMING
+   % assuming declarations
+  % ENDASSUMING
+
+  IMPORTING dL@top 
+
+  END simple_ac_dl

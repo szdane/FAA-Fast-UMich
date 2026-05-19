@@ -1,0 +1,239 @@
+active_corners_examples  % [ parameters ]
+		: THEORY
+
+  BEGIN
+
+  IMPORTING mean_value_inequalities
+
+
+
+right_open_ex1: LEMMA
+    FORALL(xo,yo:real,g:[real -> real]):
+    LET   f = LAMBDA(x:real):
+		  COND
+                    x >= 0 -> g(x),
+		    x < 0 -> g(0)
+                  ENDCOND
+    IN
+    derivable?[(right_open(0))](f) AND
+    (FORALL(x:(right_open(0))):deriv[(right_open(0))](f)(x) >= 0) AND
+    (EXISTS (x : real) :
+     x >= 0 AND
+    ((-x + xo + 2 >= 0) AND
+     (-x + xo - 2 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    xo + 2 >= x AND xo - 2 <= x)
+    IMPLIES
+ (       (  ((yo - f(xo - 2) - 1 >= 0) AND
+         (yo - f(xo + 2) + 1 <= 0)) OR
+        ((yo - f(xo - 2) + 1 >= 0) AND
+         (yo - f(xo + 2) - 1 <= 0)) OR
+        ((yo - f(xo + 2) - 1 >= 0) AND	
+         (yo - f(xo - 2) + 1 <= 0)) OR
+        ((yo - f(xo + 2) + 1 >= 0) AND
+         (yo - f(xo - 2) - 1 <= 0)))
+   %  OR
+   % (((xo  >= -2 ) AND
+   %  ( xo  <= 2 ) AND
+   %  (yo  >= -1 + f(0)) AND
+   %  (yo  <= 1 + f(0)) ))
+   )
+
+left_open_ex1: LEMMA
+    FORALL(xo,yo:real,g:[real -> real]):
+    LET   f = LAMBDA(x:real):
+		  COND
+                    x > 0 -> g(0),
+		    x <= 0 -> g(x)
+                  ENDCOND
+    IN
+    derivable?[(left_open(0))](f) AND
+    (FORALL(x:(left_open(0))):deriv[(left_open(0))](f)(x) <= 0) AND
+    (EXISTS (x : real) :
+     x <= 0 AND
+    ((-x + xo + 2 >= 0) AND
+     (-x + xo - 2 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    xo + 2 >= x AND xo - 2 <= x)
+    IMPLIES
+    %((((yo - f(xo - 2) + 1 >= 0) AND
+    % (yo - f(xo + 2) - 1 <= 0)))
+ (       (  ((yo - f(xo - 2) - 1 >= 0) AND
+         (yo - f(xo + 2) + 1 <= 0)) OR
+    % this is the correct goal
+        ((yo - f(xo - 2) + 1 >= 0) AND
+         (yo - f(xo + 2) - 1 <= 0)) OR
+        ((yo - f(xo + 2) - 1 >= 0) AND	
+         (yo - f(xo - 2) + 1 <= 0)) OR
+        ((yo - f(xo + 2) + 1 >= 0) AND
+         (yo - f(xo - 2) - 1 <= 0)))
+ %    OR
+  %  (((xo  >= -2 ) AND
+  %   ( xo  <= 2 ) AND
+  %   (yo  >= -1 + f(0)) AND
+   %  (yo  <= 1 + f(0)) ))
+   )
+
+full_ex1: LEMMA
+    FORALL(xo,yo:real,g:[real -> real]):
+    derivable?[(left_open(0))](g) AND
+    (FORALL(x:(left_open(0))):deriv[(left_open(0))](g)(x) <= 0) AND
+    derivable?[(right_open(0))](g) AND
+    (FORALL(x:(right_open(0))):deriv[(right_open(0))](g)(x) <= 0) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 2 >= 0) AND
+     (-x + xo - 2 <= 0) AND
+     (yo - g(x) + 1 >= 0) AND
+     (yo - g(x) - 1 <= 0)) AND
+    xo + 2 >= x AND xo - 2 <= x)
+    IMPLIES
+    %((((yo - f(xo - 2) + 1 >= 0) AND
+    % (yo - f(xo + 2) - 1 <= 0)))
+ (       (  ((yo - g(xo - 2) - 1 >= 0) AND
+         (yo - g(xo + 2) + 1 <= 0)) OR
+    % this is the correct goal
+        ((yo - g(xo - 2) + 1 >= 0) AND
+         (yo - g(xo + 2) - 1 <= 0)) OR
+        ((yo - g(xo + 2) - 1 >= 0) AND	
+         (yo - g(xo - 2) + 1 <= 0)) OR
+        ((yo - g(xo + 2) + 1 >= 0) AND
+         (yo - g(xo - 2) - 1 <= 0)))
+     OR
+    (((xo  >= -2 ) AND
+     ( xo  <= 2 ) AND
+     (yo  >= -1 + g(0)) AND
+     (yo  <= 1 + g(0)) )))
+
+%|- full_ex1 : PROOF
+%|- (THEN (SKEEP) (SKOLETIN*) (FLATTEN)
+%|-  (SPREAD (CASE "x<=0")
+%|-   ((THEN (LEMMA "left_open_ex1") (INST -1 "xo" "yo" "g") (ASSERT) (EXPAND "fl")
+%|-     (ASSERT)
+%|-     (SPREAD
+%|-      (CASE
+%|-          "restrict[real, (left_open(0)), real](g) = (restrict[real, (left_open(0)), real]
+%|-                 (LAMBDA (x: real):
+%|-                    COND x > 0 -> g(0), ELSE -> g(x) ENDCOND))")
+%|-      ((SPREAD (SPLIT -2)
+%|-        ((PROPAX) (PROPAX) (PROPAX) (PROPAX) (ASSERT) (ASSERT)
+%|-         (THEN (INST 1 "x") (ASSERT))))
+%|-       (THEN (DECOMPOSE-EQUALITY 1) (HIDE-ALL-BUT 1) (TYPEPRED "x!1")
+%|-        (GRIND)))))
+%|-    (THEN (LEMMA "right_open_ex1") (INST -1 "xo" "yo" "g") (ASSERT)
+%|-     (EXPAND "fr")
+%|-     (SPREAD
+%|-      (CASE "(restrict[real, (right_open(0)), real]
+%|-                     (LAMBDA (x: real):
+%|-                        COND x >= 0 -> g(x), ELSE -> g(0) ENDCOND)) = (restrict[real, (right_open(0)), real](g))")
+%|-      ((SPREAD (SPLIT -2)
+%|-        ((ASSERT) (THEN (FLATTEN) (ASSERT)) (THEN (EXPAND "fl") (ASSERT))
+%|-         (THEN (FLATTEN) (ASSERT)) (ASSERT) (ASSERT)
+%|-         (THEN (INST 1 "x") (ASSERT))))
+%|-       (THEN (HIDE-ALL-BUT 1) (DECOMPOSE-EQUALITY 1) (TYPEPRED "x!1")
+%|-        (GRIND))))))))
+%|- QED full_ex1
+
+closed_interval_ex1: LEMMA
+    FORALL(xo,yo:real,g:[real -> real]):
+    LET   f = LAMBDA(x:real):
+		  COND
+                    x < 0 -> g(0),
+		    x <= 10 AND x >= 0 -> g(x),
+		    x > 10 -> g(10)
+                  ENDCOND
+    IN
+    derivable?[(ci(0,10))](f) AND
+    (FORALL(x:(ci(0,10))): deriv[(ci(0,10))](f)(x) >= 0) AND
+ (EXISTS (x : real) :
+     x >= 0 AND x <=10 AND
+    ((-x + xo + 2 >= 0) AND
+     (-x + xo - 2 <= 0) AND
+     (yo - f(x) + 1 >= 0) AND
+     (yo - f(x) - 1 <= 0)) AND
+    xo + 2 >= x AND xo - 2 <= x)
+    IMPLIES
+ (       (  ((yo - f(xo - 2) - 1 >= 0) AND
+         (yo - f(xo + 2) + 1 <= 0)) OR
+        ((yo - f(xo - 2) + 1 >= 0) AND
+         (yo - f(xo + 2) - 1 <= 0)) OR
+        ((yo - f(xo + 2) - 1 >= 0) AND	
+         (yo - f(xo - 2) + 1 <= 0)) OR
+        ((yo - f(xo + 2) + 1 >= 0) AND
+         (yo - f(xo - 2) - 1 <= 0)))
+   %  OR
+   % (((xo  >= -2 ) AND
+   %  ( xo  <= 2 ) AND
+   %  (yo  >= -1 + f(0)) AND
+   %  (yo  <= 1 + f(0)) ))
+   )
+
+%|- closed_interval_ex1 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo-2 >=0 AND xo+2 <=10")
+%|-   ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-     (SPREAD (INST -1 "f" "0" "10" "0" "xo+2" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "0" "10" "0" "x" "xo-2")
+%|-           ((ASSERT) (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "ci" 1) (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-    (SPREAD (CASE "xo- 2 < 0 AND xo+2 <= 10")
+%|-     ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-       (SPREAD (INST -1 "f" "0" "10" "0" "xo+2" "x")
+%|-        ((SPREAD (SPLIT -1)
+%|-          ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ci")
+%|-            (SPREAD (INST -1 "f" "0" "10" "0" "x" "0")
+%|-             ((THEN (EXPAND "f") (ASSERT)) (THEN (EXPAND "ci") (PROPAX))
+%|-              (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-           (ASSERT) (PROPAX) (PROPAX) (PROPAX)))
+%|-         (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (ASSERT)))))
+%|-      (THEN (ASSERT)
+%|-       (SPREAD (CASE "xo - 2 >= 0 AND 2+xo > 10")
+%|-        ((THEN (FLATTEN) (LEMMA "mvt_gen_ge_ci")
+%|-          (SPREAD (INST -1 "f" "0" "10" "0" "10" "x")
+%|-           ((SPREAD (SPLIT -1)
+%|-             ((THEN (LEMMA "mvt_gen_ge_ci")
+%|-               (SPREAD (INST -1 "f" "0" "10" "0" "x" "xo-2")
+%|-                ((SPREAD (SPLIT -1)
+%|-                  ((THEN (ASSERT) (EXPAND "f") (ASSERT)) (ASSERT) (PROPAX)
+%|-                   (ASSERT) (PROPAX)))
+%|-                 (THEN (EXPAND "ci") (ASSERT)) (THEN (EXPAND "ci") (PROPAX)))))
+%|-              (ASSERT) (PROPAX) (ASSERT) (PROPAX)))
+%|-            (THEN (EXPAND "ci") (PROPAX))
+%|-            (THEN (ASSERT) (EXPAND "ci") (PROPAX)))))
+%|-         (THEN (ASSERT)
+%|-          (SPREAD (CASE "xo - 2 < 0 AND 2+xo > 10") ((GRIND) (GRIND))))))))))))
+%|- QED closed_interval_ex1
+
+diamond_left_case: LEMMA
+    FORALL(xo,yo:real, g:[real -> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x <= -1 -> g(x),
+            x > -1 -> g(-1)
+        ENDCOND
+    IN
+    derivable?[(left_open(-1))](f) AND
+    (FORALL(x:(left_open(-1))): deriv[(left_open(-1))](f)(x) <= -1) AND
+    (EXISTS (x : real) :
+    ((-x + xo - yo + f(x) - 1 <= 0) AND
+     (-x + xo + yo - f(x) - 1 <= 0) AND
+     (x - xo - yo + f(x) - 1 <= 0) AND
+     (x - xo + yo - f(x) - 1 <= 0)) AND
+    x <= -1 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((yo - f(xo) - 1 >= 0) AND
+     (yo - f(xo) + 1 <= 0)) OR
+    ((yo - f(xo) + 1 >= 0) AND
+     (yo - f(xo) - 1 <= 0)) OR
+    ((yo - f(xo - 1) >= 0) AND
+     (yo - f(xo + 1) <= 0)) OR
+    ((yo - f(xo + 1) >= 0) AND
+     (yo - f(xo - 1) <= 0))
+
+END active_corners_examples

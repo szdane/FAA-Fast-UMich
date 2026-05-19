@@ -1,0 +1,2 @@
+iteration,dt,milp_status,objective,unsafe_projection_count,confirmed_3d_conflicts,acm_errors
+0,300.0,2,73.23549205334399,4,0,0

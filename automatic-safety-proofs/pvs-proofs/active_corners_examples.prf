@@ -1,0 +1,490 @@
+(|active_corners_examples|
+ (|right_open_ex1_TCC1| 0
+  (|right_open_ex1_TCC1-1| NIL 3962871100 ("" (COND-DISJOINT-TCC) NIL NIL) NIL
+   NIL
+   (|right_open_ex1| DISJOINTNESS
+    "COND reals.>=(active_corners_examples.x, 0) -> active_corners_examples.g(active_corners_examples.x), reals.<(active_corners_examples.x, 0) -> active_corners_examples.g(0) ENDCOND"
+    "NIL")))
+ (|right_open_ex1_TCC2| 0
+  (|right_open_ex1_TCC2-1| NIL 3962871100 ("" (COND-COVERAGE-TCC) NIL NIL) NIL
+   NIL
+   (|right_open_ex1| COVERAGE
+    "COND reals.>=(active_corners_examples.x, 0) -> active_corners_examples.g(active_corners_examples.x), reals.<(active_corners_examples.x, 0) -> active_corners_examples.g(0) ENDCOND"
+    "NIL")))
+ (|right_open_ex1_TCC3| 0
+  (|right_open_ex1_TCC3-1| NIL 3962871100
+   ("" (SKEEP) (("" (LEMMA "right_open_dd") (("" (INST -1 "0") NIL NIL)) NIL))
+    NIL)
+   ((|right_open_dd| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|right_open_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.right_open(0))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|right_open_ex1_TCC4| 0
+  (|right_open_ex1_TCC4-1| NIL 3962871100
+   ("" (SKEEP) (("" (LEMMA "right_open_noe") (("" (INST -1 "0") NIL NIL)) NIL))
+    NIL)
+   ((|right_open_noe| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|right_open_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.right_open(0))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|right_open_ex1| 0
+  (|right_open_ex1-1| NIL 3962871238
+   ("" (SKEEP*)
+    (("" (SKOLETIN*)
+      (("" (FLATTEN)
+        (("" (SKEEP)
+          (("" (CASE "xo-2 >=0")
+            (("1" (LEMMA "mvt_gen_ge_ro")
+              (("1" (INST -1 "f" "0" "0" "xo+2" "x")
+                (("1" (SPLIT -1)
+                  (("1" (ASSERT)
+                    (("1" (LEMMA "mvt_gen_ge_ro")
+                      (("1" (INST -1 "f" "0" "0" "x" "xo-2")
+                        (("1" (ASSERT) NIL NIL)
+                         ("2" (EXPAND "right_open" 1) (("2" (ASSERT) NIL NIL))
+                          NIL)
+                         ("3" (EXPAND "right_open" 1) (("3" (ASSERT) NIL NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (PROPAX) NIL NIL) ("3" (PROPAX) NIL NIL)
+                   ("4" (PROPAX) NIL NIL))
+                  NIL)
+                 ("2" (EXPAND "right_open" 1) (("2" (ASSERT) NIL NIL)) NIL)
+                 ("3" (EXPAND "right_open" 1) (("3" (ASSERT) NIL NIL)) NIL))
+                NIL))
+              NIL)
+             ("2" (LEMMA "mvt_gen_ge_ro")
+              (("2" (INST -1 "f" "0" "0" "xo+2" "x")
+                (("1" (SPLIT -1)
+                  (("1" (ASSERT)
+                    (("1" (LEMMA "mvt_gen_ge_ro")
+                      (("1" (INST -1 "f" "0" "0" "x" "0")
+                        (("1" (EXPAND "f") (("1" (ASSERT) NIL NIL)) NIL)
+                         ("2" (EXPAND "right_open" 1) (("2" (ASSERT) NIL NIL))
+                          NIL)
+                         ("3" (EXPAND "right_open" 1) (("3" (ASSERT) NIL NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (PROPAX) NIL NIL) ("3" (PROPAX) NIL NIL)
+                   ("4" (PROPAX) NIL NIL))
+                  NIL)
+                 ("2" (EXPAND "right_open" 1) (("2" (ASSERT) NIL NIL)) NIL)
+                 ("3" (EXPAND "right_open" 1) (("3" (ASSERT) NIL NIL)) NIL))
+                NIL))
+              NIL))
+            NIL))
+          NIL))
+        NIL))
+      NIL))
+    NIL)
+   ((|deriv_fun| TYPE-EQ-DECL NIL |derivatives| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|right_open| CONST-DECL "bool" |mean_value_inequalities| NIL)
+    (|deriv_domain?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives| |analysis|)
+    (|mvt_gen_ge_ro| FORMULA-DECL NIL |mean_value_inequalities| NIL))
+   SHOSTAK))
+ (|left_open_ex1_TCC1| 0
+  (|left_open_ex1_TCC1-1| NIL 3962871100 ("" (COND-DISJOINT-TCC) NIL NIL) NIL
+   NIL
+   (|left_open_ex1| DISJOINTNESS
+    "COND reals.>(active_corners_examples.x, 0) -> active_corners_examples.g(0), reals.<=(active_corners_examples.x, 0) -> active_corners_examples.g(active_corners_examples.x) ENDCOND"
+    "NIL")))
+ (|left_open_ex1_TCC2| 0
+  (|left_open_ex1_TCC2-1| NIL 3962871100 ("" (COND-COVERAGE-TCC) NIL NIL) NIL
+   NIL
+   (|left_open_ex1| COVERAGE
+    "COND reals.>(active_corners_examples.x, 0) -> active_corners_examples.g(0), reals.<=(active_corners_examples.x, 0) -> active_corners_examples.g(active_corners_examples.x) ENDCOND"
+    "NIL")))
+ (|left_open_ex1_TCC3| 0
+  (|left_open_ex1_TCC3-1| NIL 3962871100
+   ("" (SKEEP) (("" (LEMMA "left_open_dd") (("" (INST -1 "0") NIL NIL)) NIL))
+    NIL)
+   ((|left_open_dd| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|left_open_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.left_open(0))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|left_open_ex1_TCC4| 0
+  (|left_open_ex1_TCC4-1| NIL 3962871100
+   ("" (SKEEP) (("" (LEMMA "left_open_noe") (("" (INST?) NIL NIL)) NIL)) NIL)
+   ((|left_open_noe| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|left_open_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.left_open(0))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|left_open_ex1| 0
+  (|left_open_ex1-1| NIL 3962871433
+   ("" (SKEEP*)
+    (("" (SKOLETIN*)
+      (("" (FLATTEN)
+        (("" (SKEEP)
+          (("" (CASE "xo+2 <= 0")
+            (("1" (LEMMA "mvt_gen_le_lo")
+              (("1" (INST -1 "f" "0" "0" "xo+2" "x")
+                (("1" (SPLIT -1)
+                  (("1" (ASSERT)
+                    (("1" (LEMMA "mvt_gen_le_lo")
+                      (("1" (INST -1 "f" "0" "0" "x" "xo-2")
+                        (("1" (ASSERT) NIL NIL)
+                         ("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL))
+                          NIL)
+                         ("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (PROPAX) NIL NIL) ("3" (PROPAX) NIL NIL)
+                   ("4" (PROPAX) NIL NIL))
+                  NIL)
+                 ("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL)) NIL)
+                 ("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL)) NIL))
+                NIL))
+              NIL)
+             ("2" (LEMMA "mvt_gen_le_lo")
+              (("2" (INST -1 "f" "0" "0" "0" "x")
+                (("1" (SPLIT -1)
+                  (("1" (ASSERT)
+                    (("1" (LEMMA "mvt_gen_le_lo")
+                      (("1" (INST -1 "f" "0" "0" "x" "xo-2")
+                        (("1" (EXPAND "f")
+                          (("1" (SPLIT -1)
+                            (("1" (ASSERT) NIL NIL) ("2" (PROPAX) NIL NIL))
+                            NIL))
+                          NIL)
+                         ("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL))
+                          NIL)
+                         ("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (PROPAX) NIL NIL) ("3" (ASSERT) NIL NIL)
+                   ("4" (PROPAX) NIL NIL))
+                  NIL)
+                 ("2" (EXPAND "left_open") (("2" (ASSERT) NIL NIL)) NIL)
+                 ("3" (EXPAND "left_open") (("3" (ASSERT) NIL NIL)) NIL))
+                NIL))
+              NIL))
+            NIL))
+          NIL))
+        NIL))
+      NIL))
+    NIL)
+   ((|left_open| CONST-DECL "bool" |mean_value_inequalities| NIL)
+    (|derivable?| CONST-DECL "bool" |derivatives| |analysis|)
+    (|deriv_fun| TYPE-EQ-DECL NIL |derivatives| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|mvt_gen_le_lo| FORMULA-DECL NIL |mean_value_inequalities| NIL))
+   NIL))
+ (|full_ex1_TCC1| 0
+  (|full_ex1_TCC1-1| NIL 3962874514
+   ("" (LEMMA "left_open_dd") (("" (INST -1 "0") NIL NIL)) NIL)
+   ((|left_open_dd| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|full_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.left_open(0))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|full_ex1_TCC2| 0
+  (|full_ex1_TCC2-1| NIL 3962874514
+   ("" (LEMMA "left_open_noe") (("" (INST -1 "0") NIL NIL)) NIL)
+   ((|left_open_noe| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|full_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.left_open(0))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|full_ex1_TCC3| 0
+  (|full_ex1_TCC3-1| NIL 3962874514
+   ("" (SKEEP) (("" (LEMMA "right_open_dd") (("" (INST -1 "0") NIL NIL)) NIL))
+    NIL)
+   ((|right_open_dd| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|full_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.right_open(0))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|full_ex1_TCC4| 0
+  (|full_ex1_TCC4-1| NIL 3962874514
+   ("" (SKEEP) (("" (LEMMA "right_open_noe") (("" (INST -1 "0") NIL NIL)) NIL))
+    NIL)
+   ((|right_open_noe| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|full_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.right_open(0))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|full_ex1| 0
+  (|full_ex1-1| NIL 3962874602
+   ("" (SKEEP)
+    (("" (SKOLETIN*)
+      (("" (FLATTEN)
+        (("" (CASE "x<=0")
+          (("1" (LEMMA "left_open_ex1")
+            (("1" (INST -1 "xo" "yo" "g")
+              (("1" (ASSERT)
+                (("1" (EXPAND "fl")
+                  (("1" (ASSERT)
+                    (("1"
+                      (CASE
+                          "restrict[real, (left_open(0)), real](g) = (restrict[real, (left_open(0)), real]
+                (LAMBDA (x: real):
+                   COND x > 0 -> g(0), ELSE -> g(x) ENDCOND))")
+                      (("1" (SPLIT -2)
+                        (("1" (PROPAX) NIL NIL) ("2" (PROPAX) NIL NIL)
+                         ("3" (PROPAX) NIL NIL) ("4" (PROPAX) NIL NIL)
+                         ("5" (ASSERT) NIL NIL) ("6" (ASSERT) NIL NIL)
+                         ("7" (INST 1 "x") (("7" (ASSERT) NIL NIL)) NIL))
+                        NIL)
+                       ("2" (DECOMPOSE-EQUALITY 1)
+                        (("2" (HIDE-ALL-BUT 1)
+                          (("2" (TYPEPRED "x!1") (("2" (GRIND) NIL NIL)) NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL))
+                  NIL))
+                NIL))
+              NIL))
+            NIL)
+           ("2" (LEMMA "right_open_ex1")
+            (("2" (INST -1 "xo" "yo" "g")
+              (("2" (ASSERT)
+                (("2" (EXPAND "fr")
+                  (("2"
+                    (CASE "(restrict[real, (right_open(0)), real]
+                    (LAMBDA (x: real):
+                       COND x >= 0 -> g(x), ELSE -> g(0) ENDCOND)) = (restrict[real, (right_open(0)), real](g))")
+                    (("1" (SPLIT -2)
+                      (("1" (ASSERT) NIL NIL)
+                       ("2" (FLATTEN) (("2" (ASSERT) NIL NIL)) NIL)
+                       ("3" (EXPAND "fl") (("3" (ASSERT) NIL NIL)) NIL)
+                       ("4" (FLATTEN) (("4" (ASSERT) NIL NIL)) NIL)
+                       ("5" (ASSERT) NIL NIL) ("6" (ASSERT) NIL NIL)
+                       ("7" (INST 1 "x") (("7" (ASSERT) NIL NIL)) NIL))
+                      NIL)
+                     ("2" (HIDE-ALL-BUT 1)
+                      (("2" (DECOMPOSE-EQUALITY 1)
+                        (("2" (TYPEPRED "x!1") (("2" (GRIND) NIL NIL)) NIL))
+                        NIL))
+                      NIL))
+                    NIL))
+                  NIL))
+                NIL))
+              NIL))
+            NIL))
+          NIL))
+        NIL))
+      NIL))
+    NIL)
+   NIL SHOSTAK))
+ (|closed_interval_ex1_TCC1| 0
+  (|closed_interval_ex1_TCC1-1| NIL 3962871100 ("" (COND-DISJOINT-TCC) NIL NIL)
+   NIL NIL
+   (|closed_interval_ex1| DISJOINTNESS
+    "COND reals.<(active_corners_examples.x, 0) -> active_corners_examples.g(0), booleans.AND(reals.<=(active_corners_examples.x, 10), reals.>=(active_corners_examples.x, 0)) -> active_corners_examples.g(active_corners_examples.x), reals.>(active_corners_examples.x, 10) -> active_corners_examples.g(10) ENDCOND"
+    "NIL")))
+ (|closed_interval_ex1_TCC2| 0
+  (|closed_interval_ex1_TCC2-1| NIL 3962871100 ("" (COND-COVERAGE-TCC) NIL NIL)
+   NIL NIL
+   (|closed_interval_ex1| COVERAGE
+    "COND reals.<(active_corners_examples.x, 0) -> active_corners_examples.g(0), booleans.AND(reals.<=(active_corners_examples.x, 10), reals.>=(active_corners_examples.x, 0)) -> active_corners_examples.g(active_corners_examples.x), reals.>(active_corners_examples.x, 10) -> active_corners_examples.g(10) ENDCOND"
+    "NIL")))
+ (|closed_interval_ex1_TCC3| 0
+  (|closed_interval_ex1_TCC3-1| NIL 3962871100
+   ("" (SKEEP)
+    (("" (HIDE-ALL-BUT 1)
+      (("" (LEMMA "ci_dd")
+        (("" (ASSERT) (("" (INST -1 "0" "10") (("" (ASSERT) NIL NIL)) NIL))
+          NIL))
+        NIL))
+      NIL))
+    NIL)
+   ((|ci_dd| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|closed_interval_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.ci(0, 10))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|closed_interval_ex1_TCC4| 0
+  (|closed_interval_ex1_TCC4-1| NIL 3962871100
+   ("" (SKEEP)
+    (("" (ASSERT)
+      (("" (LEMMA "ci_noe")
+        (("" (INST -1 "0" "10") (("" (ASSERT) NIL NIL)) NIL)) NIL))
+      NIL))
+    NIL)
+   ((|ci_noe| FORMULA-DECL NIL |mean_value_inequalities| NIL)) NIL
+   (|closed_interval_ex1| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.ci(0, 10))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|closed_interval_ex1| 0
+  (|closed_interval_ex1-1| NIL 3962871333
+   ("" (SKEEP*)
+    (("" (SKOLETIN*)
+      (("" (FLATTEN)
+        (("" (SKEEP)
+          (("" (CASE "xo-2 >=0 AND xo+2 <=10")
+            (("1" (FLATTEN)
+              (("1" (LEMMA "mvt_gen_ge_ci")
+                (("1" (INST -1 "f" "0" "10" "0" "xo+2" "x")
+                  (("1" (SPLIT -1)
+                    (("1" (ASSERT)
+                      (("1" (LEMMA "mvt_gen_ge_ci")
+                        (("1" (INST -1 "f" "0" "10" "0" "x" "xo-2")
+                          (("1" (ASSERT) NIL NIL)
+                           ("2" (EXPAND "ci") (("2" (PROPAX) NIL NIL)) NIL)
+                           ("3" (ASSERT)
+                            (("3" (EXPAND "ci") (("3" (PROPAX) NIL NIL)) NIL))
+                            NIL))
+                          NIL))
+                        NIL))
+                      NIL)
+                     ("2" (ASSERT) NIL NIL) ("3" (PROPAX) NIL NIL)
+                     ("4" (PROPAX) NIL NIL) ("5" (PROPAX) NIL NIL))
+                    NIL)
+                   ("2" (EXPAND "ci" 1) (("2" (ASSERT) NIL NIL)) NIL)
+                   ("3" (EXPAND "ci") (("3" (ASSERT) NIL NIL)) NIL))
+                  NIL))
+                NIL))
+              NIL)
+             ("2" (CASE "xo- 2 < 0 AND xo+2 <= 10")
+              (("1" (FLATTEN)
+                (("1" (LEMMA "mvt_gen_ge_ci")
+                  (("1" (INST -1 "f" "0" "10" "0" "xo+2" "x")
+                    (("1" (SPLIT -1)
+                      (("1" (ASSERT)
+                        (("1" (LEMMA "mvt_gen_ge_ci")
+                          (("1" (INST -1 "f" "0" "10" "0" "x" "0")
+                            (("1" (EXPAND "f") (("1" (ASSERT) NIL NIL)) NIL)
+                             ("2" (EXPAND "ci") (("2" (PROPAX) NIL NIL)) NIL)
+                             ("3" (ASSERT)
+                              (("3" (EXPAND "ci") (("3" (PROPAX) NIL NIL))
+                                NIL))
+                              NIL))
+                            NIL))
+                          NIL))
+                        NIL)
+                       ("2" (ASSERT) NIL NIL) ("3" (PROPAX) NIL NIL)
+                       ("4" (PROPAX) NIL NIL) ("5" (PROPAX) NIL NIL))
+                      NIL)
+                     ("2" (EXPAND "ci") (("2" (ASSERT) NIL NIL)) NIL)
+                     ("3" (EXPAND "ci") (("3" (ASSERT) NIL NIL)) NIL))
+                    NIL))
+                  NIL))
+                NIL)
+               ("2" (ASSERT)
+                (("2" (CASE "xo - 2 >= 0 AND 2+xo > 10")
+                  (("1" (FLATTEN)
+                    (("1" (LEMMA "mvt_gen_ge_ci")
+                      (("1" (INST -1 "f" "0" "10" "0" "10" "x")
+                        (("1" (SPLIT -1)
+                          (("1" (LEMMA "mvt_gen_ge_ci")
+                            (("1" (INST -1 "f" "0" "10" "0" "x" "xo-2")
+                              (("1" (SPLIT -1)
+                                (("1" (ASSERT)
+                                  (("1" (EXPAND "f") (("1" (ASSERT) NIL NIL))
+                                    NIL))
+                                  NIL)
+                                 ("2" (ASSERT) NIL NIL) ("3" (PROPAX) NIL NIL)
+                                 ("4" (ASSERT) NIL NIL) ("5" (PROPAX) NIL NIL))
+                                NIL)
+                               ("2" (EXPAND "ci") (("2" (ASSERT) NIL NIL)) NIL)
+                               ("3" (EXPAND "ci") (("3" (PROPAX) NIL NIL))
+                                NIL))
+                              NIL))
+                            NIL)
+                           ("2" (ASSERT) NIL NIL) ("3" (PROPAX) NIL NIL)
+                           ("4" (ASSERT) NIL NIL) ("5" (PROPAX) NIL NIL))
+                          NIL)
+                         ("2" (EXPAND "ci") (("2" (PROPAX) NIL NIL)) NIL)
+                         ("3" (ASSERT)
+                          (("3" (EXPAND "ci") (("3" (PROPAX) NIL NIL)) NIL))
+                          NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (ASSERT)
+                    (("2" (CASE "xo - 2 < 0 AND 2+xo > 10")
+                      (("1" (GRIND) NIL NIL) ("2" (GRIND) NIL NIL)) NIL))
+                    NIL))
+                  NIL))
+                NIL))
+              NIL))
+            NIL))
+          NIL))
+        NIL))
+      NIL))
+    NIL)
+   ((|deriv_fun| TYPE-EQ-DECL NIL |derivatives| |analysis|)
+    (|deriv| CONST-DECL "[T -> real]" |derivatives| |analysis|)
+    (|ci| CONST-DECL "bool" |mean_value_inequalities| NIL)
+    (|deriv_domain?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|not_one_element?| CONST-DECL "bool" |deriv_domain_def| |analysis|)
+    (|derivable?| CONST-DECL "bool" |derivatives| |analysis|)
+    (|mvt_gen_ge_ci| FORMULA-DECL NIL |mean_value_inequalities| NIL))
+   SHOSTAK))
+ (|diamond_left_case_TCC1| 0
+  (|diamond_left_case_TCC1-1| NIL 3964136229 ("" (COND-DISJOINT-TCC) NIL NIL)
+   NIL NIL
+   (|diamond_left_case| DISJOINTNESS
+    "COND reals.<=(active_corners_examples.x, -1) -> active_corners_examples.g(active_corners_examples.x), reals.>(active_corners_examples.x, -1) -> active_corners_examples.g(-1) ENDCOND"
+    "NIL")))
+ (|diamond_left_case_TCC2| 0
+  (|diamond_left_case_TCC2-1| NIL 3964136229 ("" (COND-COVERAGE-TCC) NIL NIL)
+   NIL NIL
+   (|diamond_left_case| COVERAGE
+    "COND reals.<=(active_corners_examples.x, -1) -> active_corners_examples.g(active_corners_examples.x), reals.>(active_corners_examples.x, -1) -> active_corners_examples.g(-1) ENDCOND"
+    "NIL")))
+ (|diamond_left_case_TCC3| 0
+  (|diamond_left_case_TCC3-1| NIL 3964136229 ("" (ASSUMING-TCC) NIL NIL) NIL
+   NIL
+   (|diamond_left_case| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.left_open(-1))].derivatives"
+    "deriv_domain: ASSUMPTION deriv_domain_def[T].deriv_domain?")))
+ (|diamond_left_case_TCC4| 0
+  (|diamond_left_case_TCC4-1| NIL 3964136229 ("" (ASSUMING-TCC) NIL NIL) NIL
+   NIL
+   (|diamond_left_case| ASSUMING
+    "analysis@derivatives[(mean_value_inequalities.left_open(-1))].derivatives"
+    "not_one_element: ASSUMPTION deriv_domain_def[T].not_one_element?")))
+ (|diamond_left_case| 0
+  (|diamond_left_case-1| NIL 3964136231
+   ("" (SKEEP*)
+    (("" (SKOLETIN*)
+      (("" (FLATTEN)
+        (("" (SKEEP)
+          (("" (CASE "xo + 1 <= -1")
+            (("1" (LEMMA "mvt_gen_le_lo")
+              (("1" (INST -1 "f" "-1" "0" "xo + 1" "x")
+                (("1" (SPLIT -1)
+                  (("1" (ASSERT)
+                    (("1" (LEMMA "mvt_gen_le_lo")
+                      (("1" (INST -1 "f" "-1" "0" "x" "xo - 1")
+                        (("1" (ASSERT)
+                          (("1" (GRIND-REALS)
+                            (("1" (POSTPONE) NIL NIL) ("2" (POSTPONE) NIL NIL)
+                             ("3" (POSTPONE) NIL NIL) ("4" (POSTPONE) NIL NIL)
+                             ("5" (POSTPONE) NIL NIL) ("6" (POSTPONE) NIL NIL)
+                             ("7" (POSTPONE) NIL NIL) ("8" (POSTPONE) NIL NIL)
+                             ("9" (POSTPONE) NIL NIL) ("10" (POSTPONE) NIL NIL)
+                             ("11" (POSTPONE) NIL NIL)
+                             ("12" (POSTPONE) NIL NIL)
+                             ("13" (POSTPONE) NIL NIL)
+                             ("14" (POSTPONE) NIL NIL)
+                             ("15" (POSTPONE) NIL NIL)
+                             ("16" (POSTPONE) NIL NIL))
+                            NIL))
+                          NIL)
+                         ("2" (POSTPONE) NIL NIL) ("3" (POSTPONE) NIL NIL))
+                        NIL))
+                      NIL))
+                    NIL)
+                   ("2" (POSTPONE) NIL NIL) ("3" (POSTPONE) NIL NIL)
+                   ("4" (POSTPONE) NIL NIL))
+                  NIL)
+                 ("2" (POSTPONE) NIL NIL) ("3" (POSTPONE) NIL NIL))
+                NIL))
+              NIL)
+             ("2" (POSTPONE) NIL NIL))
+            NIL))
+          NIL))
+        NIL))
+      NIL))
+    NIL)
+   NIL SHOSTAK)))
+

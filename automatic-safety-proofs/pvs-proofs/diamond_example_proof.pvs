@@ -1,0 +1,34 @@
+%%
+% @theory: diamond_example_proof
+% @author: nkheterp
+% @date: Thu, 28 Jul 2022 14:29:34 GMT
+%%
+diamond_example_proof: THEORY
+  BEGIN
+
+    IMPORTING reals@sqrt
+
+    % TODO(nishant): figure out how to define square root
+    DiamondSoundness(xo, yo, alpha : real, s: posreal) : bool =
+      (∃ (x : real) :
+        (
+          (yo - alpha*x <= xo - x + s*sqrt(2)/2)  AND  % top left edge
+          (yo - alpha*x >= xo - x - s*sqrt(2)/2)  AND  % bottom right
+          (yo - alpha*x <= -xo + x + s*sqrt(2)/2) AND  % top right edge
+          (yo - alpha*x >= -xo + x - s*sqrt(2)/2)      % bottom left edge
+        )
+      )
+      IMPLIES
+      (
+        (yo - alpha*xo + alpha*s*sqrt(2)/2) * (yo - alpha*xo - alpha*s*sqrt(2)/2) <= 0 OR
+        (yo - alpha*xo + s*sqrt(2)/2) * (yo - alpha*xo - s*sqrt(2)/2) <= 0
+      )
+
+    % TODO(nishant): generalize to handle f(x) as a general function? maybe for parabola?
+
+    IsSoundDiamond: LEMMA ∀ (xo, yo, alpha: real, s: posreal) : DiamondSoundness(xo, yo, alpha, s)
+
+    IsSoundDiamondNewEps: LEMMA ∀ (xo, yo, alpha: real, s: posreal) : DiamondSoundness(xo, yo, alpha, s)
+
+
+  END diamond_example_proof

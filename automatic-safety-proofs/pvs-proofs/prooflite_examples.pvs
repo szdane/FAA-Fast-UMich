@@ -1,0 +1,299 @@
+prooflite_examples  % [ parameters ]
+		: THEORY
+
+  BEGIN
+
+  IMPORTING analysis@derivative_props, analysis@deriv_domain
+
+
+  left_open(c:real)(x:real): bool =  c >= x
+  right_open(c:real)(x:real): bool = c <= x
+  ci(d1,d2:real)(x:real): bool =( d1 <= x AND  x <= d2)
+
+  left_open_connected: LEMMA FORALL(c:real):
+  connected?[(left_open(c))]
+
+  left_open_noe: LEMMA FORALL(c:real):
+  not_one_element?[(left_open(c))]
+
+  left_open_dd: LEMMA FORALL(c:real):
+  deriv_domain?[(left_open(c))]
+
+  right_open_connected: LEMMA FORALL(c:real):
+  connected?[(right_open(c))]
+
+  right_open_noe: LEMMA FORALL(c:real):
+
+  not_one_element?[(right_open(c))]
+
+  right_open_dd: LEMMA FORALL(c:real):
+  deriv_domain?[(right_open(c))]
+
+  ci_noe: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  not_one_element?[(ci(d1, d2))]
+
+  ci_connected: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  connected?[(ci(d1, d2))]
+
+  ci_dd: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  deriv_domain?[(ci(d1, d2))]
+
+  mvt_gen_ge: LEMMA
+  FORALL(f:[real-> real],D:{DD:[real -> bool] | connected?[(DD)] AND not_one_element?[(DD)] }, c:real):
+  (derivable?[(D)](f) AND
+  FORALL(x:(D)): deriv[(D)](f)(x) >= c)
+  IMPLIES
+  FORALL(a,b:(D)): a>=b IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+  mvt_gen_le: LEMMA
+  FORALL(f:[real-> real],D:{DD:[real -> bool] | connected?[(DD)] AND not_one_element?[(DD)] }, c:real):
+  (derivable?[(D)](f) AND
+  FORALL(x:(D)): deriv[(D)](f)(x) <= c)
+  IMPLIES
+  FORALL(a,b:(D)): a>=b IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+
+%% left open
+
+  mvt_gen_ge_lo: LEMMA
+  FORALL(f:[real-> real], C, c:real):
+  (derivable?[(left_open(C))](f) AND
+  FORALL(x:(left_open(C))): deriv[(left_open(C))](f)(x) >= c)
+  IMPLIES
+  FORALL(a,b:(left_open(C))): a>=b IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+  mvt_gen_le_lo: LEMMA
+  FORALL(f:[real-> real], C, c:real):
+  (derivable?[(left_open(C))](f) AND
+  FORALL(x:(left_open(C))): deriv[(left_open(C))](f)(x) <= c)
+  IMPLIES
+  FORALL(a,b:(left_open(C))): a>=b IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+  mvt_gen_le_lo_2: LEMMA
+  FORALL(f:[real-> real], C, c:real,a,b:(left_open(C))):
+  (derivable?[(left_open(C))](f) AND
+  FORALL(x:(left_open(C))): deriv[(left_open(C))](f)(x) <= c)
+  IMPLIES
+  (a>=b IMPLIES
+  f(a) - f(b) <= c*(a-b))
+
+%% right open
+
+  mvt_gen_ge_ro: LEMMA
+  FORALL(f:[real-> real],C, c:real):
+  (derivable?[(right_open(C))](f) AND
+  FORALL(x:(right_open(C))): deriv[(right_open(C))](f)(x) >= c)
+  IMPLIES
+  FORALL(a,b:(right_open(C))): a>=b IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+  mvt_gen_ge_ro_2: LEMMA
+  FORALL(f:[real-> real],C, c:real,a,b:(right_open(C))):
+  (derivable?[(right_open(C))](f) AND
+  FORALL(x:(right_open(C))): deriv[(right_open(C))](f)(x) >= c)
+  IMPLIES
+  ( a>=b IMPLIES
+  f(a) - f(b) >= c*(a-b))
+
+  mvt_gen_le_ro: LEMMA
+  FORALL(f:[real-> real],C, c:real):
+  (derivable?[(right_open(C))](f) AND
+  FORALL(x:[(right_open(C))]): deriv[(right_open(C))](f)(x) <= c)
+  IMPLIES
+  FORALL(a,b:[(right_open(C))]): a>=b IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%% closed_interval
+
+  mvt_gen_ge_ci: LEMMA
+  FORALL(f:[real-> real], d1,d2,c:real):
+  d1 < d2 AND (derivable?[(ci(d1,d2))](f) AND
+  FORALL(x:(ci(d1,d2))): deriv[(ci(d1,d2))](f)(x) >= c)
+  IMPLIES
+  FORALL(a,b:(ci(d1,d2))): a>=b IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+  mvt_gen_le_ci: LEMMA
+  FORALL(f:[real-> real], d1,d2,c:real):
+  d1 < d2 AND (derivable?[(ci(d1,d2))](f) AND
+  FORALL(x:(ci(d1,d2))): deriv[(ci(d1,d2))](f)(x) <= c)
+  IMPLIES
+  FORALL(a,b:(ci(d1,d2))): a>=b IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+    ascending_case: LEMMA
+        FORALL(xo,yo:real,g:[real -> real]):
+        LET f = LAMBDA(x:real):
+          COND
+            x >= 0 -> g(x),
+            x < 0 -> 0
+          ENDCOND
+        IN
+        derivable?[(right_open(0))](f) AND
+        (FORALL(x:(right_open(0))):deriv[(right_open(0))](f)(x) >= 0) AND
+        (f(0)=0) AND
+        (EXISTS (x : real) :
+        x >= 0 AND
+        ((-x + xo + 2 >= 0) AND
+        (-x + xo - 2 <= 0) AND
+        (yo - f(x) + 1 >= 0) AND
+        (yo - f(x) - 1 <= 0)) AND
+        xo + 2 >= x AND xo - 2 <= x)
+        IMPLIES
+    (       (  ((yo - f(xo - 2) - 1 >= 0) AND
+            (yo - f(xo + 2) + 1 <= 0)) OR
+            ((yo - f(xo - 2) + 1 >= 0) AND
+            (yo - f(xo + 2) - 1 <= 0)) OR
+            ((yo - f(xo + 2) - 1 >= 0) AND	
+            (yo - f(xo - 2) + 1 <= 0)) OR
+            ((yo - f(xo + 2) + 1 >= 0) AND
+            (yo - f(xo - 2) - 1 <= 0)))
+        OR
+        (((xo  >= -2 ) AND
+        ( xo  <= 2 ) AND
+        (yo  >= -1 + f(0)) AND
+        (yo  <= 1 + f(0)) )))
+
+%|- ascending_case : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo-2 >= 0")
+%|-   ((THEN (LEMMA "mvt_gen_ge_ro_2")
+%|-     (SPREAD (INST -1 "f" "0" "0" "xo+2" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ro_2")
+%|-          (SPREAD (INST -1 "f" "0" "0" "x" "xo-2")
+%|-           ((ASSERT) (THEN (EXPAND "right_open") (ASSERT))
+%|-            (THEN (EXPAND "right_open") (ASSERT)))))
+%|-         (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "right_open") (ASSERT))
+%|-       (THEN (EXPAND "right_open") (ASSERT)))))
+%|-    (THEN (LEMMA "mvt_gen_ge_ro_2")
+%|-     (SPREAD (INST -1 "f" "0" "0" "xo+2" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_ge_ro_2")
+%|-          (SPREAD (INST -1 "f" "0" "0" "x" "0")
+%|-           ((THEN (EXPAND "f") (SPREAD (SPLIT -1) ((ASSERT) (PROPAX))))
+%|-            (THEN (EXPAND "f") (EXPAND "right_open") (ASSERT))
+%|-            (THEN (EXPAND "f") (EXPAND "right_open") (ASSERT)))))
+%|-         (ASSERT) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "right_open") (ASSERT))
+%|-       (THEN (EXPAND "right_open") (ASSERT))))))))
+%|- QED ascending_case
+
+
+
+descending_case: LEMMA
+        FORALL(xo,yo:real,g:[real -> real]):
+        LET   f = LAMBDA(x:real):
+            COND
+                        x <= 0 -> g(x),
+                x > 0 -> 0
+                    ENDCOND
+        IN
+        derivable?[(left_open(0))](f) AND
+        (FORALL(x:(left_open(0))):deriv[(left_open(0))](f)(x) <= 0) AND
+        (f(0)=0) AND
+        (EXISTS (x : real) :
+        x <= 0 AND
+        ((-x + xo + 2 >= 0) AND
+        (-x + xo - 2 <= 0) AND
+        (yo - f(x) + 1 >= 0) AND
+        (yo - f(x) - 1 <= 0)) AND
+        xo + 2 >= x AND xo - 2 <= x)
+        IMPLIES
+    (       (  ((yo - f(xo - 2) - 1 >= 0) AND
+            (yo - f(xo + 2) + 1 <= 0)) OR
+            ((yo - f(xo - 2) + 1 >= 0) AND
+            (yo - f(xo + 2) - 1 <= 0)) OR
+            ((yo - f(xo + 2) - 1 >= 0) AND	
+            (yo - f(xo - 2) + 1 <= 0)) OR
+            ((yo - f(xo + 2) + 1 >= 0) AND
+            (yo - f(xo - 2) - 1 <= 0)))
+        OR
+        (((xo  >= -2 ) AND
+        ( xo  <= 2 ) AND
+        (yo  >= -1 + f(0)) AND
+        (yo  <= 1 + f(0)) )))
+
+%|- descending_case : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo+2 <= 0")
+%|-   ((THEN (LEMMA "mvt_gen_le_lo_2")
+%|-     (SPREAD (INST -1 "f" "0" "0" "xo+2" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_lo_2")
+%|-          (SPREAD (INST -1 "f" "0" "0" "x" "xo-2")
+%|-           ((ASSERT) (THEN (EXPAND "left_open") (ASSERT))
+%|-            (THEN (EXPAND "left_open") (ASSERT)))))
+%|-         (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "left_open") (ASSERT))
+%|-       (THEN (EXPAND "left_open") (ASSERT)))))
+%|-    (THEN (LEMMA "mvt_gen_le_lo_2")
+%|-     (SPREAD (INST -1 "f" "0" "0" "0" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_lo_2")
+%|-          (SPREAD (INST -1 "f" "0" "0" "x" "xo-2")
+%|-           ((THEN (EXPAND "f") (SPREAD (SPLIT -1) ((ASSERT) (PROPAX))))
+%|-            (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT))
+%|-            (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT)))))
+%|-         (ASSERT) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "left_open") (ASSERT))
+%|-       (THEN (EXPAND "left_open") (ASSERT))))))))
+%|- QED descending_case
+
+le_lo_case_0: LEMMA
+    FORALL(xo,yo:real, g:[real-> real]):
+        LET f = LAMBDA(x:real):
+        COND
+            x < 0 -> g(x),
+            x >= 0 -> g(0)
+        ENDCOND
+    IN
+    derivable?[(left_open(0))](f) AND
+    (FORALL(x:(left_open(0))): deriv[(left_open(0))](f)(x) <= 0) AND
+    (EXISTS (x : real) :
+    ((-x + xo + 1 >= 0) AND
+     (-x + xo - 1 <= 0) AND
+     (-x^2 + yo + 1 >= 0) AND
+     (-x^2 + yo - 1 <= 0)) AND
+    x <= 0 AND
+    xo + 1 >= x AND xo + -1 <= x)
+    IMPLIES
+    ((xo^2 - 2*xo + 1 >= 0) AND
+     (xo^2 + 2*xo + 1 <= 0)) OR
+    ((xo^2 + 2*xo + 1 >= 0) AND
+     (xo^2 - 2*xo + 1 <= 0))
+
+%|- le_lo_case_0 : PROOF
+%|- (THEN (SKEEP*) (SKOLETIN*) (FLATTEN) (SKEEP)
+%|-  (SPREAD (CASE "xo + 1 <= 0")
+%|-   ((THEN (LEMMA "mvt_gen_le_lo_2")
+%|-     (SPREAD (INST -1 "f" "0" "0" "xo + 1" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_lo_2")
+%|-          (SPREAD (INST -1 "f" "0" "0" "x" "xo - 1")
+%|-           ((ASSERT) (THEN (EXPAND "left_open") (ASSERT))
+%|-            (THEN (EXPAND "left_open") (ASSERT)))))
+%|-         (PROPAX) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "left_open") (ASSERT))
+%|-       (THEN (EXPAND "left_open") (ASSERT)))))
+%|-    (THEN (LEMMA "mvt_gen_le_lo_2")
+%|-     (SPREAD (INST -1 "f" "0" "0" "0" "x")
+%|-      ((SPREAD (SPLIT -1)
+%|-        ((THEN (ASSERT) (LEMMA "mvt_gen_le_lo_2")
+%|-          (SPREAD (INST -1 "f" "0" "0" "x" "xo - 1")
+%|-           ((THEN (EXPAND "f") (EXPAND "left_open") (SPREAD (SPLIT -1) ((ASSERT) (PROPAX))))
+%|-            (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT))
+%|-            (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT)))))
+%|-         (ASSERT) (PROPAX) (PROPAX)))
+%|-       (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT))
+%|-       (THEN (EXPAND "f") (EXPAND "left_open") (ASSERT))))))))     
+%|- QED le_lo_case_0
+
+%|- *TCC* : PROOF (assert) QED
+
+end prooflite_examples

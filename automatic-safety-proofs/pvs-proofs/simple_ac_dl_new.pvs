@@ -1,0 +1,113 @@
+simple_ac_dl  [(IMPORTING dL@top) r,h,v,w,a : dLVar] : THEORY
+
+  BEGIN
+
+
+%%%% Work on simple_ac_dl
+
+ ASSUMING
+
+distinct_vars : ASSUMPTION
+  pairwise_distinct_vars?((: r, h, v, w, a:))
+
+ ENDASSUMING
+
+ IMPORTING dL@top 
+  
+ rp,hp,alo,vlo      : VAR real
+
+abs_re(x:RealExpr)(env:Environment): real = abs(x(env))
+max_re(x,y:RealExpr)(env:Environment): real = max(x(env),y(env))
+
+%%% SOUND NESS
+fermats_last: LEMMA
+FORALL(n: nat,a,b,c:real):
+n>2 IMPLIES a^n + b^n /= c^n
+
+%% flying dynamics
+fly_simp(rv:real)(Q:BoolExpr): HP =
+ DIFF( (: (r, -cnst(rv)), (h, -val(v)), (v, val(a)) :), Q)
+
+fly_strt(rv,hv:real)(Q:BoolExpr): HP =
+ DIFF( (:(r, -cnst(rv)), (h, cnst(hv)):),Q)
+
+alplin(hv:real,rv:nzreal): real = (hv/rv) 
+
+fly_strt_sol: LEMMA
+  FORALL(rv,hv:real,Q,R,P:BoolExpr):
+ (FORALL(X1:real):  ((: cnst(X1) >= cnst(0),
+          DLFORALL(LAMBDA (s_1: real):
+                     DLIMPLIES(DLAND(cnst(s_1) >= cnst(0),
+                                     cnst(X1) >= cnst(s_1)),
+                               ALLRUNS(ASSIGN(cons((r,
+                                                    val(r) +
+                                                     -cnst(rv) *
+                                                      cnst(s_1)),
+                                                   cons((h,
+                                                         val(h) +
+                                                          cnst(hv) *
+                                                           cnst(s_1)),
+                                                        null))),
+                                       Q))),
+          R :)
+        |-
+        (: ALLRUNS(ASSIGN((: (r, val(r) + -cnst(rv) * cnst(X1)),
+                             (h, val(h) + cnst(hv) * cnst(X1)) :)),
+                   P) :)))
+		   IMPLIES
+    (R IMPLIES ALLRUNS(DIFF( (:(r, -cnst(rv)), (h, cnst(hv)):),Q),P))
+% r = rv*t+ r0, and  h = hv*t+ho
+% h = hv/rv*(rv*t+r0)-hv/rv*r0 + h0 = hv/rv*r-(hv/rv*r0 + h0)
+% this will be quadradic when there constant acceleration.
+% using rectangle, (r,h) is the center of the square, given by solution. and X is???
+
+% this is actually a square 
+wc_rectangle(x0,y0,alpha:real): BoolExpr =
+ x0 - val(r)  <= 1 AND
+ x0 - val(r)  >= -1 AND
+ y0 - cnst(alpha)*val(r)  <= 1 AND
+ y0 - cnst(alpha)*val(h)  >= -1
+
+%%% the slope of the trajectory is alpha = hv/rv
+%% might be different in quadratic case
+
+ 
+wc_rectanglenx(x0,y0,alpha:real): BoolExpr =
+ ((cnst(-alpha*x0 - alpha + y0 - 1))*(cnst(-alpha*x0 + alpha + y0 + 1)) <= cnst(0)) OR
+  ((cnst(-alpha*x0 - alpha + y0 + 1))*(cnst(-alpha*x0 + alpha + y0 - 1)) <= cnst(0))
+
+fly_strt_sol_ac: LEMMA
+  FORALL(x0,y0,hv:real, rv:nzreal,Q,R,P:BoolExpr,B:bool):
+ (FORALL(X1:real):  ((: cnst(X1) >= cnst(0),
+          DLFORALL(LAMBDA (s_1: real):
+                     DLIMPLIES(DLAND(cnst(s_1) >= cnst(0),
+                                     cnst(X1) >= cnst(s_1)),
+                               ALLRUNS(ASSIGN(cons((r,
+                                                    val(r) +
+                                                     -cnst(rv) *
+                                                      cnst(s_1)),
+                                                   cons((h,
+                                                         val(h) +
+                                                          cnst(hv) *
+                                                           cnst(s_1)),
+                                                        null))),
+                                       Q))),
+          R :)
+        |-
+        (: ALLRUNS(ASSIGN((: (r, val(r) + -cnst(rv) * cnst(X1)),
+                             (h, val(h) + cnst(hv) * cnst(X1)) :)),
+                   wc_rectangle(x0,y0,alplin(hv,rv))) :)))
+
+
+%%%% This should be a PVS sequent, similar to
+%Soundness(xo, yo, alpha: real) : bool =c
+%    (EXISTS (x : real) :
+%    ((-x + xo + 2 >= 0) AND
+%     (-x + xo - 2 <= 0) AND
+%     (-alpha*x + yo + 1 >= 0) AND
+%     (-alpha*x + yo - 1 <= 0))
+%    IMPLIES
+%    ((-alpha*xo - 2*alpha + yo - 1)*(-alpha*xo + 2*alpha + yo + 1) <= 0) OR
+%    ((-alpha*xo - 2*alpha + yo + 1)*(-alpha*xo + 2*alpha + yo - 1) <= 0)
+END simple_ac_dl
+

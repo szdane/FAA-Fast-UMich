@@ -1,0 +1,775 @@
+(square_example_proof
+ (IsSoundAlpha 0
+  (IsSoundAlpha-1 nil 3867939940
+   ("" (skeep)
+    (("" (expand "SoundnessAlpha")
+      (("" (flatten)
+        (("" (skeep)
+          (("" (label "alphapos" 1)
+            (("" (label "alphaneg" 2)
+              (("" (hide alphapos)
+                (("" (hide alphaneg)
+                  (("" (name "eps" "1 - xo + x")
+                    (("" (move-terms -1 l 1)
+                      (("" (move-terms -1 l 1)
+                        (("" (replace -1 -2)
+                          (("" (replace -1)
+                            (("" (assert)
+                              ((""
+                                (assert)
+                                ((""
+                                  (move-terms -4 r 1)
+                                  ((""
+                                    (move-terms -5 r 1)
+                                    ((""
+                                      (assert)
+                                      ((""
+                                        (move-terms -2 r 1)
+                                        ((""
+                                          (move-terms -3 r 1)
+                                          ((""
+                                            (assert)
+                                            ((""
+                                              (case "NOT eps >= 0")
+                                              (("1" (assert) nil nil)
+                                               ("2"
+                                                (hide -3)
+                                                (("2"
+                                                  (case "NOT eps <= 2")
+                                                  (("1"
+                                                    (assert)
+                                                    nil
+                                                    nil)
+                                                   ("2"
+                                                    (hide -4)
+                                                    (("2"
+                                                      (move-terms
+                                                       -4
+                                                       l
+                                                       2)
+                                                      (("2"
+                                                        (move-terms
+                                                         -5
+                                                         l
+                                                         2)
+                                                        (("2"
+                                                          (assert)
+                                                          (("2"
+                                                            (case
+                                                             "alpha >= 0")
+                                                            (("1"
+                                                              (mult-by
+                                                               -2
+                                                               "alpha")
+                                                              (("1"
+                                                                (mult-by
+                                                                 -3
+                                                                 "alpha")
+                                                                (("1"
+                                                                  (assert)
+                                                                  (("1"
+                                                                    (case
+                                                                     "NOT -(xo) * alpha - 1 + alpha + yo <= 2*alpha")
+                                                                    (("1"
+                                                                      (assert)
+                                                                      nil
+                                                                      nil)
+                                                                     ("2"
+                                                                      (hide
+                                                                       -6)
+                                                                      (("2"
+                                                                        (move-terms
+                                                                         -1
+                                                                         r
+                                                                         1)
+                                                                        (("2"
+                                                                          (assert)
+                                                                          (("2"
+                                                                            (case
+                                                                             "NOT  1 + -(xo) * alpha + alpha + yo >= 0")
+                                                                            (("1"
+                                                                              (assert)
+                                                                              nil
+                                                                              nil)
+                                                                             ("2"
+                                                                              (hide
+                                                                               -7)
+                                                                              (("2"
+                                                                                (mult-by
+                                                                                 -1
+                                                                                 "-1 - alpha + -(xo) * alpha + yo"
+                                                                                 -)
+                                                                                (("2"
+                                                                                  (assert)
+                                                                                  (("2"
+                                                                                    (reveal
+                                                                                     alphapos)
+                                                                                    (("2"
+                                                                                      (assert)
+                                                                                      nil
+                                                                                      nil))
+                                                                                    nil))
+                                                                                  nil))
+                                                                                nil))
+                                                                              nil))
+                                                                            nil))
+                                                                          nil))
+                                                                        nil))
+                                                                      nil))
+                                                                    nil))
+                                                                  nil))
+                                                                nil))
+                                                              nil)
+                                                             ("2"
+                                                              (mult-by
+                                                               -1
+                                                               "alpha"
+                                                               -)
+                                                              (("2"
+                                                                (mult-by
+                                                                 -2
+                                                                 "alpha"
+                                                                 -)
+                                                                (("2"
+                                                                  (case
+                                                                   "NOT -(xo) * alpha - 1 + alpha + yo <= 0")
+                                                                  (("1"
+                                                                    (assert)
+                                                                    nil
+                                                                    nil)
+                                                                   ("2"
+                                                                    (hide
+                                                                     -5)
+                                                                    (("2"
+                                                                      (case
+                                                                       "NOT 1 + -(xo) * alpha + alpha + yo >= 2*alpha")
+                                                                      (("1"
+                                                                        (assert)
+                                                                        nil
+                                                                        nil)
+                                                                       ("2"
+                                                                        (hide
+                                                                         -6)
+                                                                        (("2"
+                                                                          (move-terms
+                                                                           -1
+                                                                           r
+                                                                           1)
+                                                                          (("2"
+                                                                            (assert)
+                                                                            (("2"
+                                                                              (mult-by
+                                                                               -1
+                                                                               "-(xo) * alpha - 1 + alpha + yo"
+                                                                               -)
+                                                                              (("2"
+                                                                                (assert)
+                                                                                (("2"
+                                                                                  (reveal
+                                                                                   alphaneg)
+                                                                                  (("2"
+                                                                                    (assert)
+                                                                                    nil
+                                                                                    nil))
+                                                                                  nil))
+                                                                                nil))
+                                                                              nil))
+                                                                            nil))
+                                                                          nil))
+                                                                        nil))
+                                                                      nil))
+                                                                    nil))
+                                                                  nil))
+                                                                nil))
+                                                              nil))
+                                                            nil))
+                                                          nil))
+                                                        nil))
+                                                      nil))
+                                                    nil))
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   ((real_times_real_is_real application-judgement "real" reals nil)
+    (real_minus_real_is_real application-judgement "real" reals nil)
+    (real_plus_real_is_real application-judgement "real" reals nil)
+    (SoundnessAlpha const-decl "bool" square_example_proof nil)
+    (- const-decl "[numfield -> numfield]" number_fields nil)
+    (IFF const-decl "[bool, bool -> bool]" booleans nil)
+    (bool nonempty-type-eq-decl nil booleans nil)
+    (minus_real_is_real application-judgement "real" reals nil)
+    (real_ge_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (ge_realorder name-judgement "RealOrder" real_orders reals)
+    (real_le_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (le_realorder name-judgement "RealOrder" real_orders reals)
+    (* const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (<= const-decl "bool" reals nil)
+    (NOT const-decl "[bool -> bool]" booleans nil)
+    (both_sides_times_neg_le1_imp formula-decl nil extra_real_props
+     nil)
+    (both_sides_times_pos_le1_imp formula-decl nil extra_real_props
+     nil)
+    (nonneg_real nonempty-type-eq-decl nil real_types nil) nil
+    (nonpos_real nonempty-type-eq-decl nil real_types nil)
+    (both_sides_times_neg_ge1_imp formula-decl nil extra_real_props
+     nil)
+    (both_sides_times_pos_ge1_imp formula-decl nil extra_real_props
+     nil)
+    (>= const-decl "bool" reals nil)
+    (number nonempty-type-decl nil numbers nil)
+    (boolean nonempty-type-decl nil booleans nil)
+    (= const-decl "[T, T -> boolean]" equalities nil)
+    (number_field_pred const-decl "[number -> boolean]" number_fields
+     nil)
+    (numfield nonempty-type-eq-decl nil number_fields nil)
+    (+ const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (- const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (number_field nonempty-type-from-decl nil number_fields nil)
+    (real_pred const-decl "[number_field -> boolean]" reals nil)
+    (real nonempty-type-from-decl nil reals nil))
+   shostak))
+ (IsSoundAlphaCenterEpsilon 0
+  (IsSoundAlphaCenterEpsilon-1 nil 3867941215
+   ("" (skeep)
+    (("" (expand "SoundnessAlpha")
+      (("" (flatten)
+        (("" (label "alphapos" 1)
+          (("" (label "alphaneg" 2)
+            (("" (hide alphapos alphaneg)
+              (("" (skeep)
+                (("" (name "eps" "x-xo")
+                  (("" (move-terms -1 l 2)
+                    (("" (replace -1)
+                      (("" (assert)
+                        (("" (mult-by (-2 -3) "-1" -)
+                          (("" (assert)
+                            (("" (move-terms -4 r 1)
+                              ((""
+                                (move-terms -5 r 1)
+                                ((""
+                                  (move-terms -4 l 1)
+                                  ((""
+                                    (move-terms -5 l 1)
+                                    ((""
+                                      (assert)
+                                      ((""
+                                        (case "alpha >= 0")
+                                        (("1"
+                                          (mult-by -2 "alpha")
+                                          (("1"
+                                            (mult-by -3 "alpha")
+                                            (("1"
+                                              (assert)
+                                              (("1"
+                                                (case
+                                                 "NOT -(alpha * xo) - 1 + yo <= alpha")
+                                                (("1" (assert) nil nil)
+                                                 ("2"
+                                                  (move-terms -1 r 1)
+                                                  (("2"
+                                                    (assert)
+                                                    (("2"
+                                                      (case
+                                                       "NOT 1 + -(alpha * xo) + yo >= -alpha")
+                                                      (("1"
+                                                        (assert)
+                                                        nil
+                                                        nil)
+                                                       ("2"
+                                                        (move-terms
+                                                         -1
+                                                         r
+                                                         1)
+                                                        (("2"
+                                                          (mult-by
+                                                           -1
+                                                           "-(alpha * xo) - 1 - alpha + yo"
+                                                           -)
+                                                          (("2"
+                                                            (assert)
+                                                            (("2"
+                                                              (reveal
+                                                               alphapos)
+                                                              (("2"
+                                                                (assert)
+                                                                nil
+                                                                nil))
+                                                              nil))
+                                                            nil))
+                                                          nil))
+                                                        nil))
+                                                      nil))
+                                                    nil))
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil)
+                                         ("2"
+                                          (mult-by -1 "alpha" -)
+                                          (("2"
+                                            (mult-by -2 "alpha" -)
+                                            (("2"
+                                              (assert)
+                                              (("2"
+                                                (case
+                                                 "NOT -(alpha * xo) - 1 + yo <= -alpha")
+                                                (("1" (assert) nil nil)
+                                                 ("2"
+                                                  (move-terms -1 r 1)
+                                                  (("2"
+                                                    (assert)
+                                                    (("2"
+                                                      (case
+                                                       "NOT 1 + -(alpha * xo) + yo >= alpha")
+                                                      (("1"
+                                                        (assert)
+                                                        nil
+                                                        nil)
+                                                       ("2"
+                                                        (move-terms
+                                                         -1
+                                                         r
+                                                         1)
+                                                        (("2"
+                                                          (mult-by
+                                                           -1
+                                                           "-(alpha * xo) - 1 - -alpha + yo"
+                                                           -)
+                                                          (("2"
+                                                            (assert)
+                                                            (("2"
+                                                              (reveal
+                                                               alphaneg)
+                                                              (("2"
+                                                                (assert)
+                                                                nil
+                                                                nil))
+                                                              nil))
+                                                            nil))
+                                                          nil))
+                                                        nil))
+                                                      nil))
+                                                    nil))
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   ((le_realorder name-judgement "RealOrder" real_orders reals)
+    (ge_realorder name-judgement "RealOrder" real_orders reals))
+   shostak))
+ (IsSoundSimple 0
+  (IsSoundSimple-1 nil 3867940741
+   ("" (skeep)
+    (("" (expand "SoundnessSimple")
+      (("" (lemma IsSoundAlpha)
+        (("" (inst -1 xo yo 1)
+          (("" (expand "SoundnessAlpha")
+            (("" (assert)
+              (("" (flatten)
+                (("" (skeep)
+                  (("" (split)
+                    (("1" (propax) nil nil) ("2" (assert) nil nil)
+                     ("3" (inst?) (("3" (assert) nil nil)) nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   ((ge_realorder name-judgement "RealOrder" real_orders reals)
+    (le_realorder name-judgement "RealOrder" real_orders reals))
+   shostak))
+ (IsSoundAlphaNoEpsilon 0
+  (IsSoundAlphaNoEpsilon-1 nil 3868114900
+   ("" (skeep)
+    (("" (expand "SoundnessAlpha")
+      (("" (flatten)
+        (("" (skeep)
+          (("" (move-terms -3 r 1)
+            (("" (move-terms -3 l 2)
+              (("" (assert)
+                (("" (case "NOT x <= xo+1")
+                  (("1" (assert) nil nil)
+                   ("2" (mult-by -1 "alpha")
+                    (("1" (swap "alpha" * "x")
+                      (("1" (case "NOT yo - 1 <= (xo + 1) * alpha")
+                        (("1" (assert) nil nil)
+                         ("2" (move-terms -3 l 1)
+                          (("2" (assert)
+                            (("2" (mult-by -3 "-1" -)
+                              (("2"
+                                (assert)
+                                (("2"
+                                  (move-terms -2 r 1)
+                                  (("2"
+                                    (move-terms -2 r 1)
+                                    (("2"
+                                      (move-terms -6 r 1)
+                                      (("2"
+                                        (move-terms -6 l 2)
+                                        (("2"
+                                          (assert)
+                                          (("2"
+                                            (case "NOT x >= xo - 1")
+                                            (("1" (assert) nil nil)
+                                             ("2"
+                                              (case
+                                               "NOT 1+yo >= (xo-1)*alpha")
+                                              (("1"
+                                                (assert)
+                                                (("1"
+                                                  (mult-by -1 "alpha")
+                                                  (("1"
+                                                    (case
+                                                     "NOT 1+yo >= (xo-1)*alpha")
+                                                    (("1"
+                                                      (assert)
+                                                      nil
+                                                      nil)
+                                                     ("2"
+                                                      (move-terms
+                                                       -1
+                                                       r
+                                                       1)
+                                                      (("2"
+                                                        (assert)
+                                                        nil
+                                                        nil))
+                                                      nil))
+                                                    nil)
+                                                   ("2"
+                                                    (case "alpha >= 0")
+                                                    (("1"
+                                                      (propax)
+                                                      nil
+                                                      nil)
+                                                     ("2"
+                                                      (mult-by
+                                                       -1
+                                                       "alpha"
+                                                       -)
+                                                      (("2"
+                                                        (hide (1 2 3))
+                                                        (("2"
+                                                          (case
+                                                           "NOT yo-1 <= (xo-1)*alpha")
+                                                          (("1"
+                                                            (assert)
+                                                            nil
+                                                            nil)
+                                                           ("2"
+                                                            (move-terms
+                                                             -1
+                                                             r
+                                                             1)
+                                                            (("2"
+                                                              (case
+                                                               "NOT xo-1<=x")
+                                                              (("1"
+                                                                (assert)
+                                                                nil
+                                                                nil)
+                                                               ("2"
+                                                                (hide
+                                                                 -4)
+                                                                (("2"
+                                                                  (move-terms
+                                                                   -6
+                                                                   l
+                                                                   2)
+                                                                  (("2"
+                                                                    (move-terms
+                                                                     -6
+                                                                     r
+                                                                     1)
+                                                                    (("2"
+                                                                      (assert)
+                                                                      (("2"
+                                                                        (mult-by
+                                                                         -6
+                                                                         "alpha"
+                                                                         -)
+                                                                        (("2"
+                                                                          (case
+                                                                           "NOT 1+yo > (xo+1)*alpha")
+                                                                          (("1"
+                                                                            (assert)
+                                                                            nil
+                                                                            nil)
+                                                                           ("2"
+                                                                            (move-terms
+                                                                             -1
+                                                                             r
+                                                                             1)
+                                                                            (("2"
+                                                                              (mult-by
+                                                                               -1
+                                                                               "-1 - alpha * xo + alpha + yo"
+                                                                               -)
+                                                                              (("2"
+                                                                                (assert)
+                                                                                nil
+                                                                                nil))
+                                                                              nil))
+                                                                            nil))
+                                                                          nil))
+                                                                        nil))
+                                                                      nil))
+                                                                    nil))
+                                                                  nil))
+                                                                nil))
+                                                              nil))
+                                                            nil))
+                                                          nil))
+                                                        nil))
+                                                      nil))
+                                                    nil))
+                                                  nil))
+                                                nil)
+                                               ("2"
+                                                (assert)
+                                                (("2"
+                                                  (move-terms -6 l 2)
+                                                  (("2"
+                                                    (move-terms -6 r 1)
+                                                    (("2"
+                                                      (assert)
+                                                      (("2"
+                                                        (hide -3)
+                                                        (("2"
+                                                          (grind)
+                                                          (("2"
+                                                            (grind-reals)
+                                                            (("2"
+                                                              (postpone)
+                                                              nil
+                                                              nil))
+                                                            nil))
+                                                          nil))
+                                                        nil))
+                                                      nil))
+                                                    nil))
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil)
+                     ("2" (postpone) nil nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   nil shostak))
+ (IsSoundAlphaNoEpsilonSecondTry 0
+  (IsSoundAlphaNoEpsilonSecondTry-1 nil 3871651465
+   ("" (skeep)
+    (("" (expand "SoundnessAlpha")
+      (("" (flatten)
+        (("" (skeep)
+          (("" (move-terms -1 l 2)
+            (("" (move-terms -1 r 1)
+              (("" (move-terms -2 l 2)
+                (("" (move-terms -2 r 1)
+                  (("" (move-terms -3 l 2)
+                    (("" (move-terms -4 l 2)
+                      (("" (move-terms -3 r 1)
+                        (("" (move-terms -4 r 1)
+                          (("" (assert)
+                            (("" (case "alpha >= 0")
+                              (("1"
+                                (mult-by -3 "alpha")
+                                (("1"
+                                  (case
+                                   "NOT yo - 1 <= alpha * (1 + xo)")
+                                  (("1" (assert) nil nil)
+                                   ("2"
+                                    (mult-by -4 "alpha")
+                                    (("2"
+                                      (case "NOT 1 + yo >= x * alpha")
+                                      (("1" (assert) nil nil)
+                                       ("2"
+                                        (hide -7)
+                                        (("2"
+                                          (case
+                                           "NOT 1 + yo >= (xo-1)*alpha")
+                                          (("1" (assert) nil nil)
+                                           ("2"
+                                            (move-terms -1 r 1)
+                                            (("2"
+                                              (move-terms -4 r 1)
+                                              (("2"
+                                                (mult-by
+                                                 -1
+                                                 "yo - 1 - alpha * (1 + xo)"
+                                                 -)
+                                                (("2"
+                                                  (assert)
+                                                  nil
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil)
+                               ("2"
+                                (assert)
+                                (("2"
+                                  (mult-by -1 "alpha" -)
+                                  (("2"
+                                    (case
+                                     "NOT yo - 1 <= (xo - 1) * alpha")
+                                    (("1" (assert) nil nil)
+                                     ("2"
+                                      (move-terms -1 r 1)
+                                      (("2"
+                                        (mult-by -3 "alpha" -)
+                                        (("2"
+                                          (case
+                                           "NOT 1+yo >= x * alpha")
+                                          (("1" (assert) nil nil)
+                                           ("2"
+                                            (case
+                                             "NOT 1+yo >= (1+xo)*alpha")
+                                            (("1" (assert) nil nil)
+                                             ("2"
+                                              (move-terms -1 r 1)
+                                              (("2"
+                                                (mult-by
+                                                 -1
+                                                 " yo - 1 - (xo - 1) * alpha"
+                                                 -)
+                                                (("2"
+                                                  (assert)
+                                                  nil
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil))
+      nil))
+    nil)
+   ((real_times_real_is_real application-judgement "real" reals nil)
+    (real_minus_real_is_real application-judgement "real" reals nil)
+    (real_plus_real_is_real application-judgement "real" reals nil)
+    (SoundnessAlpha const-decl "bool" square_example_proof nil)
+    (NOT const-decl "[bool -> bool]" booleans nil)
+    (xo skolem-const-decl "real" square_example_proof nil)
+    (yo skolem-const-decl "real" square_example_proof nil)
+    (nonpos_real nonempty-type-eq-decl nil real_types nil)
+    (both_sides_times_neg_ge1_imp formula-decl nil extra_real_props
+     nil)
+    (both_sides_times_pos_le1_imp formula-decl nil extra_real_props
+     nil)
+    (alpha skolem-const-decl "real" square_example_proof nil)
+    (nonneg_real nonempty-type-eq-decl nil real_types nil)
+    (both_sides_times_pos_ge1_imp formula-decl nil extra_real_props
+     nil)
+    (both_sides_times_neg_le1_imp formula-decl nil extra_real_props
+     nil)
+    (* const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (ge_realorder name-judgement "RealOrder" real_orders reals)
+    (real_ge_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (>= const-decl "bool" reals nil)
+    (- const-decl "[numfield -> numfield]" number_fields nil)
+    (le_realorder name-judgement "RealOrder" real_orders reals)
+    (real_le_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (+ const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (- const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (numfield nonempty-type-eq-decl nil number_fields nil)
+    (<= const-decl "bool" reals nil)
+    (real nonempty-type-from-decl nil reals nil)
+    (real_pred const-decl "[number_field -> boolean]" reals nil)
+    (number_field nonempty-type-from-decl nil number_fields nil)
+    (number_field_pred const-decl "[number -> boolean]" number_fields
+     nil)
+    (number nonempty-type-decl nil numbers nil)
+    (IFF const-decl "[bool, bool -> bool]" booleans nil)
+    (bool nonempty-type-eq-decl nil booleans nil)
+    (boolean nonempty-type-decl nil booleans nil))
+   shostak)))
+

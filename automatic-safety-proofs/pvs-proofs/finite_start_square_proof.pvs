@@ -1,0 +1,39 @@
+%%
+% @theory: finite_start_square_proof
+% @author: nkheterp
+% @date: Fri, 29 Jul 2022 15:01:22 GMT
+%%
+finite_start_square_proof: THEORY
+  BEGIN
+
+    SoundnessAlphaFiniteStart(xo: real, yo: real, alpha: posreal) : bool =
+      (
+        ∃ (x : real) : ( % x is polygon center
+        x >= 0 AND (xo - x) <= 1 AND (xo - x) >= -1 AND (yo - alpha*x) <= 1 AND (yo - alpha*x) >= -1)
+      ) 
+      IMPLIES 
+      (
+        (xo <= 1 AND xo >= -1 AND yo <= 1 AND yo >= -1) OR % init notch
+        (yo >= -xo AND ((yo - alpha*xo - alpha - 1) * (yo - alpha*xo + alpha + 1) <= 0)) OR % alphapos
+        (yo <=  xo AND ((yo - alpha*xo - alpha + 1) * (yo - alpha*xo + alpha - 1) <= 0)) % alphaneg
+      )
+
+    % @QED IsSoundAlphaFiniteStart proved by nkheterp on Fri, 29 Jul 2022 18:26:37 GMT
+    IsSoundAlphaFiniteStart: LEMMA ∀ (xo, yo: real, alpha: posreal) : SoundnessAlphaFiniteStart(xo, yo, alpha)
+
+    SoundnessAlphaFiniteStartFiniteEnd(xo, yo, xend: real, alpha: posreal) : bool =
+      (
+        ∃ (x : real) : ( % x is polygon center
+        x >= 0 AND (xo - x) <= 1 AND (xo - x) >= -1 AND (yo - alpha*x) <= 1 AND (yo - alpha*x) >= -1 AND x <= xend)
+      ) 
+      IMPLIES 
+      (
+        (xo <= 1 AND xo >= -1 AND yo <= 1 AND yo >= -1) OR % init notch
+        (xo - xend <= 1 AND xo - xend >= -1 AND yo - alpha*xend <= 1 AND yo - alpha*xend >= -1) OR % final notch 
+        (yo >= -xo AND yo <= -xo + xend + alpha*xend AND ((yo - alpha*xo - alpha - 1) * (yo - alpha*xo + alpha + 1) <= 0)) OR % alphapos
+        (yo <=  xo AND yo >= xo - xend + alpha*xend AND ((yo - alpha*xo - alpha + 1) * (yo - alpha*xo + alpha - 1) <= 0)) % alphaneg
+      )
+
+    IsSoundAlphaFiniteStartFiniteEnd: LEMMA ∀ (xo, yo, xend: real, alpha: posreal) : SoundnessAlphaFiniteStartFiniteEnd(xo, yo, xend, alpha)
+
+  END finite_start_square_proof

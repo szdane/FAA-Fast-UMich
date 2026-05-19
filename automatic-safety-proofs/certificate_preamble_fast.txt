@@ -1,0 +1,211 @@
+active_corner_certificate_fast  % [ parameters ]
+		: THEORY
+
+  BEGIN
+
+  IMPORTING analysis@derivative_props, analysis@deriv_domain
+
+  left_open(c:real)(x:real): bool =  c >= x
+  right_open(c:real)(x:real): bool = c <= x
+  ci(d1,d2:real)(x:real): bool =( d1 <= x AND  x <= d2)
+
+  left_open_connected: LEMMA FORALL(c:real):
+  connected?[(left_open(c))]
+
+%|- left_open_connected : PROOF
+%|- (THEN (SKEEP) (EXPAND "connected?") (SKEEP) (TYPEPRED "x" "y")
+%|-  (EXPAND "left_open") (ASSERT))
+%|- QED left_open_connected
+
+  left_open_noe: LEMMA FORALL(c:real):
+  not_one_element?[(left_open(c))]
+
+%|- left_open_noe : PROOF
+%|- (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP)
+%|-  (SPREAD (INST 1 "x-1")
+%|-   ((ASSERT) (THEN (TYPEPRED "x") (EXPAND "left_open") (ASSERT)))))
+%|- QED left_open_noe
+
+  left_open_dd: LEMMA FORALL(c:real):
+  deriv_domain?[(left_open(c))]
+
+%|- left_open_dd : PROOF
+%|- (THEN (SKEEP) (LEMMA "connected_deriv_domain[(left_open(c))]") (ASSERT)
+%|-  (HIDE 2) (LEMMA " left_open_connected") (LEMMA " left_open_noe") (INST?)
+%|-  (INST?) (ASSERT))
+%|- QED left_open_dd
+
+  right_open_connected: LEMMA FORALL(c:real):
+  connected?[(right_open(c))]
+
+%|- right_open_connected : PROOF
+%|- (THEN (SKEEP) (EXPAND "connected?") (SKEEP) (TYPEPRED "x" "y")
+%|-  (EXPAND "right_open") (ASSERT))
+%|- QED right_open_connected
+
+  right_open_noe: LEMMA FORALL(c:real):
+  not_one_element?[(right_open(c))]
+
+%|- right_open_noe : PROOF
+%|- (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP)
+%|-  (SPREAD (INST 1 "x+1")
+%|-   ((ASSERT) (THEN (TYPEPRED "x") (ASSERT) (EXPAND "right_open") (ASSERT)))))
+%|- QED right_open_noe
+
+  right_open_dd: LEMMA FORALL(c:real):
+  deriv_domain?[(right_open(c))]
+
+%|- right_open_dd : PROOF
+%|- (THEN (SKEEP) (LEMMA "connected_deriv_domain[(right_open(c))]") (ASSERT)
+%|-  (HIDE 2) (LEMMA " right_open_connected") (LEMMA " right_open_noe") (INST?)
+%|-  (INST?) (ASSERT))
+%|- QED right_open_dd
+
+  ci_noe: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  not_one_element?[(ci(d1, d2))]
+
+%|- ci_noe : PROOF
+%|- (THEN (SKEEP) (EXPAND "not_one_element?") (SKEEP) (TYPEPRED "x")
+%|-  (SPREAD (INST-CP 2 "d1")
+%|-   ((SPREAD (INST 2 "d2") ((ASSERT) (THEN (EXPAND "ci") (ASSERT))))
+%|-    (THEN (EXPAND "ci") (ASSERT) (FLATTEN) (ASSERT)))))
+%|- QED ci_noe
+
+  ci_connected: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  connected?[(ci(d1, d2))]
+
+%|- ci_connected : PROOF
+%|- (THEN (SKEEP) (EXPAND "connected?" 2) (SKEEP) (TYPEPRED "x" "y" "z")
+%|-  (EXPAND "ci") (ASSERT) (FLATTEN) (ASSERT))
+%|- QED ci_connected
+
+  ci_dd: LEMMA FORALL(d1,d2:real):
+  d1 /= d2 IMPLIES  deriv_domain?[(ci(d1, d2))]
+
+%|- ci_dd : PROOF
+%|- (THEN (SKEEP) (LEMMA "connected_deriv_domain[(ci(d1,d2))]") (ASSERT) (HIDE 2)
+%|-  (LEMMA " ci_connected") (LEMMA " ci_noe") (TYPEPRED "d1" "d2") (REVEAL +)
+%|-  (INST -3 "d1" "d2") (INST -4 "d1" "d2") (ASSERT))
+%|- QED ci_dd
+
+  mvt_gen_ge: LEMMA
+  FORALL(f:[real-> real],D:{DD:[real -> bool] | connected?[(DD)] AND not_one_element?[(DD)] }, c:real,a,b:(D)):
+  (derivable?[(D)](f) AND a >= b AND
+  FORALL(x:(D)): deriv[(D)](f)(x) >= c)
+  IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge : PROOF
+%|- (THEN (SKEEP)
+%|-  (SPREAD (CASE "a=b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "mean_value[(D)]") (INST -1 "b" "a" "f") (ASSERT) (SKEEP)
+%|-     (INST -6 "c!1") (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT)
+%|-     (EXPAND "restrict") (ASSERT)))))
+%|- QED mvt_gen_ge
+
+  mvt_gen_le: LEMMA
+  FORALL(f:[real-> real],D:{DD:[real -> bool] | connected?[(DD)] AND not_one_element?[(DD)] }, c:real,a,b:(D)):
+  (derivable?[(D)](f)  AND a >= b AND
+  FORALL(x:(D)): deriv[(D)](f)(x) <= c) IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le : PROOF
+%|- (THEN (SKEEP)
+%|-  (SPREAD (CASE "a=b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "mean_value[(D)]") (INST -1 "b" "a" "f") (ASSERT) (SKEEP)
+%|-     (INST -6 "c!1") (EXPAND "deriv" -6) (ASSERT) (MULT-BY -6 "a-b") (ASSERT)
+%|-     (EXPAND "restrict") (ASSERT)))))
+%|- QED mvt_gen_le
+
+%% left open
+
+  mvt_gen_ge_lo: LEMMA
+  FORALL(f:[real-> real], C, c:real,a,b:(left_open(C))):
+  (derivable?[(left_open(C))](f)  AND a >= b  AND
+  FORALL(x:(left_open(C))): deriv[(left_open(C))](f)(x) >= c) IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge_lo : PROOF
+%|- (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "left_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "left_open_noe") (LEMMA " left_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_ge_lo
+
+  mvt_gen_le_lo: LEMMA
+  FORALL(f:[real-> real], C, c:real,a,b:(left_open(C))):
+  (derivable?[(left_open(C))](f)  AND a >= b  AND
+  FORALL(x:(left_open(C))): deriv[(left_open(C))](f)(x) <= c)
+  IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le_lo : PROOF
+%|- (THEN (LEMMA "mvt_gen_le") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "left_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "left_open_noe") (LEMMA " left_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_le_lo
+
+%% right open
+
+  mvt_gen_ge_ro: LEMMA
+  FORALL(f:[real-> real],C, c:real,a,b:(right_open(C))):
+  (derivable?[(right_open(C))](f)  AND a >= b  AND
+  FORALL(x:(right_open(C))): deriv[(right_open(C))](f)(x) >= c) IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge_ro : PROOF
+%|- (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "right_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "right_open_noe") (LEMMA "right_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_ge_ro
+
+  mvt_gen_le_ro: LEMMA
+  FORALL(f:[real-> real],C, c:real,a,b:[(right_open(C))]):
+  (derivable?[(right_open(C))](f)  AND a >= b  AND
+  FORALL(x:[(right_open(C))]): deriv[(right_open(C))](f)(x) <= c) IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le_ro : PROOF
+%|- (THEN (LEMMA "mvt_gen_le") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "right_open(C)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "right_open_noe") (LEMMA "right_open_connected") (INST -1 "C")
+%|-     (INST -2 "C") (ASSERT)))))
+%|- QED mvt_gen_le_ro
+
+%% closed_interval
+
+  mvt_gen_ge_ci: LEMMA
+  FORALL(f:[real-> real], d1,d2,c:real,a,b:(ci(d1,d2))):
+  (d1 < d2 AND derivable?[(ci(d1,d2))](f)  AND a >= b  AND
+  FORALL(x:(ci(d1,d2))): deriv[(ci(d1,d2))](f)(x) >= c) IMPLIES
+  f(a) - f(b) >= c*(a-b)
+
+%|- mvt_gen_ge_ci : PROOF
+%|- (THEN (LEMMA "mvt_gen_ge") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "ci(d1,d2)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "ci_noe") (LEMMA " ci_connected") (INST -1 "d1" "d2")
+%|-     (INST -2 "d1" "d2") (ASSERT)))))
+%|- QED mvt_gen_ge_ci
+
+  mvt_gen_le_ci: LEMMA
+  FORALL(f:[real-> real], d1,d2,c:real,a,b:(ci(d1,d2))):
+  (d1 < d2 AND derivable?[(ci(d1,d2))](f)  AND a >= b  AND
+  FORALL(x:(ci(d1,d2))): deriv[(ci(d1,d2))](f)(x) <= c) IMPLIES
+  f(a) - f(b) <= c*(a-b)
+
+%|- mvt_gen_le_ci : PROOF
+%|- (THEN (LEMMA "mvt_gen_le") (SKEEP)
+%|-  (SPREAD (INST -1 "f" "ci(d1,d2)" "c" "a" "b")
+%|-   ((ASSERT)
+%|-    (THEN (LEMMA "ci_noe") (LEMMA " ci_connected") (INST -1 "d1" "d2")
+%|-     (INST -2 "d1" "d2") (ASSERT)))))
+%|- QED mvt_gen_le_ci

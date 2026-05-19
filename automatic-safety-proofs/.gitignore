@@ -1,0 +1,11 @@
+.vscode/
+myenv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+pvsbin/
+*.prf~
+tikz/*.log
+tikz/*.aux
+tikz/*.fls
+tikz/*.fdb_latexmk
