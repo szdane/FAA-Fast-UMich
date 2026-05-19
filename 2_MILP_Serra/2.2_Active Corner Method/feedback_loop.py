@@ -199,22 +199,6 @@ def feedback_loop(
         print(f"DT = {dt}")
         print("="*70)
 
-        # ====================================================
-        # IMPORTANT:
-        # Replace ONLY the DT assignment in your MILP
-        # with:
-        #
-        #     DT = dt
-        #
-        # Then wrap your whole MILP model construction
-        # into:
-        #
-        #     def solve_milp(dt):
-        #         ...
-        #         return m
-        #
-        # ====================================================
-
         m = solve_milp(dt)
 
         if m.status != GRB.OPTIMAL:
