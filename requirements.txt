@@ -27,3 +27,4 @@ shapely==2.1.2
 six==1.17.0
 tzdata==2025.2
 urllib3==2.6.3
+sympy==1.14.0
