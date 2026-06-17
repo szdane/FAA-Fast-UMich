@@ -5,6 +5,7 @@
 
 import warnings
 from math import pi
+from pathlib import Path
 
 import casadi as ca
 
@@ -104,8 +105,8 @@ class Cruise_with_Multi_Waypoints(Base):
         # Initial guess - states
         middle_waypoints = kwargs.get("middle_waypoints", [])
         full_waypoints = [self.origin] + middle_waypoints + [self.destination]
-        #self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
-        self.x_guess = self.initial_guess()
+        self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
+        #self.x_guess = self.initial_guess()
         # middle_waypoints = kwargs.get("middle_waypoints", [])
         # full_waypoints = [self.origin] + middle_waypoints + [self.destination]
         #print(full_waypoints)
@@ -490,6 +491,58 @@ class Cruise_with_Multi_Waypoints(Base):
         # Function to get x and u from w
         output = ca.Function("output", [w], [X, U], ["w"], ["x", "u"])
         x_opt, u_opt = output(self.solution["x"])
+
+        # --- Save NLP decision variables and per-interval cost to CSV ---
+        flight_id  = kwargs.get("flight_id", "unknown")
+        output_dir = kwargs.get("output_dir", Path(__file__).parent.parent / "Output")
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+        x_np = np.array(x_opt.full())   # shape (5, nodes+1): x, y, h, mass, ts
+        u_np = np.array(u_opt.full())   # shape (3, nodes):   mach, vs, psi
+        W_MACH_val, W_VS_val, W_PSI_val = 100.0, 1.0, 50.0
+
+        nlp_rows = []
+        n_nodes = u_np.shape[1]  # number of control nodes
+        for k in range(x_np.shape[1]):  # iterate over all state nodes (nodes+1)
+            u_k     = u_np[:, k]     if k < n_nodes else np.full(3, np.nan)
+            u_next  = u_np[:, k+1]  if k + 1 < n_nodes else np.full(3, np.nan)
+            d_mach  = float(u_next[0] - u_k[0]) if (k < n_nodes and k+1 < n_nodes) else np.nan
+            d_vs    = float(u_next[1] - u_k[1]) if (k < n_nodes and k+1 < n_nodes) else np.nan
+            d_psi   = float(u_next[2] - u_k[2]) if (k < n_nodes and k+1 < n_nodes) else np.nan
+            cost_mach = W_MACH_val * d_mach**2 if not np.isnan(d_mach) else np.nan
+            cost_vs   = W_VS_val   * d_vs**2   if not np.isnan(d_vs)   else np.nan
+            cost_psi  = W_PSI_val  * d_psi**2  if not np.isnan(d_psi)  else np.nan
+            cost_total = (cost_mach + cost_vs + cost_psi) if not np.isnan(d_mach) else np.nan
+            nlp_rows.append({
+                "flight":       flight_id,
+                "node":         k,
+                # State variables
+                "x_cart_m":     float(x_np[0, k]),
+                "y_cart_m":     float(x_np[1, k]),
+                "h_m":          float(x_np[2, k]),
+                "h_ft":         float(x_np[2, k]) / ft,
+                "mass_kg":      float(x_np[3, k]),
+                "ts_s":         float(x_np[4, k]),
+                # Control variables (NaN at last state-only node)
+                "mach":         float(u_k[0])  if k < n_nodes else np.nan,
+                "vs_mps":       float(u_k[1])  if k < n_nodes else np.nan,
+                "psi_rad":      float(u_k[2])  if k < n_nodes else np.nan,
+                "vs_fpm":       float(u_k[1]) / fpm if k < n_nodes else np.nan,
+                "psi_deg":      float(u_k[2]) * 180 / pi if k < n_nodes else np.nan,
+                # Inter-interval cost terms (NaN at last interval)
+                "d_mach":       d_mach,
+                "d_vs_mps":     d_vs,
+                "d_psi_rad":    d_psi,
+                "cost_mach":    cost_mach,
+                "cost_vs":      cost_vs,
+                "cost_psi":     cost_psi,
+                "cost_total":   cost_total,
+            })
+        df_nlp = pd.DataFrame(nlp_rows)
+        nlp_path = Path(output_dir) / f"nlp_variables_{flight_id}.csv"
+        df_nlp.to_csv(nlp_path, index=False)
+        print(f"  NLP variables saved to {nlp_path}  (obj={float(self.solution['f']):.4f})")
+        # --- End NLP CSV save ---
 
         df = self.to_trajectory(ts_final, x_opt, u_opt)
 

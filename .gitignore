@@ -1,3 +1,15 @@
 FAST MILP/filtered_rows.csv
 Kuang's Sketch Codes/data/*.csv
 5_Deliverable_Serra/Input/filtered_rows.csv
+
+# Ignore all CSV files
+*.csv
+
+# Ignore large raster files
+*.tif
+*.tiff
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo

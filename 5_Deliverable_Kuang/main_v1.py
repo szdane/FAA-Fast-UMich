@@ -20,7 +20,8 @@ print(" === PROBLEM SETUP ===")
 ## 1.1 Set parameters
 # Global parameters
 FT2NM             = 1 / 6076.12               # Feet to NM
-flights_to_optimize = ["DAL1208_KORDtoKDTW"]  # Define flights to optimize
+flights_to_optimize = ["AAL419_KCLTtoKDTW"]  # Define flights to optimize
+#flights_to_optimize = ["DAL1208_KORDtoKDTW"]  # Define flights to optimize
 # flights_to_optimize = [
 #     "DAL1208_KORDtoKDTW",
 #     "DAL1066_KTPAtoKDTW",
@@ -192,6 +193,9 @@ udx   = m.addVars(N_flights, N_steps, name="udx")                    # |ddx| —
 udy   = m.addVars(N_flights, N_steps, name="udy")                    # |ddy| — absolute heading rate in lon
 is_end = m.addVars(N_flights, N_steps, vtype=GRB.BINARY, name="is_end")  # add binary variable to indicate whether the flight has reached its chosen STAR fix at time step k, is_end[i,k] ∈ {0,1} for ith flight at time step k
                                                            # is_end[i,k] = 1 means the flight has reached its chosen STAR fix at time step k, and is_end[i,k] = 0 means it has not reached its chosen STAR fix at time step k.
+exit_k = m.addVars(N_flights, vtype=GRB.INTEGER, lb=0, ub=N_steps-1, name="exit_k")  # optimized first-arrival step inferred from is_end transitions
+delta_end = m.addVars(N_flights, N_steps, vtype=GRB.BINARY, name="delta_end")         # delta_end[i,k] = 1 iff is_end switches 0->1 at step k
+accel_xy = m.addVars(N_flights, N_steps, lb=0.0, name="accel_xy")                      # gated heading-rate cost term active only before exit_k
 speed = m.addVars(N_flights, N_steps, name="speed") # add variable for speed at time step k for flight i, which will be defined with sqrt(diffx[i,k]^2 + diffy[i,k]^2)
 tfuel = m.addVars(N_flights, N_steps, name="t") # add variable for fuel usage at time step k for flight i, which will be defined with compute_fuel_emission_flow()) when is_end[i,k] = 0 (active branch), and 0 when is_end[i,k] = 1 (inactive branch)
 print("Decision variables created...")
@@ -216,30 +220,36 @@ for i in range(N_flights):
         # Speed definition (kept minimal change: quadratic equality)
         m.addConstr(speed[i, k] * speed[i, k] == diffx[i, k] * diffx[i, k] + diffy[i, k] * diffy[i, k])
 
-        # Fuel: active until end, zero after end
-        m.addGenConstrIndicator(
-            is_end[i, k], 0,
-            tfuel[i, k] == compute_fuel_emission_flow(
-                speed[i, k], z[i][k], diffz[i, k],
-                0.8 * mtow, S, cd0, k, tsfc,
-                m, limit=True, cal_emission=False, mode="full"
-            )
-        )
-        m.addGenConstrIndicator(is_end[i, k], 1, tfuel[i, k] == 0)
+        # # Fuel: active until end, zero after end
+        # m.addGenConstrIndicator(
+        #     is_end[i, k], 0,
+        #     tfuel[i, k] == compute_fuel_emission_flow(
+        #         speed[i, k], z[i][k], diffz[i, k],
+        #         0.8 * mtow, S, cd0, k, tsfc,
+        #         m, limit=True, cal_emission=False, mode="full"
+        #     )
+        # )
+        # m.addGenConstrIndicator(is_end[i, k], 1, tfuel[i, k] == 0)
 
         # cost for path smoothness
         active = 1 - is_end[i, k]
         # obj += CF * tfuel[i, k]
-        obj += CT * DT * active
+        #obj += CT * DT * active
         obj += CSMOOTH * (ux[i][k-1] + uy[i][k-1] + ALPHA_Z * uz[i][k-1])
 
-        # heading-rate penalty: penalize changes in step direction to prevent staircase/zigzag
+        # Heading-rate penalty terms are defined from entry_k + 2 onward.
+        # The effective upper limit exit_k - 1 is enforced below via is_end-gated cost,
+        # since exit_k is a decision variable and cannot be used in a Python if/range.
         if k >= entry_k + 2:
             m.addConstr(ddx[i, k] == diffx[i, k] - diffx[i, k-1])
             m.addConstr(ddy[i, k] == diffy[i, k] - diffy[i, k-1])
             m.addConstr(udx[i, k] == abs_(ddx[i, k]))
             m.addConstr(udy[i, k] == abs_(ddy[i, k]))
-            obj += CACCEL * (udx[i, k] + udy[i, k])
+            # Apply heading-rate cost only for k in [entry_k+2, exit_k-1] via is_end[i,k].
+            m.addGenConstrIndicator(is_end[i, k], 0, accel_xy[i, k] == udx[i, k] + udy[i, k])
+            # m.addGenConstrIndicator(is_end[i, k], 1, accel_xy[i, k] == 0)
+            m.addGenConstrIndicator(is_end[i, k], 1, accel_xy[i, k] == udx[i, k] + udy[i, k])
+            obj += CACCEL * accel_xy[i, k]
 
         # if k >= entry_k + 2:
         #     obj += CACCEL * (ddx[i, k] * ddx[i, k] + ddy[i, k] * ddy[i, k])
@@ -257,6 +267,7 @@ for i in range(N_flights):
     # Before entry: is_end must be 0 (aircraft hasn't entered yet)
     for k in range(entry_k + 1):
         m.addConstr(is_end[i, k] == 0, f"is_end_before_entry_{i}_{k}")
+        m.addConstr(delta_end[i, k] == 0, f"delta_end_before_entry_{i}_{k}")
     
     # After entry: enforce monotonicity (once is_end becomes 1, it stays 1)
     for k in range(entry_k + 2, N_steps):
@@ -264,6 +275,18 @@ for i in range(N_flights):
         m.addConstr((is_end[i, k] == 1) >> (y[i][k] == y[i][N_steps-1])) # if is_end = 1, then the flight has reached its chosen STAR fix in the y direction
         m.addConstr((is_end[i, k] == 1) >> (z[i][k] == z[i][N_steps-1])) # if is_end = 1, then the flight has reached its chosen STAR fix in the z direction
         m.addConstr(is_end[i, k] >= is_end[i, k-1], f"is_end_monotonic_{i}_{k}")
+
+    # Link exit_k to the first 0->1 transition of is_end.
+    for k in range(entry_k + 1, N_steps):
+        m.addConstr(delta_end[i, k] >= is_end[i, k] - is_end[i, k-1], f"delta_lb_{i}_{k}")
+        m.addConstr(delta_end[i, k] <= is_end[i, k], f"delta_ub_end_{i}_{k}")
+        m.addConstr(delta_end[i, k] <= 1 - is_end[i, k-1], f"delta_ub_prev_{i}_{k}")
+
+    delta_sum = quicksum(delta_end[i, k] for k in range(entry_k + 1, N_steps))
+    m.addConstr(
+        exit_k[i] == quicksum(k * delta_end[i, k] for k in range(entry_k + 1, N_steps)) + (N_steps - 1) * (1 - delta_sum),
+        f"exit_k_def_{i}"
+    )
 print("is_end logic constraints created...")
 
 # ii) Add entry point constraints
@@ -372,6 +395,13 @@ if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optim
                 final_alt = z[i][N_steps-1].X
                 print(f'  {flight_id}: {chosen_fix} (lat={fix_lat:.4f}, lon={fix_lon:.4f}, alt={final_alt:.0f} ft)')
                 break
+    print()
+
+    print('Optimized exit_k by flight:')
+    for i in range(N_flights):
+        flight_id = flights.iloc[i]['acId']
+        k_exit = int(round(exit_k[i].X))
+        print(f'  {flight_id}: exit_k={k_exit}, exit_t={k_exit * DT:.1f} s')
     print()
 
     # 3.2. Extract the optimized trajectories for each flight and save them to a CSV file for visualization and analysis.

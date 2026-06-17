@@ -189,9 +189,10 @@ def plot_2d_trajectories(
 
 def plot_3d_trajectories(
     dic=None, labels=None, colors=None,
-    waypoints=None,
+    waypoints=None, plot_trajectory=True,
     lat0=42.2125, lon0=-83.3534,
-    title="3D Flight Trajectories"
+    title="3D Flight Trajectories",
+    show_legend=True
 ):
     """
     Plot 3D trajectories for multiple aircraft from a dictionary of DataFrames.
@@ -213,17 +214,18 @@ def plot_3d_trajectories(
         color = colors[i % len(colors)]
 
         name_to_check = labels[i].lower() if labels else acId.lower()
-        if "historic" in name_to_check:
-            ls = '--'
-        else:
-            ls = '-'
+        is_historic = "historic" in name_to_check
+        ls = '--' if is_historic else '-'
+
+        if not plot_trajectory and not is_historic:
+            continue
 
         label = labels[i]
 
         ax.plot(df["x"] / 1000, df["y"] / 1000, df["alt"], label=label, lw=2, color=color, linestyle=ls) # Plot line
         ax.scatter(df.iloc[0]["x"] / 1000, df.iloc[0]["y"] / 1000, df.iloc[0]["alt"], color=color, marker='^', s=60, label=f"{label} Origin") # Plot origin 
         ax.scatter(df.iloc[-1]["x"] / 1000, df.iloc[-1]["y"] / 1000, df.iloc[-1]["alt"],
-                   color=color, marker='s', s=60, label=f"{label} Destination") # Plot destination
+                color=color, marker='s', s=60, label=f"{label} Destination") # Plot destination
 
     # Plot waypoints if provided
     if waypoints is not None:
@@ -241,7 +243,8 @@ def plot_3d_trajectories(
     ax.set_ylabel("Y (km)")
     ax.set_zlabel("Altitude (ft)")
     ax.set_title(title)
-    ax.legend()
+    if show_legend:
+        ax.legend()
     plt.tight_layout()
     return fig, ax
 
