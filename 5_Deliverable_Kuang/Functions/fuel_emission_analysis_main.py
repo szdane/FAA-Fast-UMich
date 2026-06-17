@@ -297,14 +297,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
         # 4.2 Extract origin and destination, and intermediate waypoints from Serra's waypoint list
         origin = tuple(df_wp.iloc[0][["lat", "lon", "alt_ft", "t"]])
         destination = tuple(df_wp.iloc[-1][["lat", "lon", "alt_ft", "t"]])
-        # t in df_wp is UTC epoch seconds (seconds since midnight).
-        # The NLP's internal time variable starts at 0 at the origin, so all
-        # waypoint times must be expressed as elapsed seconds from the origin.
-        t_origin = df_wp.iloc[0]["t"]
-        middle_waypoints = [
-            [lat, lon, alt, t - t_origin]
-            for lat, lon, alt, t in df_wp.iloc[1:-1][["lat", "lon", "alt_ft", "t"]].values.tolist()
-        ]
+        middle_waypoints = df_wp.iloc[1:-1][["lat", "lon", "alt_ft", "t"]].values.tolist()
 
         # 4.3 Data cleaning by reducing number of waypoints
         middle_waypoints_cleaned = middle_waypoints

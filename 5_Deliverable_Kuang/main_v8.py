@@ -164,40 +164,41 @@ print("STAR fix constraints created...")
 for i in range(N_flights):
     k_entry = flights.iloc[i]['flight_entry_timestep']
 
-    # Before entry: fix_reached and fix_enters must be 0
+    # (1) Before entry: [fix_reached] must be 0
     for k in range(k_entry + 1):
         m.addConstr(fix_reached[i, k] == 0, f"fix_reached_pre_entry_{i}_{k}")
-        m.addConstr(fix_enters[i, k] == 0, f"fix_enters_pre_entry_{i}_{k}")
+        m.addConstr(fix_enters[i, k] == 0, f"fix_enters_pre_entry_{i}_{k}") 
+        # [fix_enters] is just a intermediate variable for [k_arrive] recording; 
+        # it should also be 0 before entry since arrival is impossible before entry
 
-    # After entry: fix_reached is monotone (0→1 only); once 1, position freezes at the chosen STAR fix
+    # (2) After entry: [fix_reached] is monotone (0→1 only); once 1, position freezes at the chosen STAR fix
     for k in range(k_entry + 2, N_steps):
         m.addConstr(fix_reached[i, k] >= fix_reached[i, k-1], f"fix_reached_monotone_{i}_{k}")
         m.addConstr((fix_reached[i, k] == 1) >> (f_lat[i][k] == f_lat[i][N_steps-1])) # Once fix_reached=1, freeze position at the chosen STAR fix
         m.addConstr((fix_reached[i, k] == 1) >> (f_lon[i][k] == f_lon[i][N_steps-1]))
         m.addConstr((fix_reached[i, k] == 1) >> (f_alt[i][k] == f_alt[i][N_steps-1]))
 
-    # fix_enters encodes the 0→1 transition; link k_arrive to the transition step
-    for k in range(k_entry + 1, N_steps):
-        m.addConstr(fix_enters[i, k] >= fix_reached[i, k] - fix_reached[i, k-1], f"fix_enters_lb_{i}_{k}")
-        m.addConstr(fix_enters[i, k] <= fix_reached[i, k],                        f"fix_enters_ub_{i}_{k}")
-        m.addConstr(fix_enters[i, k] <= 1 - fix_reached[i, k-1],                  f"fix_enters_ub_prev_{i}_{k}")
+    # (3) Record step No. [k_arrive] corresponding to the first time reaching the fix
+    for k in range(k_entry + 1, N_steps):     # [fix_enters] encodes the 0→1 transition corresponding to the first time reaching the fix
+        m.addConstr(fix_enters[i, k] >= fix_reached[i, k] - fix_reached[i, k-1], f"fix_enters_lb_{i}_{k}")       # fix_enters=1 if fix_reached transitions from 0 to 1 at step k
+        m.addConstr(fix_enters[i, k] <= fix_reached[i, k],                        f"fix_enters_ub_{i}_{k}")      # fix_enters can only be 1 if fix_reached=1 at step k
+        m.addConstr(fix_enters[i, k] <= 1 - fix_reached[i, k-1],                  f"fix_enters_ub_prev_{i}_{k}") # fix_enters can only be 1 if fix_reached was 0 at step k-1
 
-    delta_sum = quicksum(fix_enters[i, k] for k in range(k_entry + 1, N_steps))
     m.addConstr(
-        k_arrive[i] == quicksum(k * fix_enters[i, k] for k in range(k_entry + 1, N_steps)) + (N_steps - 1) * (1 - delta_sum),
+        k_arrive[i] == quicksum(k * fix_enters[i, k] for k in range(k_entry + 1, N_steps)),
         f"k_arrive_def_{i}"
-    )
+    ) # link k_arrive to the first step where fix_enters=1 (first arrival at the fix)
 
-# Every flight must have arrived by the final step (guarantees k_arrive is always defined)
+# (4) Every flight must have arrived by the final step (guarantees k_arrive is always defined)
 for i in range(N_flights):
     m.addConstr(fix_reached[i, N_steps-1] == 1, f"fix_reached_at_final_{i}")
 
-# Step budget: every flight must arrive within N_STEPS_BUDGET steps of its own entry
-for i in range(N_flights):
-    k_entry = int(flights.iloc[i]['flight_entry_timestep'])
-    m.addConstr(k_arrive[i] <= k_entry + N_STEPS_BUDGET, f"step_budget_{i}")
-print("Arrival flag constraints created...")
-print(f"  Step budget: k_arrive[i] <= k_entry + {N_STEPS_BUDGET} for all flights")
+# # (5) Step budget: every flight must arrive within N_STEPS_BUDGET steps of its own entry
+# for i in range(N_flights):
+#     k_entry = int(flights.iloc[i]['flight_entry_timestep'])
+#     m.addConstr(k_arrive[i] <= k_entry + N_STEPS_BUDGET, f"step_budget_{i}")
+# print("Arrival flag constraints created...")
+# print(f"  Step budget: k_arrive[i] <= k_entry + {N_STEPS_BUDGET} for all flights")
 
 # iv) Max speed constraints (bound per-step displacement in each axis)
 for i in range(N_flights):

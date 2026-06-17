@@ -171,6 +171,7 @@ def save_trajectory_csv(f_lat, f_lon, f_alt, N_flights, N_steps, grid_epoch_utc,
         rows.append(row)
     df_wide = pd.DataFrame(rows)
 
+    output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "df_wide.csv"
     df_wide.to_csv(output_path, index=False)
     print(f"Results saved to {output_path}\n")
