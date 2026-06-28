@@ -129,10 +129,10 @@ for i in range(N_flights):
         # Heading-rate penalty (k_entry+2 onward; k_arrive enforced via arrived gate)
         if k >= k_entry + 2:
             for dd, ud, df, dfp in zip(
-                (dd_lat[i,k],     dd_lon[i,k]    ),
-                (u_dd_lat[i,k],     u_dd_lon[i,k]    ),
-                (d_lat[i,k],   d_lon[i,k]  ),
-                (d_lat[i,k-1], d_lon[i,k-1]),
+                (dd_lat[i,k],    dd_lon[i,k]  ),
+                (u_dd_lat[i,k],  u_dd_lon[i,k]),
+                (d_lat[i,k],     d_lon[i,k]   ),
+                (d_lat[i,k-1],   d_lon[i,k-1] ),
             ):
                 m.addConstr(dd == df - dfp)
                 m.addConstr(ud == abs_(dd))

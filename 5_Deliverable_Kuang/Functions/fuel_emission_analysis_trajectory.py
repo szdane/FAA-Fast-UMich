@@ -98,8 +98,11 @@ class Cruise_with_Multi_Waypoints(Base):
         self.u_f_ub = [self.mach_max, 500 * fpm, psi + pi / 4]
 
         # Control - Lower and upper bound
-        self.u_lb = [0.5, -500 * fpm, psi - pi / 2]
-        self.u_ub = [self.mach_max, 500 * fpm, psi + pi / 2]
+        self.u_lb = [0.5, -500 * fpm, psi - pi / 60] #2]
+        self.u_ub = [self.mach_max, 500 * fpm, psi + pi /  60] #2]
+
+        # self.u_lb = [0.5, -500 * fpm, psi - pi / 2]
+        # self.u_ub = [self.mach_max, 500 * fpm, psi + pi /  2]
 
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # Initial guess - states
@@ -244,6 +247,7 @@ class Cruise_with_Multi_Waypoints(Base):
                 # Add contribution to quadrature function — disabled; using smoothness objective
                 # J = J + B[j] * qj * dt
                 # J = J + B[j] * qj
+                J = J + B[j] * qj * self.dt
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
@@ -284,7 +288,7 @@ class Cruise_with_Multi_Waypoints(Base):
         for k in range(self.nodes - 1):
             J += W_MACH * (U[k + 1][0] - U[k][0]) ** 2
             J += W_VS   * (U[k + 1][1] - U[k][1]) ** 2
-            J += W_PSI  * (U[k + 1][2] - U[k][2]) ** 2
+            J += W_PSI  * (U[k + 1][2] - U[k][2]) ** 2  
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
 
@@ -420,13 +424,13 @@ class Cruise_with_Multi_Waypoints(Base):
         #     dh = X[k + 1][2] - X[k][2]          # altitude change (m), positive = climb
         #     J += penalty_weight_climb * ca.fmax(0, dh) ** 2
 
-        # --- Time constraint on final node ---
-        final_time = kwargs.get("final_time") # final_time = 1200 
-        if final_time is not None:
-            final_time_margin = 5 #kwargs.get("final_time_margin", 20)  # seconds tolerance
-            g.append(X[self.nodes][4])  # time component of final node
-            lbg.append([final_time - final_time_margin])
-            ubg.append([final_time + final_time_margin])
+        # # --- Time constraint on final node ---
+        # final_time = kwargs.get("final_time")  # flight duration in seconds (NOT UTC time)
+        # if final_time is not None:
+        #     final_time_margin = 30  # seconds tolerance
+        #     g.append(X[self.nodes][4])  # elapsed time at final node
+        #     lbg.append([final_time - final_time_margin])
+        #     ubg.append([final_time + final_time_margin])
             
         # Added / Tunned Optimization Constraints
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
@@ -499,7 +503,7 @@ class Cruise_with_Multi_Waypoints(Base):
 
         x_np = np.array(x_opt.full())   # shape (5, nodes+1): x, y, h, mass, ts
         u_np = np.array(u_opt.full())   # shape (3, nodes):   mach, vs, psi
-        W_MACH_val, W_VS_val, W_PSI_val = 100.0, 1.0, 50.0
+        W_MACH_val, W_VS_val, W_PSI_val = W_MACH, W_VS, W_PSI
 
         nlp_rows = []
         n_nodes = u_np.shape[1]  # number of control nodes
@@ -513,6 +517,7 @@ class Cruise_with_Multi_Waypoints(Base):
             cost_vs   = W_VS_val   * d_vs**2   if not np.isnan(d_vs)   else np.nan
             cost_psi  = W_PSI_val  * d_psi**2  if not np.isnan(d_psi)  else np.nan
             cost_total = (cost_mach + cost_vs + cost_psi) if not np.isnan(d_mach) else np.nan
+            fuel_kg    = float(x_np[3, k] - x_np[3, k+1]) if k + 1 < x_np.shape[1] else np.nan  # mass drop over interval k → k+1
             nlp_rows.append({
                 "flight":       flight_id,
                 "node":         k,
@@ -536,7 +541,8 @@ class Cruise_with_Multi_Waypoints(Base):
                 "cost_mach":    cost_mach,
                 "cost_vs":      cost_vs,
                 "cost_psi":     cost_psi,
-                "cost_total":   cost_total,
+                "fuel_kg":      fuel_kg,         # kg burned in this interval (= mass drop)
+                "cost_total":   cost_total,      # smoothness cost only; fuel cost is in fuel_kg
             })
         df_nlp = pd.DataFrame(nlp_rows)
         nlp_path = Path(output_dir) / f"nlp_variables_{flight_id}.csv"

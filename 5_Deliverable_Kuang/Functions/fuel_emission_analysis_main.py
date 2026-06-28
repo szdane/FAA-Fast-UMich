@@ -315,10 +315,10 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
         """
         
         # 4.4 Interpolate trajectory
-        # Get final time for this aircraft if available
-        final_time_sec = final_times.get(acId) if final_times else None
-        if final_time_sec is not None:
-            print(f"Using final time constraint for {acId}: {final_time_sec} seconds")
+        # Flight duration = arrival UTC time minus departure UTC time (both in seconds from grid epoch)
+        # NLP time axis starts at 0, so we pass duration (not absolute UTC time)
+        final_time_sec = float(df_wp.iloc[-1]["t"] - df_wp.iloc[0]["t"])
+        print(f"Using final time constraint for {acId}: {final_time_sec} seconds")
         
         cruise_flight = Cruise_with_Multi_Waypoints(
             acType, origin, destination, m0=m0
@@ -492,6 +492,47 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
         'optimized': dic_opt_flights_preTracon,
         'waypoints': dic_waypoints_cleaned
     }
+
+
+def analyze_optimized_trajectory_xyz(df_wide, aircraft_list=None,
+                                     lat0=42.2125, lon0=-83.3534,
+                                     final_times=None):
+    """XYZ variant of analyze_optimized_trajectory.
+
+    Reads f{i}_x (east m), f{i}_y (north m), f{i}_z (altitude m) columns from
+    df_wide instead of f{i}_lat / f{i}_lon / f{i}_alt_ft, then back-converts to
+    geographic coordinates and delegates to the original pipeline unchanged.
+
+    Args:
+        df_wide (pd.DataFrame): Trajectory DataFrame with f{i}_x, f{i}_y, f{i}_z columns.
+        aircraft_list (list): Same as analyze_optimized_trajectory.
+        lat0 (float): Projection origin latitude  (default DTW = 42.2125).
+        lon0 (float): Projection origin longitude (default DTW = -83.3534).
+        final_times (dict): Same as analyze_optimized_trajectory.
+
+    Returns:
+        dict: Same structure as analyze_optimized_trajectory.
+    """
+    import openap
+
+    df_converted = df_wide.copy()
+    i = 1
+    while f"f{i}_x" in df_wide.columns:
+        x = df_wide[f"f{i}_x"].values.astype(float)
+        y = df_wide[f"f{i}_y"].values.astype(float)
+        z = df_wide[f"f{i}_z"].values.astype(float)
+
+        dist    = np.sqrt(x**2 + y**2)
+        bearing = np.degrees(np.arctan2(x, y))   # arctan2(east, north) = compass bearing
+        lat, lon = openap.aero.latlon(lat0, lon0, dist, bearing)
+
+        df_converted[f"f{i}_lat"]    = lat
+        df_converted[f"f{i}_lon"]    = lon
+        df_converted[f"f{i}_alt_ft"] = z / 0.3048
+        i += 1
+
+    return analyze_optimized_trajectory(df_converted, aircraft_list, final_times)
+
 
 if __name__ == "__main__":
     # Example: Run with CSV file (backward compatibility)

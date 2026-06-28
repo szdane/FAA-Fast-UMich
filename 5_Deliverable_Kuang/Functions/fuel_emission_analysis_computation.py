@@ -18,8 +18,8 @@ def proj_with_defined_origin(lat, lon, lat0, lon0, inverse=False): #lon0, lat0 a
 
         return x, y
     
-    else: # from x, to lat, lon
-        x, y = lon, lat
+    else: # from x, y (meters) back to lat, lon
+        x, y = lat, lon  # lat arg = x (east meters), lon arg = y (north meters)
         distances = np.sqrt(x**2 + y**2)
         bearing = np.arctan2(x, y) * 180 / 3.14159
         lat, lon = openap.aero.latlon(lat0, lon0, distances, bearing)

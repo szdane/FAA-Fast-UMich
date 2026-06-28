@@ -26,17 +26,20 @@ flights_to_optimize = [
 
 # Model parameters
 TIMESTEP_DT = 300.0                         # Time step (s) — 5-min standardized UTC grid
-N_STEPS_BUDGET = 6                          # Active steps every flight gets after its entry (= number of middle waypoints + 1); tune this to control trajectory smoothness vs. separation flexibility
+N_STEPS_HORIZON = 6                         # Extra steps beyond the last entry step to size the time grid; increase to allow more sequencing / delay flexibility
 
 # Cost parameters
 w_time      = 1.0                           # Time cost weight (penalizes each active step; drives earlier arrival)
 w_smooth = 0.05                             # Path smoothness weight
 w_accel  = 2.0                              # Heading-rate penalty weight
-w_z = 0.25                                  # Relative penalty on vertical changes
+w_z = 0.1                                  # Relative penalty on vertical changes
+w_descent = 0 #1e-5                          # Reward per ft of descent each step (subtracts cost → encourages lower altitude)
+w_alt_final = 0# 1e5                         # Penalty per ft of final STAR fix altitude (pushes toward alt_min)
 
 # Constraint parameters
 BIG_M     = 1e5                                                     # Disjunction constant
 VMAX_LAT, VMAX_LON, VMAX_ALT = 0.25/60, 0.072/60, 1000/60           # Max speed (lat°/s, lon°/s, ft/s)
+VMIN_2D = 120 * 1.852 * TIMESTEP_DT / 3600 / 111  # Min 2D ground speed (°/step) ≈ 120 kts → ~0.166°/step at 42°N
 SEP_HOR_NM, SEP_VERT_FT  = 500.0 * FT2NM, 100.0                     # Separation minima (NM horizontal, ft vertical)
 
 # Aircraft parameters
@@ -56,12 +59,12 @@ csv_path = script_dir / "Input" / "entry_exit_points.csv"
 flights, GRID_EPOCH_UTC = load_flights_utc(csv_path, flights_to_optimize, TIMESTEP_DT)
 
 ## 1.4. Determine time steps
-N_steps, max_entry_k = compute_time_grid(flights, N_STEPS_BUDGET)
+N_steps, max_entry_k = compute_time_grid(flights, N_STEPS_HORIZON)
 _epoch_end_utc = GRID_EPOCH_UTC + pd.Timedelta(seconds=(N_steps - 1) * TIMESTEP_DT)
 print(f"UTC grid epoch  : {GRID_EPOCH_UTC.strftime('%Y-%m-%d %H:%M:%S')} UTC (k=0)")
 print(f"Grid step size  : {int(TIMESTEP_DT)}s  ({TIMESTEP_DT / 60:.0f} min per step)")
 print(f"Time steps      : {N_steps}  (k=0 → {GRID_EPOCH_UTC.strftime('%H:%M')} UTC, k={N_steps-1} → {_epoch_end_utc.strftime('%H:%M')} UTC)")
-print(f"max_entry_k={max_entry_k}, budget={N_STEPS_BUDGET} steps/flight...")
+print(f"max_entry_k={max_entry_k}, horizon={N_STEPS_HORIZON} extra steps...")
 print(f"\nFinal flight data for optimization:\n{flights}\n")
 
 ########################
@@ -71,6 +74,8 @@ print(" === MILP OPTIMIZATION ===")
 # 2.1. Create model
 env = Env(empty=True)
 env.setParam("OutputFlag", 0)   # disable all output from Gurobi
+# env.setParam("Seed", 42)        # fix random seed for reproducibility
+# env.setParam("Threads", 1)      # single thread eliminates parallel non-determinism
 env.start()
 
 m = Model("mip1", env=env)
@@ -79,12 +84,12 @@ print("Model created...")
 # 2.2. Create decision variables
 # i) Position and control variables (per flight, per step)
 N_flights = len(flights)
-f_lat = [m.addVars(range(N_steps), lb=-100000, name=f"f{i}_lat")    for i in range(1, N_flights+1)]
-f_lon = [m.addVars(range(N_steps), lb=-100000, name=f"f{i}_lon")    for i in range(1, N_flights+1)]
-f_alt = [m.addVars(range(N_steps),             name=f"f{i}_alt_ft") for i in range(1, N_flights+1)]
-u_lat = [m.addVars(range(N_steps),             name=f"uf{i}_x")     for i in range(1, N_flights+1)]
-u_lon = [m.addVars(range(N_steps),             name=f"uf{i}_y")     for i in range(1, N_flights+1)]
-u_alt = [m.addVars(range(N_steps),             name=f"uf{i}_z")     for i in range(1, N_flights+1)]
+f_lat = [m.addVars(range(N_steps), lb=-100000, name=f"f{i}_lat")    for i in range(1, N_flights+1)] # Latitude (ft) of each flight at each time step
+f_lon = [m.addVars(range(N_steps), lb=-100000, name=f"f{i}_lon")    for i in range(1, N_flights+1)] # Longitude (ft) of each flight at each time step
+f_alt = [m.addVars(range(N_steps),             name=f"f{i}_alt_ft") for i in range(1, N_flights+1)] # Altitude (ft) of each flight at each time step
+u_lat = [m.addVars(range(N_steps),             name=f"uf{i}_x")     for i in range(1, N_flights+1)] # Control input for latitude (ft) of each flight at each time step
+u_lon = [m.addVars(range(N_steps),             name=f"uf{i}_y")     for i in range(1, N_flights+1)] # Control input for longitude (ft) of each flight at each time step
+u_alt = [m.addVars(range(N_steps),             name=f"uf{i}_z")     for i in range(1, N_flights+1)] # Control input for altitude (ft) of each flight at each time step
 
 # ii) STAR fix selection (binary)
 fix_names = list(star_fixes)
@@ -107,7 +112,7 @@ for i in range(N_flights):
     k_entry = int(flights.iloc[i]['flight_entry_timestep'])
     
     for k in range(k_entry + 1, N_steps):
-        active = 1 - fix_reached[i, k]          # 1 while airborne, 0 after arrival
+        active = 1 - fix_reached[i, k]                  # 1 while airborne, 0 after arrival
         obj += w_time * TIMESTEP_DT * active            # penalize each active step → minimizes flight time
 
         # Step differences and their L1 absolutes
@@ -122,6 +127,7 @@ for i in range(N_flights):
 
         m.addConstr(speed_2d[i,k]**2 == d_lat[i,k]**2 + d_lon[i,k]**2)
         obj += w_smooth * (u_lat[i][k-1] + u_lon[i][k-1] + w_z * u_alt[i][k-1]) # Path smoothness (L1 on displacements)
+        obj += w_descent * d_alt[i, k]  # reward descent: d_alt<0 when descending → adds negative value → reduces objective
 
         # Heading-rate penalty (k_entry+2 onward; k_arrive enforced via arrived gate)
         if k >= k_entry + 2:
@@ -158,6 +164,7 @@ for j in range(N_flights):
     m.addConstr(f_lon[j][N_steps-1] == LinExpr(lon_vals,     fix_sel[j].values()), f"lon_choice{j+1}")
     m.addConstr(f_alt[j][N_steps-1] <= LinExpr(alt_vals_max, fix_sel[j].values()), f"alt_choice_max{j+1}")
     m.addConstr(f_alt[j][N_steps-1] >= LinExpr(alt_vals_min, fix_sel[j].values()), f"alt_choice_min{j+1}")
+    obj += w_alt_final * f_alt[j][N_steps-1]  # penalize high final altitude → pushes toward alt_min
 print("STAR fix constraints created...")
 
 # iii) Arrival flag (fix_reached / fix_enters) logic
@@ -193,13 +200,6 @@ for i in range(N_flights):
 for i in range(N_flights):
     m.addConstr(fix_reached[i, N_steps-1] == 1, f"fix_reached_at_final_{i}")
 
-# # (5) Step budget: every flight must arrive within N_STEPS_BUDGET steps of its own entry
-# for i in range(N_flights):
-#     k_entry = int(flights.iloc[i]['flight_entry_timestep'])
-#     m.addConstr(k_arrive[i] <= k_entry + N_STEPS_BUDGET, f"step_budget_{i}")
-# print("Arrival flag constraints created...")
-# print(f"  Step budget: k_arrive[i] <= k_entry + {N_STEPS_BUDGET} for all flights")
-
 # iv) Max speed constraints (bound per-step displacement in each axis)
 for i in range(N_flights):
     k_entry = flights.iloc[i]['flight_entry_timestep']
@@ -211,6 +211,8 @@ for i in range(N_flights):
         m.addConstr(f_lat[i][k-1] - f_lat[i][k] <=  VMAX_LAT*TIMESTEP_DT)
         m.addConstr(f_lon[i][k-1] - f_lon[i][k] <=  VMAX_LON*TIMESTEP_DT)
         m.addConstr(f_alt[i][k-1] - f_alt[i][k] <=  VMAX_ALT*TIMESTEP_DT)
+        # Minimum 2D speed while airborne (gated off after arrival by fix_reached)
+        m.addConstr(speed_2d[i,k] >= VMIN_2D * (1 - fix_reached[i,k]), f"min_speed_{i}_{k}")
 print("Max speed constraints created...")
 
 # v) Separation constraints
@@ -250,7 +252,7 @@ if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optim
 
     # 3.2. Extract and save optimized trajectories
     output_dir = script_dir / "Output"
-    df_wide = save_trajectory_csv(f_lat, f_lon, f_alt, N_flights, N_steps, GRID_EPOCH_UTC, TIMESTEP_DT, output_dir)
+    df_wide = save_trajectory_csv(f_lat, f_lon, f_alt, N_flights, N_steps, GRID_EPOCH_UTC, TIMESTEP_DT, output_dir, flights=flights, k_arrive=k_arrive)
 
     # 3.3. Print waypoint table per flight
     print_waypoint_table(flights, f_lat, f_lon, f_alt, fix_reached, sep_bypass, N_steps, GRID_EPOCH_UTC, TIMESTEP_DT)
