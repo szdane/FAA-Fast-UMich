@@ -98,23 +98,15 @@ class Cruise_with_Multi_Waypoints(Base):
         self.u_f_ub = [self.mach_max, 500 * fpm, psi + pi / 4]
 
         # Control - Lower and upper bound
-        self.u_lb = [0.5, -500 * fpm, psi - pi / 60] #2]
-        self.u_ub = [self.mach_max, 500 * fpm, psi + pi /  60] #2]
-
-        # self.u_lb = [0.5, -500 * fpm, psi - pi / 2]
-        # self.u_ub = [self.mach_max, 500 * fpm, psi + pi /  2]
+        # Control - Lower and upper bound
+        self.u_lb = [0.5, -500 * fpm, psi - pi / 2]
+        self.u_ub = [self.mach_max, 500 * fpm, psi + pi / 2]
 
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # Initial guess - states
         middle_waypoints = kwargs.get("middle_waypoints", [])
         full_waypoints = [self.origin] + middle_waypoints + [self.destination]
-        #self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
         self.x_guess = self.initial_guess()
-        # middle_waypoints = kwargs.get("middle_waypoints", [])
-        # full_waypoints = [self.origin] + middle_waypoints + [self.destination]
-        #print(full_waypoints)
-        #full_waypoints = [(self.lat1, self.lon1, self.alt1, )] + middle_waypoints + [(self.lat2, self.lon2, self.alt2)]
-        #self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
         # Initial guess - controls
@@ -282,9 +274,9 @@ class Cruise_with_Multi_Waypoints(Base):
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # # Smooth trajectory objective: penalize squared control changes between nodes
         # # Controls: U[k] = [mach (-), vertical_rate (m/s), heading (rad)]
-        W_MACH = 100.0   # Mach number smoothness weight
-        W_VS   = 1.0     # vertical rate smoothness weight
-        W_PSI  = 50.0    # heading smoothness weight
+        W_MACH = 100.0     # Mach number smoothness weight
+        W_VS   = 1.0       # vertical rate smoothness weight
+        W_PSI  = 10000.0   # heading smoothness weight — high to prevent zigzag
         for k in range(self.nodes - 1):
             J += W_MACH * (U[k + 1][0] - U[k][0]) ** 2
             J += W_VS   * (U[k + 1][1] - U[k][1]) ** 2
@@ -336,8 +328,7 @@ class Cruise_with_Multi_Waypoints(Base):
             lbg.append([0])
             ubg.append([middle_radius ** 2])
 
-            # Altitude constraint (z)
-            # margin_alt = 1000 * ft  # ±1000 ft tolerance
+            # Altitude constraint (z) on the waypoint node
             g.append(X[wp_index][2])
             lbg.append([alt_wp_m - margin_alt])
             ubg.append([alt_wp_m + margin_alt])

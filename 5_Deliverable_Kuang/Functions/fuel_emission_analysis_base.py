@@ -203,6 +203,69 @@ class Base:
 
         return np.vstack([xp_guess, yp_guess, h_guess, m_guess, ts_guess]).T
 
+    def initial_guess_smooth_through_waypoints(self, waypoints: list):
+        """Create a C2-smooth initial guess using cubic spline interpolation (scipy).
+
+        Unlike initial_guess_through_waypoints (piecewise-linear), the spline gives
+        a smooth heading profile with no kinks at waypoint junctions.  This prevents
+        IPOPT from converging to the zigzag local minimum that occurs when heading
+        changes ~180° at every node.
+
+        Arc-length parameterisation is used so that nodes are distributed proportionally
+        to the path length of each segment (better than uniform t for uneven spacing).
+
+        Args:
+            waypoints: list of (lat, lon, alt_ft, t) tuples including origin & destination.
+
+        Returns:
+            np.ndarray shape (nodes+1, 5): columns = [x, y, h_m, mass_kg, ts_s]
+        """
+        from scipy.interpolate import CubicSpline
+
+        n_wps = len(waypoints)
+
+        # Convert to NLP's internal (x, y) Cartesian frame
+        xp_wps, yp_wps, h_wps = [], [], []
+        for lat, lon, alt_ft, _ in waypoints:
+            xp, yp = self.proj(lon, lat)
+            xp_wps.append(float(xp))
+            yp_wps.append(float(yp))
+            h_wps.append(float(alt_ft) * ft)   # feet → metres
+
+        xp_wps = np.array(xp_wps)
+        yp_wps = np.array(yp_wps)
+        h_wps  = np.array(h_wps)
+
+        # Arc-length parameterisation (t ∈ [0, 1])
+        dists = [0.0]
+        for i in range(1, n_wps):
+            dists.append(dists[-1] + np.hypot(xp_wps[i] - xp_wps[i-1],
+                                               yp_wps[i] - yp_wps[i-1]))
+        t_wps   = np.array(dists) / max(dists[-1], 1.0)
+        t_nodes = np.linspace(0.0, 1.0, self.nodes + 1)
+
+        h_floor = float(np.min(h_wps)) * 0.7   # 30% below lowest waypoint altitude
+        h_ceil  = self.aircraft["limits"]["ceiling"]
+
+        if n_wps >= 3:
+            # Natural cubic spline: C2 continuity, no heading kinks at junctions
+            cs_x = CubicSpline(t_wps, xp_wps, bc_type='natural')
+            cs_y = CubicSpline(t_wps, yp_wps, bc_type='natural')
+            cs_h = CubicSpline(t_wps, h_wps,  bc_type='natural')
+            xp_guess = cs_x(t_nodes)
+            yp_guess = cs_y(t_nodes)
+            h_guess  = np.clip(cs_h(t_nodes), h_floor, h_ceil)
+        else:
+            # Only 2 waypoints: straight line (already smooth)
+            xp_guess = np.interp(t_nodes, t_wps, xp_wps)
+            yp_guess = np.interp(t_nodes, t_wps, yp_wps)
+            h_guess  = np.clip(np.interp(t_nodes, t_wps, h_wps), h_floor, h_ceil)
+
+        ts_guess = np.linspace(0, 6 * 3600, self.nodes + 1)
+        m_guess  = self.mass_init * np.ones(self.nodes + 1)
+
+        return np.vstack([xp_guess, yp_guess, h_guess, m_guess, ts_guess]).T
+
     def enable_wind(self, windfield: pd.DataFrame):
         self.wind = openap_tools.PolyWind(
             windfield, self.proj, self.lat1, self.lon1, self.lat2, self.lon2
@@ -293,14 +356,14 @@ class Base:
 
         return ca.vertcat(dx, dy, dh, dm, dt)
 
-    def setup(self, nodes=80, polydeg=3, debug=False, **kwargs):
+    def setup(self, nodes=40, polydeg=3, debug=False, **kwargs):
         self.nodes = nodes
         self.polydeg = polydeg
 
-        max_iteration = kwargs.get("max_iteration", 5000)
-        tol = kwargs.get("tol", 1e-6)
-        acceptable_tol = kwargs.get("acceptable_tol", 1e-4)
-        alpha_for_y = kwargs.get("alpha_for_y", "primal-and-full")
+        max_iteration       = kwargs.get("max_iteration",       1000)
+        tol                 = kwargs.get("tol",                 1e-4)
+        acceptable_tol      = kwargs.get("acceptable_tol",      1e-3)
+        alpha_for_y         = kwargs.get("alpha_for_y",         "primal-and-full")
         hessian_approximation = kwargs.get("hessian_approximation", "exact")
 
         self.debug = debug
