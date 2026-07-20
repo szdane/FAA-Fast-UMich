@@ -216,13 +216,14 @@ def plot_3d_trajectories(
         name_to_check = labels[i].lower() if labels else acId.lower()
         is_historic = "historic" in name_to_check
         ls = '--' if is_historic else '-'
+        lw = 2.5 if is_historic else 1.5
 
         if not plot_trajectory and not is_historic:
             continue
 
         label = labels[i]
 
-        ax.plot(df["x"] / 1000, df["y"] / 1000, df["alt"], label=label, lw=2, color=color, linestyle=ls) # Plot line
+        ax.plot(df["x"] / 1000, df["y"] / 1000, df["alt"], label=label, lw=lw, color=color, linestyle=ls) # Plot line
         ax.scatter(df.iloc[0]["x"] / 1000, df.iloc[0]["y"] / 1000, df.iloc[0]["alt"], color=color, marker='^', s=60, label=f"{label} Origin") # Plot origin 
         ax.scatter(df.iloc[-1]["x"] / 1000, df.iloc[-1]["y"] / 1000, df.iloc[-1]["alt"],
                 color=color, marker='s', s=60, label=f"{label} Destination") # Plot destination
@@ -236,6 +237,8 @@ def plot_3d_trajectories(
             x_wp, y_wp = fuel_emission_analysis_computation.proj_with_defined_origin(lat_list, lon_list, lat0, lon0)
             
             color = colors[idx % len(colors)]
+            ax.plot(np.array(x_wp) / 1000, np.array(y_wp) / 1000, alt_list,
+                    color=color, lw=1.5, linestyle='-', zorder=5)
             ax.scatter(np.array(x_wp) / 1000, np.array(y_wp) / 1000, alt_list,
                         color=color, marker='x', s=40, label=f'{acId} Waypoints')
     # Format
@@ -366,3 +369,47 @@ def plot_NOx_flow_and_emission(df1=None, df2=None,
     fig.suptitle(title)
     plt.tight_layout(rect=[0, 0, 1, 0.96])
 
+
+def plot_fuel_and_NOx_usage(df1=None, df2=None,
+                            color1='#E42320', color2='#6A8EC9',
+                            linestyle1='--', linestyle2='-',
+                            label1="Trajectory 1", label2="Trajectory 2",
+                            title="Fuel Used and NOx Emitted"):
+    """Plot cumulative fuel usage and cumulative NOx emissions in one figure."""
+    fig, axs = plt.subplots(2, 1, figsize=(7, 5), sharex=True)
+
+    # --- Cumulative fuel used ---
+    if df1 is not None:
+        axs[0].plot(df1.recTime, df1.fuel_used,  label=label1, color=color1, linestyle=linestyle1)
+    if df2 is not None:
+        axs[0].plot(df2.recTime, df2.fuel_used,  label=label2, color=color2, linestyle=linestyle2)
+    axs[0].set_ylabel("fuel used (kg)")
+    format_ax(axs[0])
+    axs[0].legend()
+    for df, color in [(df1, color1), (df2, color2)]:
+        if df is not None and len(df) > 0:
+            t, v = df.recTime.iloc[-1], df.fuel_used.iloc[-1]
+            axs[0].scatter(t, v, color=color, zorder=3)
+            axs[0].annotate(f"{v:.0f} kg", xy=(t, v),
+                            xytext=(t - pd.Timedelta(seconds=10), v + 20),
+                            fontsize=9, color=color)
+
+    # --- Cumulative NOx emitted ---
+    if df1 is not None:
+        axs[1].plot(df1.recTime, df1.NOx_emitted, label=label1, color=color1, linestyle=linestyle1)
+    if df2 is not None:
+        axs[1].plot(df2.recTime, df2.NOx_emitted, label=label2, color=color2, linestyle=linestyle2)
+    axs[1].set_ylabel("NOx emitted (g)")
+    format_ax(axs[1])
+    axs[1].legend()
+    for df, color in [(df1, color1), (df2, color2)]:
+        if df is not None and len(df) > 0:
+            t, v = df.recTime.iloc[-1], df.NOx_emitted.iloc[-1]
+            axs[1].scatter(t, v, color=color, zorder=3)
+            axs[1].annotate(f"{v:.2f} g", xy=(t, v),
+                            xytext=(t - pd.Timedelta(seconds=10), v + 200),
+                            fontsize=9, color=color)
+
+    axs[1].set_xlabel("Time")
+    fig.suptitle(title)
+    plt.tight_layout(rect=[0, 0, 1, 0.96])

@@ -177,7 +177,8 @@ class Base:
         yp_list = np.array(yp_list)
         h_list = np.array(h_list)
 
-        ts_guess = np.linspace(0, 6 * 3600, self.nodes + 1)
+        # ts_guess = np.linspace(0, 6 * 3600, self.nodes + 1)
+        ts_guess = np.linspace(0, self.range / 200, self.nodes + 1) # rescaling for pre tracon (openAP does long haul so 6h so 6*3600, here we are doing range/200mps)
         m_guess = self.mass_init * np.ones(self.nodes + 1)
 
         return np.vstack([xp_list, yp_list, h_list, m_guess, ts_guess]).T
@@ -186,7 +187,8 @@ class Base:
     
     def initial_guess(self, flight: pd.DataFrame = None): # not used any more
         m_guess = self.mass_init * np.ones(self.nodes + 1)
-        ts_guess = np.linspace(0, 6 * 3600, self.nodes + 1)
+        # ts_guess = np.linspace(0, 6 * 3600, self.nodes + 1)
+        ts_guess = np.linspace(0, self.range / 200, self.nodes + 1) # rescaling for pre tracon (openAP does long haul so 6h so 6*3600, here we are doing range/200mps)
 
         if flight is None:
             h_cr = self.aircraft["cruise"]["height"]
@@ -261,7 +263,8 @@ class Base:
             yp_guess = np.interp(t_nodes, t_wps, yp_wps)
             h_guess  = np.clip(np.interp(t_nodes, t_wps, h_wps), h_floor, h_ceil)
 
-        ts_guess = np.linspace(0, 6 * 3600, self.nodes + 1)
+        # ts_guess = np.linspace(0, 6 * 3600, self.nodes + 1)
+        ts_guess = np.linspace(0, self.range / 200, self.nodes + 1) # rescaling for pre tracon (openAP does long haul so 6h so 6*3600, here we are doing range/200mps)
         m_guess  = self.mass_init * np.ones(self.nodes + 1)
 
         return np.vstack([xp_guess, yp_guess, h_guess, m_guess, ts_guess]).T

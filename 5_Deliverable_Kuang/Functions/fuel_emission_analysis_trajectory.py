@@ -89,24 +89,26 @@ class Cruise_with_Multi_Waypoints(Base):
         self.x_lb = [x_min, y_min, h_min, self.oew, ts_min]
         self.x_ub = [x_max, y_max, h_max, self.mass_init, ts_max]
 
+        # Min and Max vertical rates. 
+        vs_min = kwargs.get("vs_min", -3000 * fpm)   # realistic arrival descent rate (3000 fpm)
+        vs_max = kwargs.get("vs_max",   0 * fpm) # No climbing
         # Control init - lower and upper bounds
-        self.u_0_lb = [0.5, -500 * fpm, psi - pi / 4]
-        self.u_0_ub = [self.mach_max, 500 * fpm, psi + pi / 4]
-
+        self.u_0_lb = [0.5, vs_min, psi - pi / 4]
+        self.u_0_ub = [self.mach_max, vs_max, psi + pi / 4]
         # Control final - lower and upper bounds
-        self.u_f_lb = [0.5, -500 * fpm, psi - pi / 4]
-        self.u_f_ub = [self.mach_max, 500 * fpm, psi + pi / 4]
-
+        self.u_f_lb = [0.5, vs_min, psi - pi / 4]
+        self.u_f_ub = [self.mach_max, vs_max, psi + pi / 4]
         # Control - Lower and upper bound
-        # Control - Lower and upper bound
-        self.u_lb = [0.5, -500 * fpm, psi - pi / 2]
-        self.u_ub = [self.mach_max, 500 * fpm, psi + pi / 2]
+        self.u_lb   = [0.5, vs_min, psi - pi / 2]
+        self.u_ub   = [self.mach_max, vs_max, psi + pi / 2]
 
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # Initial guess - states
         middle_waypoints = kwargs.get("middle_waypoints", [])
         full_waypoints = [self.origin] + middle_waypoints + [self.destination]
-        self.x_guess = self.initial_guess()
+        # self.x_guess = self.initial_guess() 
+        # self.x_guess = self.initial_guess_through_waypoints(full_waypoints)
+        self.x_guess = self.initial_guess_smooth_through_waypoints(full_waypoints)
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
 
         # Initial guess - controls
@@ -146,18 +148,15 @@ class Cruise_with_Multi_Waypoints(Base):
 
 
         # Initialize conditions
-        self.init_conditions(**kwargs)
-
-        self.init_model(objective, **kwargs)
-        
+        # self.init_conditions(**kwargs)
+        # self.init_model(objective, **kwargs)
         # arguments passed init_condition to overwright h_min and h_max
         self.init_conditions(**kwargs)
-
         self.init_model(objective, **kwargs)
 
         customized_max_fuel = kwargs.get("max_fuel", None)
 
-        initial_guess = None #kwargs.get("initial_guess", None)
+        initial_guess = kwargs.get("initial_guess", None) # None #
         if initial_guess is not None:
             self.x_guess = self.initial_guess(initial_guess)
 
@@ -269,7 +268,7 @@ class Cruise_with_Multi_Waypoints(Base):
         w.append(self.ts_final)
         lbw.append([0])
         ubw.append([ca.inf])
-        w0.append([self.range * 1000 / 200])
+        w0.append([self.range / 200])
 
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
         # # Smooth trajectory objective: penalize squared control changes between nodes
@@ -399,6 +398,7 @@ class Cruise_with_Multi_Waypoints(Base):
 
 
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## Modified By Kuang ### ### ### ### ### ### ### ### ### ### ### ### ### ### ## 
+        ## Forced ROC to ZERO and therefore none of these are needed anymore
         # # OPTIONAL: Hard constraint to prevent climbing (uncomment to enforce strict descent)
         # enforce_monotonic_descent = kwargs.get("enforce_monotonic_descent", True)
         # if enforce_monotonic_descent:
@@ -407,7 +407,6 @@ class Cruise_with_Multi_Waypoints(Base):
         #         g.append(X[k + 1][2] - X[k][2])
         #         lbg.append([-ca.inf])  # Can decrease by any amount
         #         ubg.append([0])         # Cannot increase (max change = 0)
-
         # # Soft penalty: heavily penalize any altitude increase between nodes
         # # ca.fmax(0, dh) is 0 when descending/level, positive when climbing
         # penalty_weight_climb = kwargs.get("penalty_weight_climb", 1e6)
@@ -415,13 +414,14 @@ class Cruise_with_Multi_Waypoints(Base):
         #     dh = X[k + 1][2] - X[k][2]          # altitude change (m), positive = climb
         #     J += penalty_weight_climb * ca.fmax(0, dh) ** 2
 
-        # # --- Time constraint on final node ---
-        # final_time = kwargs.get("final_time")  # flight duration in seconds (NOT UTC time)
-        # if final_time is not None:
-        #     final_time_margin = 30  # seconds tolerance
-        #     g.append(X[self.nodes][4])  # elapsed time at final node
-        #     lbg.append([final_time - final_time_margin])
-        #     ubg.append([final_time + final_time_margin])
+
+        # --- Time constraint on final node ---
+        final_time = kwargs.get("final_time")  # flight duration in seconds (NOT UTC time)
+        if final_time is not None:
+            final_time_margin = kwargs.get("final_time_margin", 0.10 * final_time)
+            g.append(X[self.nodes][4])  # elapsed time at final node
+            lbg.append([final_time - final_time_margin])
+            ubg.append([final_time + final_time_margin])
             
         # Added / Tunned Optimization Constraints
         ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
@@ -479,6 +479,12 @@ class Cruise_with_Multi_Waypoints(Base):
 
         self.solver = ca.nlpsol("solver", "ipopt", nlp, self.solver_options)
         self.solution = self.solver(x0=w0, lbx=lbw, ubx=ubw, lbg=lbg, ubg=ubg)
+        status = self.solver.stats()["return_status"]
+        print(f"  IPOPT status: {status}")
+        print(f"  range = {self.range:.1f}  |  ts_final guess = {self.range / 200:.1f} s")
+        # if status not in ("Solve_Succeeded", "Solved_To_Acceptable_Level"):
+        #     warnings.warn(f"NLP did not converge for {kwargs.get('flight_id')}: {status}")
+        #     return None
 
         # final timestep
         ts_final = self.solution["x"][-1].full()[0][0]

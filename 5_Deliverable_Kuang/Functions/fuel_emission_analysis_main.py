@@ -23,12 +23,11 @@ import pandas as pd
 from datetime import timedelta
 import time
 import numpy as np
-from openap.extra.aero import fpm, ft, kts
 from pathlib import Path
 import os
-
 import matplotlib
 
+from openap.extra.aero import fpm, ft, kts, distance
 
 def _configure_matplotlib_backend():
     if os.environ.get("MPLBACKEND"):
@@ -314,6 +313,9 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
             [origin] + middle_waypoints_cleaned + [destination],
             columns=["lat", "lon", "alt_ft", "t"]
         )
+        print(f"  {acId}: {len(df_wp)} waypoint rows → {len(middle_waypoints_cleaned)} middle waypoints")
+        print(f"    origin      alt = {origin[2]:.0f} ft")
+        print(f"    destination alt = {destination[2]:.0f} ft")
 
         # 4.4 Run NLP
         # Use historical flight duration — the MILP provides the spatial path (entry + STAR fix),
@@ -322,7 +324,26 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
         df_hist_flight = dic_hist_flights_preTracon[acId]
         t_hist_entry = pd.to_datetime(df_hist_flight.iloc[0]["recTime"])
         t_hist_exit  = pd.to_datetime(df_hist_flight.iloc[-1]["recTime"])
-        final_time_sec = max((t_hist_exit - t_hist_entry).total_seconds(), 300.0)
+        ###*************************************************************************************###
+        # instead of :
+        # final_time_sec =  max((t_hist_exit - t_hist_entry).total_seconds(), 300.0)
+        
+        hist_time_sec =  max((t_hist_exit - t_hist_entry).total_seconds(), 300.0)
+        # The NLP flies entry → MILP STAR fix; the historic flight flew entry → its own
+        # exit. Preserve the historic average speed, not the historic duration, so the
+        # time constraint matches the geometry the NLP is actually given.
+        hist_range = distance(df_hist_flight.iloc[0]["coord1"],  df_hist_flight.iloc[0]["coord2"],
+                              df_hist_flight.iloc[-1]["coord1"], df_hist_flight.iloc[-1]["coord2"])
+        milp_range = distance(origin[0], origin[1], destination[0], destination[1])
+
+        if hist_range < 1000:          # degenerate historic track — don't scale
+            final_time_sec = hist_time_sec
+        else:
+            final_time_sec = hist_time_sec * (milp_range / hist_range)
+        print(f"  {acId}: hist {hist_range/1000:.0f} km / {hist_time_sec:.0f} s "
+              f"→ MILP {milp_range/1000:.0f} km / {final_time_sec:.0f} s "
+              f"({milp_range/final_time_sec:.0f} m/s)")
+        ###*************************************************************************************###
         print(f"Using historical flight time for {acId}: {final_time_sec:.0f} seconds")
 
         # Do NOT pass MILP intermediate waypoints as hard NLP constraints.
@@ -335,6 +356,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
             acType, origin, destination, m0=m0
         ).trajectory(
             objective        = "fuel",
+            h_min            = 5000 * ft,   # below lowest STAR fix (8000 ft)
             middle_waypoints = middle_waypoints_cleaned,  # MILP waypoints as spatial guides
             middle_radius    = waypoint_proximity,
             middle_alt_margin= 200 * ft,
