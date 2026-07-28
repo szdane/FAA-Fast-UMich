@@ -29,10 +29,10 @@ cwam_wx_pipeline/
 
 ## What each file does
 
-**`config.yaml`** — the only file you normally touch. Defines the case
+**`config.yaml`** — the only file normally modified. Defines the case
 (date/time window), the region (airport center, radius, STAR fixes), the
 analysis parameters (cell size, dBZ threshold, altitude limits, thresholds),
-data source URLs, and directories.
+data source URLs (this does not need to be changed), and directories.
 
 **`prob_table_cwam2.csv`** — the P(deviation) lookup table. Rows = Δz bin
 centers in kft (aircraft altitude − echo top; negative = below the tops),
@@ -40,7 +40,7 @@ columns = coverage-% bin centers. Edit freely; regenerated with default
 values only if the file is missing.
 
 **`run_pipeline.py`** — thin launcher so the pipeline can be run from Spyder
-with F5. Sets the import path, reads the option constants at the top of the
+with F5 (built for me). Sets the import path, reads the option constants at the top of the
 file (`CONFIG`, `SKIP_DOWNLOAD`, `ECHOTOP_LOCAL_DIR`), and calls
 `cwam_pipeline.run.main()`. Equivalent to running
 `python -m cwam_pipeline.run --config config.yaml` in a terminal.
@@ -49,7 +49,7 @@ file (`CONFIG`, `SKIP_DOWNLOAD`, `ECHOTOP_LOCAL_DIR`), and calls
 renders the raw N0Q frame (NWS reflectivity palette, dBZ colorbar) and the
 raw NET frame (echo tops in kft) cropped to the pre-TRACON circle with the
 blue/red boundaries overlaid. Same aspect convention as the pipeline
-overlays so all image types line up side by side.
+overlays so all image types line up side by side. For visual diagnostics of raster images.
 
 **`cwam_pipeline/config.py`** — see next section.
 
@@ -74,14 +74,16 @@ files instead of S3.
 **`cwam_pipeline/rasters.py`** — raster loading. Reads both products cropped
 to the region bounding box and returns `(data, transform, valid)` grids in
 lon/lat. Converts N0Q palette index → dBZ (`dBZ = index/2 − 32`; index 154 ⇔
-45 dBZ, matching wx_grid_creator_3) and EchoTop km → feet. Handles the MRMS
+45 dBZ) and EchoTop km → feet. Handles the MRMS
 0–360° longitude convention and its sentinel values: −999 (no radar
 coverage) → NaN, other negatives (scanned, no echo) → 0 ft.
 
 **`cwam_pipeline/metrics.py`** — the two CWAM predictors, computed once per
 timestamp (both are altitude-independent). Rasterizes the cell polygons onto
 each raster's own grid (so the differing N0Q/NET resolutions never need
-co-registration), then per cell: `coverage_pct` = % of N0Q pixels ≥
+co-registration). Co-registration means means aligning two or more raster/image 
+datasets  so their pixels correspond to the exact same physical locations on 
+the ground then per cell: `coverage_pct` = % of N0Q pixels ≥
 `dbz_threshold` (no-echo pixels count in the denominator), and
 `etop_stat_ft` = 90th-percentile (or max) echo top. Returns a DataFrame plus
 the cell-label raster used later for painting.
@@ -89,9 +91,8 @@ the cell-label raster used later for painting.
 **`cwam_pipeline/waf.py`** — the probability model. Loads the CSV table,
 validates monotonic axes, and does clamped bilinear interpolation:
 `P = table(dz_ft, coverage_pct)`. NaN inputs (no echo-top data over a cell)
-return NaN. Also contains the default-table generator (an analytic
-approximation of CWAM2 Fig. 8c — replace with calibrated values for research
-use).
+return NaN. Also contains the default-table generator (replace with calibrated 
+values for research use).
 
 **`cwam_pipeline/products.py`** — output writers: paints cell probabilities
 onto the N0Q pixel grid, writes GeoTIFFs, thresholds into binary masks,
