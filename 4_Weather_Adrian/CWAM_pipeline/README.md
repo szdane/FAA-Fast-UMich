@@ -1,189 +1,160 @@
-# CWAM Weather Pipeline — README
+# CWAM Weather Pipeline (N0Q + MRMS Echo Tops, pre-TRACON)
 
-Implements the two-predictor structure of the MIT Lincoln Laboratory
-Convective Weather Avoidance Model  over a configurable
-pre-TRACON region, combining IEM N0Q composite reflectivity with NOAA MRMS
-EchoTop_18 (NET) data, and producing per-altitude weather-avoidance products
-for the MILP route optimizer.
+A configurable pipeline implementing the two-predictor structure of the MIT
+Lincoln Laboratory Convective Weather Avoidance Model (CWAM2, DeLaura et al.),
+combining:
 
-```
-cwam_wx_pipeline/
-├── config.yaml              all user-configurable settings
-├── prob_table_cwam2.csv     2D probability lookup table (editable)
-├── requirements.txt         Python dependencies
-├── run_pipeline.py          Spyder-friendly launcher (F5)
-├── plot_raw_rasters.py      renders raw N0Q / NET images for one timestamp
-└── cwam_pipeline/           the package
-    ├── __init__.py
-    ├── config.py            YAML → typed config objects
-    ├── roi.py               pre-TRACON geometry + analysis cell grid
-    ├── fetch.py             data downloaders (IEM, NOAA S3)
-    ├── rasters.py           raster readers + unit conversions
-    ├── metrics.py           per-cell predictor computation
-    ├── waf.py               probability table load/lookup
-    ├── products.py          output writers (tif/npz/csv/png)
-    └── run.py               CLI orchestrator (ties everything together)
-```
+1. **N0Q composite reflectivity** from the Iowa Environmental Mesonet archive
+   (same PNG + WLD source used in `wx_grid_creator_3.py`), and
+2. **NOAA MRMS `EchoTop_18`** — height of the 18 dBZ echo top, the echo-top
+   definition used by CWAM — from the public NOAA S3 archive
+   (`noaa-mrms-pds`, ~2 min cadence, CONUS, archived back to Oct 2020).
 
----
+The pre-TRACON region (geodesic circle around the airport minus the TRACON
+polygon from ordered STAR fixes) is tiled with **equally sized square cells**
+(default 16×16 km, per CWAM2). For each cell and timestamp the pipeline
+computes:
 
-## What each file does
+| Predictor | Meaning |
+|---|---|
+| `coverage_pct` | % of N0Q pixels in the cell with reflectivity ≥ `dbz_threshold` |
+| `dz_ft` | altitude − echo-top statistic (90th percentile by default) |
 
-**`config.yaml`** — the only file normally modified. Defines the case
-(date/time window), the region (airport center, radius, STAR fixes), the
-analysis parameters (cell size, dBZ threshold, altitude limits, thresholds),
-data source URLs (this does not need to be changed), and directories.
+and looks up **P(deviation)** in a 2D probability table
+`P(dz, coverage)` with bilinear interpolation.
 
-**`prob_table_cwam2.csv`** — the P(deviation) lookup table. Rows = Δz bin
-centers in kft (aircraft altitude − echo top; negative = below the tops),
-columns = coverage-% bin centers. Edit freely; regenerated with default
-values only if the file is missing.
+The WAF is evaluated at **every altitude level** in a manually configured
+range (`altitude_min_ft` / `altitude_max_ft` / `altitude_step_ft`, or an
+explicit `altitudes_ft` list), producing one full product set per level per
+timestamp (tagged `FLxxx`), so a downstream MILP can trade off routes across
+altitudes. Coverage % and echo-top statistics are altitude-independent and
+computed once per timestamp; only the dz → probability lookup repeats.
 
-**`run_pipeline.py`** — thin launcher so the pipeline can be run from Spyder
-with F5 (built for me). Sets the import path, reads the option constants at the top of the
-file (`CONFIG`, `SKIP_DOWNLOAD`, `ECHOTOP_LOCAL_DIR`), and calls
-`cwam_pipeline.run.main()`. Equivalent to running
-`python -m cwam_pipeline.run --config config.yaml` in a terminal.
-
-**`plot_raw_rasters.py`** — standalone illustration tool. For one timestamp,
-renders the raw N0Q frame (NWS reflectivity palette, dBZ colorbar) and the
-raw NET frame (echo tops in kft) cropped to the pre-TRACON circle with the
-blue/red boundaries overlaid. Same aspect convention as the pipeline
-overlays so all image types line up side by side. For visual diagnostics of raster images.
-
-**`cwam_pipeline/config.py`** — see next section.
-
-**`cwam_pipeline/roi.py`** — geometry. Builds the TRACON polygon from the
-ordered STAR fixes, the geodesic circle around the airport (WGS84, exact
-`radius_km` in every direction), and the pre-TRACON region (circle minus
-TRACON). Then tiles that region with equally sized square cells: the grid is
-constructed in a local azimuthal-equidistant projection centered on the
-airport so every cell is a true `cell_size_km` × `cell_size_km` square on
-the ground, then each cell is clipped to the region and transformed back to
-lon/lat. Cells with less than `min_cell_area_fraction` of their area inside
-the region are dropped.
-
-**`cwam_pipeline/fetch.py`** — data acquisition. Downloads N0Q PNG+WLD pairs
-from the IEM archive (concurrent, cached, same source as wx_grid_creator_3)
-and EchoTop_18 GRIB2 files from the public NOAA S3 bucket (`noaa-mrms-pds`),
-listing each day's objects via the S3 REST API and pairing each N0Q
-timestamp with the nearest EchoTop file within
-`echo_top_time_tolerance_min`. `local_echo_tops()` supports pre-downloaded
-files instead of S3.
-
-**`cwam_pipeline/rasters.py`** — raster loading. Reads both products cropped
-to the region bounding box and returns `(data, transform, valid)` grids in
-lon/lat. Converts N0Q palette index → dBZ (`dBZ = index/2 − 32`; index 154 ⇔
-45 dBZ) and EchoTop km → feet. Handles the MRMS
-0–360° longitude convention and its sentinel values: −999 (no radar
-coverage) → NaN, other negatives (scanned, no echo) → 0 ft.
-
-**`cwam_pipeline/metrics.py`** — the two CWAM predictors, computed once per
-timestamp (both are altitude-independent). Rasterizes the cell polygons onto
-each raster's own grid (so the differing N0Q/NET resolutions never need
-co-registration). Co-registration means means aligning two or more raster/image 
-datasets  so their pixels correspond to the exact same physical locations on 
-the ground then per cell: `coverage_pct` = % of N0Q pixels ≥
-`dbz_threshold` (no-echo pixels count in the denominator), and
-`etop_stat_ft` = 90th-percentile (or max) echo top. Returns a DataFrame plus
-the cell-label raster used later for painting.
-
-**`cwam_pipeline/waf.py`** — the probability model. Loads the CSV table,
-validates monotonic axes, and does clamped bilinear interpolation:
-`P = table(dz_ft, coverage_pct)`. NaN inputs (no echo-top data over a cell)
-return NaN. Also contains the default-table generator (replace with calibrated 
-values for research use).
-
-**`cwam_pipeline/products.py`** — output writers: paints cell probabilities
-onto the N0Q pixel grid, writes GeoTIFFs, thresholds into binary masks,
-and renders the black-background overlay PNGs (boundaries in blue/red;
-continuous grayscale P, or thresholded black/white if `overlay_binary`).
-
-**`cwam_pipeline/run.py`** — orchestrator. Parses CLI args, loads config,
-builds geometry once, downloads data, then loops timestamps × altitudes
-writing all products (see "How outputs are generated").
-
-**`tests/test_metrics_logic.py`** — verifies the numeric core (dBZ
-conversion, coverage %, p90/max echo tops, Δz, table interpolation, region
-extraction) against hand-computed values, with the geo libraries mocked so
-it runs anywhere.
-
----
-
-## How config.py works
-
-`config.py` turns `config.yaml` into typed Python objects. Each YAML section
-maps to a dataclass:
-
-| YAML section | Dataclass | Contents |
-|---|---|---|
-| `case` | `CaseConfig` | date, start/end time, step |
-| `region` | `RegionConfig` | center, radius, STAR fixes, boundary order |
-| `analysis` | `AnalysisConfig` | cell size, thresholds, altitudes, table path |
-| `sources` | `SourcesConfig` | URLs, S3 prefix, worker count |
-| `paths` | `PathsConfig` | data/output directories |
-
-`load_config(path)` reads the YAML and constructs a `PipelineConfig` holding
-all five. Anything omitted from the YAML falls back to the dataclass
-defaults, so a minimal config only needs `case` and `region`.
-
-Two kinds of derived values are computed on demand:
-
-- `CaseConfig.timestamps()` expands date + window + step into the list of
-  datetimes to process (inclusive of `end_time`).
-- `AnalysisConfig.altitudes()` expands the manual altitude limits
-  (`altitude_min_ft`/`altitude_max_ft`/`altitude_step_ft`) into the list of
-  flight levels — unless an explicit `altitudes_ft` list is given, which
-  overrides the range. Invalid limits (max < min, step ≤ 0) raise
-  immediately at startup.
-
-Relative paths (`data_dir`, `output_dir`, `prob_table`) are resolved
-relative to the folder containing `config.yaml`, not the shell's working
-directory — so runs behave identically from a terminal or Spyder.
-
----
-
-## How the outputs are generated
-
-Per run, `run.py` executes this sequence:
-
-1. **Setup (once).** Load config → build region geometry and the cell grid
-   (`roi.py`) → load or create the probability table (`waf.py`).
-2. **Acquire (once).** Download/reuse N0Q files for every timestamp and pair
-   each with its nearest EchoTop file (`fetch.py`). Timestamps missing
-   either input are skipped with a warning.
-3. **Per timestamp:** load both rasters cropped to the region
-   (`rasters.py`) → compute the altitude-independent cell predictors
-   `coverage_pct` and `etop_stat_ft` once (`metrics.py`).
-4. **Per altitude level** (tag `FLxxx`, e.g. FL340): compute
-   `dz_ft = altitude − etop_stat_ft`, look up `p_deviation` per cell
-   (`waf.py`), then write the product set (`products.py`).
-
-Products per (timestamp `<t>`, altitude `FLxxx`), under `output_dir`:
-
-| File | Contents | Generated how |
-|---|---|---|
-| `cells/cells_<t>_FLxxx.csv` | one row per grid square: ids, centroid/bounds, `n_pixels_n0q`, `coverage_pct`, `etop_stat_ft`, `altitude_ft`, `dz_ft`, `p_deviation` | the predictor DataFrame + table lookup |
-| `waf/waf_<t>_FLxxx.tif` | probability raster, EPSG:4326 float32 | each N0Q pixel painted with its cell's P via the label raster |
-| `masks/mask_<t>_FLxxx.npz` | keys `binary_mask` (uint8, 1 = infeasible) + `altitude_ft` | pixels where P ≥ `mask_probability_threshold`; drop-in for the Gurobi/MILP workflow |
-| `regions/regions_<t>_FLxxx.csv` | one row per **infeasible cell** (no merging): `region_id`, `n_pixels`, lat/lon bounds, centroid, plus `coverage_pct`, `dz_ft`, `p_deviation` | filter of the cells table at the mask threshold; first 8 columns match the legacy `t00.csv` schema |
-| `overlays/overlay_<t>_FLxxx.png` | black-background quick-look, pre-TRACON boundary blue, TRACON red | grayscale P (or black/white mask if `overlay_binary: true`) |
-
-Additionally `plot_raw_rasters.py` writes `raw/n0q_raw_<t>.png` and
-`raw/echotop_raw_<t>.png` for illustration.
-
-Pixel (row, col) → lon/lat georeferencing for the npz masks comes from the
-matching GeoTIFF: `rasterio.open(waf_tif).transform`.
-
----
-
-## Running
+## Install
 
 ```bash
-pip install -r requirements.txt          # or conda install -c conda-forge rasterio shapely pyproj
-python -m cwam_pipeline.run --config config.yaml
-python -m cwam_pipeline.run --config config.yaml --skip-download        # reuse data_dir
-python -m cwam_pipeline.run --config config.yaml --echotop-local-dir D  # own EchoTop files
+pip install -r requirements.txt
 ```
 
-Or open `run_pipeline.py` in Spyder and press F5.
+(`rasterio` wheels include GDAL with the GRIB driver, which reads the MRMS
+`.grib2` files directly — no eccodes/pygrib needed.)
+
+## Run
+
+```bash
+python -m cwam_pipeline.run --config config.yaml
+```
+
+Options:
+
+- `--skip-download` — reuse files already in `data_dir`
+- `--echotop-local-dir DIR` — use pre-downloaded EchoTop files instead of S3
+  (filenames must contain `_YYYYMMDD-HHMMSS`)
+
+## Configuration (`config.yaml`)
+
+- `case` — date, UTC time window, 5-min step (N0Q archive cadence)
+- `region` — pre-TRACON definition: center lat/lon, radius (km), STAR fixes,
+  ordered boundary fix names. Defaults reproduce the DTW region from
+  `wx_grid_creator_3.py`. Point at any airport by editing these values.
+- `analysis` — cell size, dBZ threshold, altitude limits (min/max/step or
+  explicit list), echo-top statistic (`p90`/`max`), N0Q↔EchoTop pairing
+  tolerance, probability-table path, mask threshold, `overlay_binary`,
+  `missing_data_policy` (see below)
+- `sources`/`paths` — URLs, download workers, data/output directories
+
+## Outputs (per timestamp and per altitude level, under `output_dir`)
+
+`<t>` is the timestamp (`YYYYMMDDHHMM`), `FLxxx` the altitude tag
+(FL350 = 35,000 ft):
+
+| File | Contents |
+|---|---|
+| `cells/cells_<t>_FLxxx.csv` | one row per grid square: cell id/row/col, centroid & bounds, `n_pixels_n0q`, `coverage_pct`, `etop_stat_ft`, `altitude_ft`, `dz_ft`, `p_deviation`, `data_missing`, **`infeasible`** |
+| `waf/waf_<t>_FLxxx.tif` | WAF probability raster painted onto the N0Q grid (EPSG:4326, float32, LZW). NaN where a pixel is outside the grid *or* its cell had no valid EchoTop data — these two cases are not distinguishable from this file alone |
+| `masks/mask_<t>_FLxxx.npz` | keys `binary_mask` (per `missing_data_policy`, see below), `altitude_ft`, `data_missing_mask` (raw per-pixel data-gap flag, independent of policy) — drop-in for the Gurobi/MILP workflow |
+| `regions/regions_<t>_FLxxx.csv` | one row per **infeasible grid square** (no merging): `region_id, n_pixels, min/max lat/lon, centroid, coverage_pct, dz_ft, p_deviation, data_missing` (first 8 columns match the legacy `t00.csv` schema) |
+| `overlays/overlay_<t>_FLxxx.png` | black-background quick-look with pre-TRACON boundary (blue), TRACON polygon (red), and data-gap cells in **mid-gray** (see below) |
+
+## Missing-data handling
+
+A cell has no valid EchoTop statistic when it sits in an MRMS radar-coverage
+gap, or is a thin sliver at the pre-TRACON boundary too small to contain any
+MRMS pixel center. That cell's `dz_ft` and `p_deviation` are correctly `NaN`
+in `cells_*.csv` — but a *decision* still has to be made for the mask the
+MILP consumes, and "no data" is not the same claim as "confirmed clear."
+
+`analysis.missing_data_policy` controls that decision:
+
+- `infeasible` (default) — missing-data cells are folded into the binary
+  mask and the regions CSV as blocked, on the principle that an unknown
+  weather state should not be assumed safe to fly through.
+- `passable` — missing-data cells are excluded from the mask (legacy
+  behavior — data gaps silently read as clear weather). Not recommended for
+  anything safety-relevant; useful mainly for comparing against earlier
+  pipeline output.
+
+Every cell's `data_missing` flag is preserved in `cells_*.csv` and
+`regions_*.csv` regardless of policy, and the mask npz also carries a raw
+`data_missing_mask` independent of the chosen policy, so you can always
+recover which blocked cells were "confirmed weather" versus "no data" if the
+MILP needs to treat them differently downstream. The overlay PNGs paint
+data-gap cells mid-gray (0.4) rather than black, so a gap is never visually
+identical to confirmed-clear (black, P≈0) or confirmed-blocked (white, P≈1).
+
+## The probability table
+
+`prob_table_cwam2.csv` — rows are `dz` bin centers in **kft** (aircraft
+altitude minus echo top; negative = flying below the tops), columns are
+coverage-% bin centers. Values are P(deviation). Edit freely; any monotonic
+bin spacing works, lookups are bilinearly interpolated and clamped at edges.
+
+> **Important:** the shipped table is an *analytic approximation* shaped to
+> match CWAM2 Figure 8c qualitatively
+> (`P = (cov/100)^0.35 · sigmoid(−dz/3.5 kft)`). The paper does not publish
+> numeric tables, and its coverage predictor is echo-top-based
+> (% echo tops ≥ 30 kft) while this pipeline uses reflectivity coverage per
+> your spec. Calibrate the table against your own encounter data (or digitized
+> paper figures) before drawing research conclusions.
+
+## Notes & conventions
+
+- **N0Q index → dBZ**: `dBZ = index/2 − 32` (index 154 ⇔ 45 dBZ, matching
+  `wx_grid_creator_3`). Index 0 = no echo; kept in the coverage denominator.
+- **EchoTop_18 units**: MRMS encodes km MSL; converted to feet. Negative
+  sentinel values: `−999` (no radar coverage) → NaN; other negatives
+  (scanned, no 18 dBZ echo) → 0 ft, so `dz` is large and P ≈ 0.
+- **Grid cells** are exact squares in a local azimuthal-equidistant projection
+  centered on the airport, clipped to the pre-TRACON region; cells with < 5%
+  of their area in the region are dropped (configurable).
+- **Time pairing**: for each 5-min N0Q frame, the nearest EchoTop file within
+  `echo_top_time_tolerance_min` is used (MRMS runs ~every 2 min).
+- N0Q and EchoTop grids have different resolutions (~0.005° vs 0.01°); the
+  per-cell aggregation makes co-registration unnecessary.
+- Lightning is intentionally excluded, per project scope.
+- **Unverified against real files.** The N0Q index→dBZ formula and the
+  MRMS km-vs-meters unit heuristic in `rasters.py` were never checked
+  against an actual downloaded PNG/GRIB2 file (no network in the dev
+  sandbox). On your first real run, sanity-check one frame — e.g. print
+  `np.unique(raw)` from the un-scaled EchoTop array and compare a known
+  storm's reflectivity/top values against a public radar viewer — before
+  trusting the numbers for anything decision-relevant.
+- A thin ROI-boundary cell can pass the `min_cell_area_fraction` check by
+  area yet still sample zero MRMS pixel centers (`all_touched=False`),
+  giving it `data_missing=True` for a sampling reason rather than a true
+  coverage gap. Harmless under the default `infeasible` policy (it's
+  blocked either way) but worth knowing if you switch to `passable`.
+
+## Package layout
+
+```
+cwam_pipeline/
+  config.py    YAML → dataclasses
+  roi.py       pre-TRACON geometry + equal-area cell grid
+  fetch.py     IEM N0Q downloader, MRMS S3 listing/downloader
+  rasters.py   PNG+WLD and GRIB2 readers, unit conversions, ROI cropping
+  metrics.py   per-cell coverage % and echo-top statistics
+  waf.py       probability table (load/lookup/default generator)
+  products.py  CSV / GeoTIFF / npz / regions / overlay writers
+  run.py       CLI orchestrator
+```

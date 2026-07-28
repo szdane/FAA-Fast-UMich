@@ -1,0 +1,80 @@
+# =====================================================================
+# CWAM-style weather pipeline configuration
+# N0Q composite reflectivity (IEM) + NOAA MRMS EchoTop_18 (18 dBZ echo top)
+# =====================================================================
+
+case:
+  date: "2025-04-03"          # YYYY-MM-DD (UTC)
+  start_time: "04:00"         # UTC, inclusive
+  end_time: "05:00"           # UTC, inclusive
+  step_minutes: 5             # N0Q archive cadence is 5 min
+
+# ---------------------------------------------------------------------
+# Pre-TRACON region definition (defaults: DTW, from wx_grid_creator_3)
+# pre-TRACON = geodesic circle of radius_km around the center,
+#              minus the TRACON polygon built from the ordered STAR fixes
+# ---------------------------------------------------------------------
+region:
+  center_lat: 42.2125
+  center_lon: -83.3534
+  radius_km: 300.0
+  # STAR waypoint fixes as {NAME: [lon, lat]}
+  star_fixes:
+    BONZZ: [-82.7972, 41.7483]
+    CRAKN: [-82.9405, 41.6730]
+    CUUGR: [-83.0975, 42.3643]
+    FERRL: [-82.6093, 42.4165]
+    GRAYT: [-83.6020, 42.9150]
+    HANBL: [-84.1773, 41.7375]
+    HAYLL: [-84.2975, 41.9662]
+    HTROD: [-83.3442, 42.0278]
+    KKISS: [-83.7620, 42.5443]
+    KLYNK: [-82.9888, 41.8793]
+    LAYKS: [-83.5498, 42.8532]
+    LECTR: [-84.0217, 41.9183]
+    RKCTY: [-83.9603, 42.6869]
+    VCTRZ: [-84.0670, 41.9878]
+  # Boundary of the TRACON polygon (order matters)
+  ordered_fix_names: [CRAKN, BONZZ, FERRL, LAYKS, GRAYT, RKCTY, HAYLL, HANBL]
+
+# ---------------------------------------------------------------------
+# CWAM two-predictor analysis
+# ---------------------------------------------------------------------
+analysis:
+
+  overlay_binary: true
+  cell_size_km: 8.0          # equally sized grid cells (CWAM2 uses 16x16 km)
+  dbz_threshold: 35.0         # predictor 1: % of N0Q pixels in cell >= this dBZ
+  # predictor 2: dz = altitude - echo top (ft), evaluated at EVERY altitude
+  # below (one WAF/mask/CSV set per level, tagged FLxxx in filenames).
+  altitude_min_ft: 11000      # manually set altitude limits
+  altitude_max_ft: 40000
+  altitude_step_ft: 2000
+  # altitudes_ft: [30000, 35000, 39000]   # optional explicit list; overrides
+                                          # the min/max/step range if given
+  echo_top_stat: p90          # per-cell echo top statistic: p90 (CWAM2) or max
+  echo_top_time_tolerance_min: 5   # max |t_N0Q - t_EchoTop| when pairing files
+  min_cell_area_fraction: 0.05     # drop cells with <5% of their area in the ROI
+  prob_table: prob_table_cwam2.csv # 2D lookup table P(deviation | dz, coverage)
+  mask_probability_threshold: 0.6  # P >= this -> infeasible (binary mask / regions)
+  min_region_pixels: 10            # ignore connected regions smaller than this
+  # Cells with no valid EchoTop data (radar coverage gap, thin ROI-boundary
+  # sliver) -> "infeasible" treats missing data as blocked (safe default);
+  # "passable" treats it as clear (legacy behavior, not recommended).
+  missing_data_policy: infeasible
+
+# ---------------------------------------------------------------------
+# Data sources
+# ---------------------------------------------------------------------
+sources:
+  n0q_base_url: "https://mesonet.agron.iastate.edu/archive/data/{yyyy}/{mm}/{dd}/GIS/uscomp/"
+  mrms_bucket_url: "https://noaa-mrms-pds.s3.amazonaws.com"
+  mrms_prefix: "CONUS/EchoTop_18_00.50"   # 18 dBZ echo top, ~2 min cadence
+  download_workers: 8
+
+# ---------------------------------------------------------------------
+# Paths (relative to where you run the pipeline, or absolute)
+# ---------------------------------------------------------------------
+paths:
+  data_dir: "./data"          # raw downloads (n0q/, echotop/)
+  output_dir: "/Users/anomi/Documents/LATTICE/FAST/Codes/wx_codes/cwam_wx_pipeline/35dBZ_output"      # all products
