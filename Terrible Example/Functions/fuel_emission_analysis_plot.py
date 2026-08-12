@@ -1,6 +1,6 @@
 import os
 import matplotlib
-matplotlib.use(os.environ.get("MPLBACKEND", "TkAgg"))  # interactive by default; override with MPLBACKEND=Agg
+matplotlib.use(os.environ.get("MPLBACKEND", "TkAgg"))
 from matplotlib import dates
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 
 from Functions import fuel_emission_analysis_computation
-
 
 def print_altitude_comparison(aircraft_list, dic_hist_pretracon, dic_opt_pretracon,
                                dic_waypoints, star_fixes_csv_path, output_csv_path):
@@ -29,8 +28,6 @@ def print_altitude_comparison(aircraft_list, dic_hist_pretracon, dic_opt_pretrac
         if df_h is None or df_o is None or df_wp is None:
             continue
         dest_lat, dest_lon = df_wp.iloc[-1]["lat"], df_wp.iloc[-1]["lon"]
-        fix_lats = {n: v[0] for n, v in _fix_alt.items()}  # reuse _fix_alt keys
-        fix_lons = {}
         _sf_lookup = {row["name"]: (row["lat"], row["lon"]) for _, row in _sf_csv.iterrows()}
         closest_fix = min(_sf_lookup, key=lambda n: (
             (_sf_lookup[n][0] - dest_lat)**2 + (_sf_lookup[n][1] - dest_lon)**2
@@ -65,8 +62,8 @@ def print_altitude_comparison(aircraft_list, dic_hist_pretracon, dic_opt_pretrac
 def print_fuel_time_summary(aircraft_list, dic_hist_pretracon, dic_opt_pretracon):
     """Print historic vs optimized time and fuel summary table."""
     W = 38
-    SEP   = "=" * 70
-    HSEP  = f"  {'':─<{W}}  {'──────────':>10}  {'─────────':>9}  {'────────':>8}  {'──────────':>10}  {'─────────':>9}  {'────────':>8}"
+    SEP  = "=" * 70
+    HSEP = f"  {'':─<{W}}  {'──────────':>10}  {'─────────':>9}  {'────────':>8}  {'──────────':>10}  {'─────────':>9}  {'────────':>8}"
     print(f"\n{SEP}")
     print(f"  SUMMARY — Historic vs Optimized")
     print(SEP)
@@ -309,12 +306,10 @@ def plot_3d_trajectories(
 
         label = labels[i]
 
-        ax.plot(df["x"] / 1000, df["y"] / 1000, df["alt"], label=label, lw=lw, color=color, linestyle=ls)
-        # origin/destination markers excluded from legend to keep it compact
-        ax.scatter(df.iloc[0]["x"] / 1000, df.iloc[0]["y"] / 1000, df.iloc[0]["alt"],
-                   color=color, marker='^', s=60, label='_nolegend_')
+        ax.plot(df["x"] / 1000, df["y"] / 1000, df["alt"], label=label, lw=lw, color=color, linestyle=ls) # Plot line
+        ax.scatter(df.iloc[0]["x"] / 1000, df.iloc[0]["y"] / 1000, df.iloc[0]["alt"], color=color, marker='^', s=60, label='_nolegend_') # Plot origin 
         ax.scatter(df.iloc[-1]["x"] / 1000, df.iloc[-1]["y"] / 1000, df.iloc[-1]["alt"],
-                   color=color, marker='s', s=60, label='_nolegend_')
+                color=color, marker='s', s=60, label='_nolegend_') # Plot destination
 
     # Plot waypoints if provided
     if waypoints is not None:
@@ -323,19 +318,19 @@ def plot_3d_trajectories(
             lon_list = wps["lon"].tolist()
             alt_list = wps["alt_ft"].tolist()
             x_wp, y_wp = fuel_emission_analysis_computation.proj_with_defined_origin(lat_list, lon_list, lat0, lon0)
+            
             color = colors[idx % len(colors)]
             if plot_waypoint_lines:
                 ax.plot(np.array(x_wp) / 1000, np.array(y_wp) / 1000, alt_list,
                         color=color, lw=1.5, linestyle='-', zorder=5)
             ax.scatter(np.array(x_wp) / 1000, np.array(y_wp) / 1000, alt_list,
-                       color=color, marker='x', s=40, label='_nolegend_')
+                        color=color, marker='x', s=40, label='_nolegend_')
     # Format
     ax.set_xlabel("X (km)")
     ax.set_ylabel("Y (km)")
     ax.set_zlabel("Altitude (ft)")
     ax.set_title(title)
     if show_legend:
-        # place legend outside the 3D axes so it doesn't shrink the plot
         ax.legend(fontsize=8, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
     fig.subplots_adjust(right=0.75)
     return fig, ax
@@ -461,51 +456,6 @@ def plot_NOx_flow_and_emission(df1=None, df2=None,
     return fig
 
 
-def plot_fuel_and_NOx_usage(df1=None, df2=None,
-                            color1='#E42320', color2='#6A8EC9',
-                            linestyle1='--', linestyle2='-',
-                            label1="Trajectory 1", label2="Trajectory 2",
-                            title="Fuel Used and NOx Emitted"):
-    """Plot cumulative fuel usage and cumulative NOx emissions in one figure."""
-    fig, axs = plt.subplots(2, 1, figsize=(7, 5), sharex=True)
-
-    # --- Cumulative fuel used ---
-    if df1 is not None:
-        axs[0].plot(df1.recTime, df1.fuel_used,  label=label1, color=color1, linestyle=linestyle1)
-    if df2 is not None:
-        axs[0].plot(df2.recTime, df2.fuel_used,  label=label2, color=color2, linestyle=linestyle2)
-    axs[0].set_ylabel("fuel used (kg)")
-    format_ax(axs[0])
-    axs[0].legend()
-    for df, color in [(df1, color1), (df2, color2)]:
-        if df is not None and len(df) > 0:
-            t, v = df.recTime.iloc[-1], df.fuel_used.iloc[-1]
-            axs[0].scatter(t, v, color=color, zorder=3)
-            axs[0].annotate(f"{v:.0f} kg", xy=(t, v),
-                            xytext=(t - pd.Timedelta(seconds=10), v + 20),
-                            fontsize=9, color=color)
-
-    # --- Cumulative NOx emitted ---
-    if df1 is not None:
-        axs[1].plot(df1.recTime, df1.NOx_emitted, label=label1, color=color1, linestyle=linestyle1)
-    if df2 is not None:
-        axs[1].plot(df2.recTime, df2.NOx_emitted, label=label2, color=color2, linestyle=linestyle2)
-    axs[1].set_ylabel("NOx emitted (g)")
-    format_ax(axs[1])
-    axs[1].legend()
-    for df, color in [(df1, color1), (df2, color2)]:
-        if df is not None and len(df) > 0:
-            t, v = df.recTime.iloc[-1], df.NOx_emitted.iloc[-1]
-            axs[1].scatter(t, v, color=color, zorder=3)
-            axs[1].annotate(f"{v:.2f} g", xy=(t, v),
-                            xytext=(t - pd.Timedelta(seconds=10), v + 200),
-                            fontsize=9, color=color)
-
-    axs[1].set_xlabel("Time")
-    fig.suptitle(title)
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-
-
 def animate_milp_trajectories(df_wide, flights, star_fixes_xyz, output_path, fps=1, dpi=100):
     """Step-by-step GIF of MILP waypoint trajectories — each frame is one MILP timestep."""
     from matplotlib.animation import FuncAnimation
@@ -578,3 +528,4 @@ def animate_milp_trajectories(df_wide, flights, star_fixes_xyz, output_path, fps
     anim.save(str(output_path), writer='pillow', fps=fps, dpi=dpi)
     plt.close(fig)
     print(f"Animation saved → {output_path}\n")
+
