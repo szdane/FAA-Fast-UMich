@@ -1,0 +1,66 @@
+import pandas as pd
+
+
+class RouteProcessor:
+    def __init__(self, flight_data_path):
+        """
+        Initialize the RouteProcessor with flight data.
+
+        Args:
+            flight_data_path (str): Path to the flight data CSV file.
+        """
+        self.flight_data_path = flight_data_path
+        self.flight_data = None
+
+    def load_data(self):
+        """
+        Load flight data into a DataFrame.
+        """
+        self.flight_data = pd.read_csv(self.flight_data_path)
+        print(f"Flight data loaded from {self.flight_data_path}")
+
+    def extract_routes(self):
+        """
+        Extract unique routes based on departure and arrival airports.
+        """
+        if self.flight_data is None:
+            raise ValueError("Flight data not loaded.")
+
+        routes = self.flight_data[['departureAirport', 'arrivalAirport']].drop_duplicates()
+        print(f"{len(routes)} unique routes extracted.")
+        return routes
+
+    def analyze_route_metrics(self):
+        """
+        Analyze metrics for each route, such as average flight delay and total flights.
+        """
+        if self.flight_data is None:
+            raise ValueError("Flight data not loaded.")
+
+        self.flight_data['delay_minutes'] = (
+            (pd.to_datetime(self.flight_data['actualArrival']) - pd.to_datetime(self.flight_data['scheduledArrival']))
+            .dt.total_seconds() / 60
+        )
+        route_metrics = self.flight_data.groupby(['departureAirport', 'arrivalAirport']).agg({
+            'flightId': 'count',
+            'delay_minutes': 'mean'
+        }).rename(columns={'flightId': 'total_flights', 'delay_minutes': 'avg_delay'}).reset_index()
+        print("Route metrics calculated successfully.")
+        return route_metrics
+
+    def save_routes(self, output_path):
+        """
+        Save unique routes to a CSV file.
+
+        Args:
+            output_path (str): Path to save the routes.
+        """
+        routes = self.extract_routes()
+        routes.to_csv(output_path, index=False)
+        print(f"Routes saved to {output_path}")
+
+
+if __name__ == "__main__":
+    processor = RouteProcessor("/Users/hoo/Desktop/UMICH/FAA/data/flights_data.csv")
+    processor.load_data()
+    processor.save_routes("/Users/hoo/Desktop/UMICH/FAA/output/unique_routes.csv")

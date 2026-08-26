@@ -1,0 +1,53 @@
+import pandas as pd
+
+
+class AirspaceProcessor:
+    def __init__(self, airspace_data_path):
+        """
+        Initialize the AirspaceProcessor with airspace data.
+
+        Args:
+            airspace_data_path (str): Path to the airspace data CSV file.
+        """
+        self.airspace_data_path = airspace_data_path
+        self.airspace_data = None
+
+    def load_data(self):
+        """
+        Load airspace data into a DataFrame.
+        """
+        self.airspace_data = pd.read_csv(self.airspace_data_path)
+        self.airspace_data['recTime'] = pd.to_datetime(self.airspace_data['recTime'])
+        print(f"Airspace data loaded from {self.airspace_data_path}")
+
+    def calculate_congestion(self, time_interval='1H'):
+        """
+        Calculate congestion levels for each region over time.
+
+        Args:
+            time_interval (str): Time interval for grouping (e.g., '1H', '30min').
+        """
+        if self.airspace_data is None:
+            raise ValueError("Airspace data not loaded.")
+
+        self.airspace_data['time_window'] = self.airspace_data['recTime'].dt.floor(time_interval)
+        congestion = self.airspace_data.groupby(['region', 'time_window']).size().reset_index(name='flight_count')
+        print("Congestion levels calculated successfully.")
+        return congestion
+
+    def save_congestion_summary(self, output_path):
+        """
+        Save congestion summary to a CSV file.
+
+        Args:
+            output_path (str): Path to save the summary.
+        """
+        congestion = self.calculate_congestion()
+        congestion.to_csv(output_path, index=False)
+        print(f"Congestion summary saved to {output_path}")
+
+
+if __name__ == "__main__":
+    processor = AirspaceProcessor("/Users/hoo/Desktop/UMICH/FAA/data/airspace_data.csv")
+    processor.load_data()
+    processor.save_congestion_summary("/Users/hoo/Desktop/UMICH/FAA/output/airspace_congestion.csv")

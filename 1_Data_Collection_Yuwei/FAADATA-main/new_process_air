@@ -1,0 +1,66 @@
+import pandas as pd
+
+
+class AirlineProcessor:
+    def __init__(self, flight_data_path):
+        """
+        Initialize the AirlineProcessor with flight data.
+
+        Args:
+            flight_data_path (str): Path to the flight data CSV file.
+        """
+        self.flight_data_path = flight_data_path
+        self.flight_data = None
+
+    def load_data(self):
+        """
+        Load flight data into a DataFrame.
+        """
+        self.flight_data = pd.read_csv(self.flight_data_path)
+        self.flight_data['recTime'] = pd.to_datetime(self.flight_data['recTime'])
+        print(f"Flight data loaded from {self.flight_data_path}")
+
+    def compute_flight_delays(self):
+        """
+        Compute delays for flights based on actual and scheduled arrival times.
+        """
+        if self.flight_data is None:
+            raise ValueError("Flight data not loaded.")
+
+        self.flight_data['delay_minutes'] = (
+            (pd.to_datetime(self.flight_data['actualArrival']) - pd.to_datetime(self.flight_data['scheduledArrival']))
+            .dt.total_seconds() / 60
+        )
+        print("Flight delays computed successfully.")
+
+    def summarize_airline_performance(self):
+        """
+        Summarize airline performance by computing the average delay and flight counts.
+        """
+        if self.flight_data is None:
+            raise ValueError("Flight data not loaded.")
+
+        airline_summary = self.flight_data.groupby('airline').agg({
+            'flightId': 'count',
+            'delay_minutes': 'mean'
+        }).rename(columns={'flightId': 'total_flights', 'delay_minutes': 'avg_delay'}).reset_index()
+        print("Airline performance summary created.")
+        return airline_summary
+
+    def save_summary(self, output_path):
+        """
+        Save airline performance summary to a CSV file.
+
+        Args:
+            output_path (str): Path to save the summary.
+        """
+        summary = self.summarize_airline_performance()
+        summary.to_csv(output_path, index=False)
+        print(f"Summary saved to {output_path}")
+
+
+if __name__ == "__main__":
+    processor = AirlineProcessor("/Users/hoo/Desktop/UMICH/FAA/data/flights_data.csv")
+    processor.load_data()
+    processor.compute_flight_delays()
+    processor.save_summary("/Users/hoo/Desktop/UMICH/FAA/output/airline_performance.csv")
