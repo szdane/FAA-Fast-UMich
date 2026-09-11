@@ -6,7 +6,7 @@
 case:
   date: "2025-04-03"          # YYYY-MM-DD (UTC)
   start_time: "04:00"         # UTC, inclusive
-  end_time: "05:00"           # UTC, inclusive
+  end_time: "04:00"           # UTC, inclusive (single frame for quick test)
   step_minutes: 5             # N0Q archive cadence is 5 min
 
 # ---------------------------------------------------------------------
@@ -47,9 +47,9 @@ analysis:
   dbz_threshold: 35.0         # predictor 1: % of N0Q pixels in cell >= this dBZ
   # predictor 2: dz = altitude - echo top (ft), evaluated at EVERY altitude
   # below (one WAF/mask/CSV set per level, tagged FLxxx in filenames).
-  altitude_min_ft: 11000      # manually set altitude limits
-  altitude_max_ft: 40000
-  altitude_step_ft: 2000
+  altitude_min_ft: 30000      # manually set altitude limits
+  altitude_max_ft: 35000
+  altitude_step_ft: 5000
   # altitudes_ft: [30000, 35000, 39000]   # optional explicit list; overrides
                                           # the min/max/step range if given
   echo_top_stat: p90          # per-cell echo top statistic: p90 (CWAM2) or max
@@ -77,4 +77,4 @@ sources:
 # ---------------------------------------------------------------------
 paths:
   data_dir: "./data"          # raw downloads (n0q/, echotop/)
-  output_dir: "/Users/anomi/Documents/LATTICE/FAST/Codes/wx_codes/cwam_wx_pipeline/35dBZ_output"      # all products
+  output_dir: "./output"      # all products
