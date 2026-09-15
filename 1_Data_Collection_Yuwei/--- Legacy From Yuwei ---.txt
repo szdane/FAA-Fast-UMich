@@ -1,0 +1,34 @@
+----- AIRCRAFT TRAJECTORY -----
+Yuwei's code is on GitHub at: https://github.com/YuweiHu17/FAADATA
+README.md describes the purpose of each Python file.
+run.ipynb contains example usage for each Python file.
+This GitHub repo was originally created by Yuwei for a previous project, so many of the .py files are not needed here. Only the first two .py files mentioned in run.ipynb are important.
+
+Steps to obtain historic trajectory data:
+
+Step 1. Download historic trajectory data from BTS (does not include departure/arrival airport info)
+	https://www.bts.gov/ - Topics and Geography - Airlines, Airports and Aviation - Quick Links - Aviation Databases (Transtats) - Air Carrier Statistics (Form 41 Traffic) - U.S. Carriers - T-100 Domestic Market (U.S. Carriers)
+	https://transtats.bts.gov/Fields.asp?gnoyr_VQ=FIM
+	(Downloaded file name example: data/IFF_ZOB_20231222_050004_86382_LADDfiltered.csv)
+
+Step 2. Download departure/arrival airport info from NASA Sherlock
+	https://sherlock.opendata.arc.nasa.gov/sherlock_open/ - Create an account here (follow online guide.pdf) or log in.
+	If login fails, try resetting your password at: https://guest.nasa.gov/ (This method successfully recovered an account on 2025.9.8)
+
+Step 3. process_airspace.py - Process NASA Sherlock data and generate the initial filtered_rows.csv (without departure/arrival airport info)
+	See the first block of run.ipynb for details.
+
+Step 4. process_airline.py - Retrieve departure/arrival airport info from BTS data and merge it into filtered_rows.csv
+	See the second block of run.ipynb for details.
+
+Step 5. Obtain the final filtered rows :)
+
+
+----- WEATHER DATA -----
+(Need to confirm with Yuwei again in a meeting)
+Scripts are located in the Weather Data Processing folder.
+weather.ipynb - Used to download weather radar images.
+weather_grid_analysis_20231222.ipynb - Used to analyze radar images and extract specific information, producing our weather severity classification CSV.
+region_methods_all_times.ipynb - This is likely used by Serra for optimization to avoid regions with multiple optimal points.
+
+

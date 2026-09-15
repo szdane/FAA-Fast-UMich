@@ -1,0 +1,723 @@
+# ============================================================
+# Pre-TRACON transit time analysis configuration
+# All waypoints are given as [lat, lon].
+#
+# Base settings below apply to every run. Optional [[scenarios]]
+# blocks at the bottom each override a subset of settings; the
+# script runs ALL scenarios in one pass (IFF files are read once
+# per day, shared across scenarios). If no [[scenarios]] blocks
+# are present, the base settings run as a single scenario.
+# ============================================================
+name = "DTW north flow"
+
+[paths]
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZOB_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZOB_figures/north_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZOB/north_flow"
+
+[region]
+# Center of the pre-TRACON circle (usually the arrival airport)
+center_lat = 42.2122
+center_lon = -83.3540
+radius_km = 300.0
+# A trajectory is "full" if it starts within this distance of the outer
+# circle AND ends within this distance of the TRACON boundary.
+boundary_tolerance_km = 10.0
+# Ring order of the TRACON boundary (names must exist in [region.star_fixes])
+ordered_fixes = ["CUUGR", "KLYNK", "VCTRZ", "LECTR", "HTROD", "KKISS", "LAYKS"]
+
+[region.star_fixes]
+CUUGR = [42.3643, -83.0975]
+KLYNK = [41.8793, -82.9888]
+VCTRZ = [41.9878, -84.0670]
+LECTR = [41.9183, -84.0217]
+HTROD = [42.0278, -83.3442]
+KKISS = [42.5443, -83.7620]
+LAYKS = [42.8532, -83.5498]
+
+[rd_filters]
+# Keep flights whose Dest (col 26) is any of these
+dest_airports = ["KDTW"]
+# Keep ONLY flights whose Airline (col 21) starts with any of these
+# prefixes. Use [] to keep all airlines.
+include_airline_prefixes = []
+# Drop flights whose Airline starts with any of these prefixes
+exclude_airline_prefixes = ["GA."]
+# Keep flights whose landing runway (col 28) starts with any of these
+# prefixes. Use [] to disable the runway filter entirely.
+landing_runway_prefixes = ["21", "22"]
+# Drop flights whose landing runway is unknown ("?", "NONE", or empty),
+# regardless of the prefix filter above.
+exclude_unknown_runway = true
+
+[processing]
+chunksize = 500000
+
+# ============================================================
+# SCENARIOS - each block overrides base settings.
+# Allowed keys: name, data_dir, output_dir, csv_output_dir,
+# center_lat, center_lon, ordered_fixes, star_fixes, dest_airports,
+# include_airline_prefixes, exclude_airline_prefixes,
+# landing_runway_prefixes, exclude_unknown_runway
+#
+# Notes:
+# - If a scenario provides star_fixes, it REPLACES the base set entirely
+#   (define it as [scenarios.star_fixes] INSIDE the scenario block, and
+#   provide a matching ordered_fixes list).
+# - Scenarios sharing the same data_dir and region run in one shared
+#   data pass; a different data_dir or region gets its own pass.
+# ============================================================
+
+
+[[scenarios]]
+name = "ORD"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD", "KMDW"]
+landing_runway_prefixes = []
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+exclude_airline_prefixes = ["GA."]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "ORD West Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/west_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/west_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["27", "28"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+exclude_airline_prefixes = ["GA."]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "ORD East Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/east_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/east_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["09", "10"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+exclude_airline_prefixes = ["GA."]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "ORD North Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/north_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/north_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["04"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+exclude_airline_prefixes = ["GA."]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "ORD South Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/south_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/south_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["22"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+exclude_airline_prefixes = ["GA."]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "United Transit Time"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/UAL"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/UAL"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = []
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["UAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "United Transit Time - West Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/UAL/west_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/UAL/west_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["27", "28"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["UAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "United Transit Time - East Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/UAL/east_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/UAL/east_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["09", "10"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["UAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "United Transit Time - North Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/UAL/north_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/UAL/north_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["04"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["UAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "United Transit Time - South Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/UAL/south_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/UAL/south_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["22"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["UAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+
+WYNDE = [42.4558, -87.1102]
+
+WATSN = [41.2834, -86.0353]
+
+VEECK = [41.1253, -86.6192]
+
+TRTLL = [41.3706, -88.6116]
+
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Skywest Transit Time"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/SKW"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/SKW"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = []
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["SKW"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Skywest Transit Time - West Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/SKW/west_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/SKW/west_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["27", "28"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["SKW"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Skywest Transit Time - East Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/SKW/east_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/SKW/east_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["09", "10"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["SKW"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Skywest Transit Time - North Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/SKW/north_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/SKW/north_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["04"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["SKW"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Skywest Transit Time - South Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/SKW/south_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/SKW/south_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["22"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["SKW"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+
+[[scenarios]]
+name = "American Transit Time"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AAL"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AAL"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = []
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "American Transit Time - West Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AAL/west_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AAL/west_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["27", "28"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "American Transit Time - East Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AAL/east_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AAL/east_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["09", "10"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "American Transit Time - North Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AAL/north_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AAL/north_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["04"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "American Transit Time - South Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AAL/south_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AAL/south_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["22"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AAL"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+
+[[scenarios]]
+name = "Air Wisconsin Transit Time"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AWI"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AWI"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = []
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AWI"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Air Wisconsin Transit Time - West Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AWI/west_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AWI/west_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["27", "28"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AWI"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Air Wisconsin Transit Time - East Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AWI/east_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AWI/east_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["09", "10"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AWI"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Air Wisconsin Transit Time - North Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AWI/north_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AWI/north_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["04"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AWI"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Air Wisconsin Transit Time - South Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/AWI/south_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/AWI/south_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["22"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["AWI"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+
+[[scenarios]]
+name = "Envoy Transit Time"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/ENY"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/ENY"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = []
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["ENY"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Envoy Transit Time - West Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/ENY/west_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/ENY/west_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["27", "28"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["ENY"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Envoy Transit Time - East Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/ENY/east_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/ENY/east_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["09", "10"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["ENY"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Envoy Transit Time - North Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/ENY/north_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/ENY/north_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["04"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["ENY"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]
+
+[[scenarios]]
+name = "Envoy Transit Time - South Flow"
+data_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/SHERLOCK_data/2023_ARTCC_datasets/IFF_RD_ZAU_2023_12_01_2024_01_01"
+output_dir = "/Users/anomi/Documents/LATTICE/FAST/Figures/pre-TRACON_transit_time/ZAU_figures/ORD/ENY/south_flow"
+csv_output_dir = "/Users/anomi/Documents/LATTICE/FAST/CSV/pre-TRACON_transit_times/ZAU/ORD/ENY/south_flow"
+center_lat = 41.9775 
+center_lon = -87.9082
+dest_airports = ["KORD"]
+landing_runway_prefixes = ["22"]
+ordered_fixes = ["JVL", "WYNDE", "WATSN", "VEECK", "TRTLL", "SHAIN"]
+include_airline_prefixes = ["ENY"]
+
+[scenarios.star_fixes]
+JVL = [42.5580, -89.1053]
+WYNDE = [42.4558, -87.1102]
+WATSN = [41.2834, -86.0353]
+VEECK = [41.1253, -86.6192]
+TRTLL = [41.3706, -88.6116]
+SHAIN = [41.6436, -89.1358]

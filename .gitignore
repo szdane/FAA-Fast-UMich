@@ -1,2 +1,46 @@
-FAST MILP/filtered_rows.csv
-Kuang's Sketch Codes/data/*.csv    
+# Large data files
+*.csv
+*.tif
+*.tiff
+*.grib2
+*.grib
+*.npz
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.sqlite
+*.db
+
+# Large documents
+*.pdf
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pptx
+*.ppt
+
+# Binary / compiled
+*.jar
+*.class
+*.dylib
+*.so
+*.dll
+*.exe
+
+# macOS app bundles and zip artifacts
+*.app/
+__MACOSX/
+*.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# Editor
+*.swp
