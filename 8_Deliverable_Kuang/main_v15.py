@@ -10,7 +10,7 @@ from Functions.utilities import (
     print_chosen_star_fixes_xyz, print_exit_times, print_flight_results,
     save_trajectory_csv_xyz, print_waypoint_table_xyz,
     print_separation_check_xyz, _cluster_flights_by_time, _find_cluster_for_query,
-    select_cluster
+    select_cluster, write_simulation_summary, record_terminal_output
 )
 import os
 # Clear terminal
@@ -120,6 +120,8 @@ env.setParam("OutputFlag", 0)   # disable all output from Gurobi
 env.start()
 
 m = Model("mip1", env=env)
+m.Params.LogToConsole = 0
+m.Params.OutputFlag = 1
 #print("Model created...")
 
 # 2.2. Create decision variables
@@ -305,10 +307,16 @@ for k in range(N_steps):
 
 # 2.5. Initiate optimization
 import time as _time
+solver_log_lines = []
+def capture_solver_log(model, where):
+    if where == GRB.Callback.MESSAGE:
+        solver_log_lines.append(model.cbGet(GRB.Callback.MSG_STRING))
+
 print("Starting optimization...")
 _t0 = _time.perf_counter()
-m.optimize()
+m.optimize(capture_solver_log)
 _opt_elapsed = _time.perf_counter() - _t0
+solver_log = "".join(solver_log_lines)
 print(f"Optimization completed in {_opt_elapsed:.1f} s.\n")
 
 _STATUS_NAMES = {1:"LOADED",2:"OPTIMAL",3:"INFEASIBLE",4:"INF_OR_UNBD",5:"UNBOUNDED",
@@ -323,10 +331,6 @@ print(f'Optimization success! Obj= {m.ObjVal:.4g}')
 print(" === OUTPUT RESULTS ===")
 if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optimal solution.
 
-    # 3.1. Print objective value and chosen STAR fixe
-    print_flight_results(flights, fix_sel, fix_names, star_fixes_xyz, f_z, N_steps,
-                          k_arrive, GRID_EPOCH_UTC, TIMESTEP_DT)
-
     # 3.2. Extract and save optimized trajectories
     # Primary columns: f{i}_x/y/z (metres). lat/lon/alt_ft also written for human readability.
     import shutil
@@ -334,6 +338,37 @@ if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optim
     if output_dir.exists():
         shutil.rmtree(output_dir)   # wipe previous run's outputs
     output_dir.mkdir(parents=True)
+
+    report_path = write_simulation_summary(output_dir, {
+        "Script": Path(__file__).name,
+        "Report time (UTC)": pd.Timestamp.now(tz="UTC").isoformat(),
+        "Input files": f"{csv_path}; {script_dir / 'Input' / 'star_fixes.csv'}",
+        "Cluster query (UTC) / window (min)": f"{QUERY_TIME} / {CLUSTER_WINDOW_MIN}",
+        "Selected entry window (UTC)": f"{_t_start} to {_t_end}",
+        "Flight subset": FLIGHTS_SUBSET,
+        "Flight count": N_flights,
+        "Grid epoch / end (UTC)": f"{GRID_EPOCH_UTC} / {_epoch_end_utc}",
+        "Time step (s) / grid points / extra horizon steps": f"{TIMESTEP_DT} / {N_steps} / {N_STEPS_HORIZON}",
+        "Projection origin (latitude, longitude)": f"{DTW_LAT0}, {DTW_LON0}",
+        "Horizontal / vertical separation (m)": f"{SEP_HOR_M} / {SEP_VERT_M}",
+        "Separation policy": "Waypoint checks only; v15 separation bypass is not linked to arrival. Not a safety guarantee.",
+        "Maximum per-axis horizontal / vertical displacement (m/step)": f"{VMAX_XY} / {VMAX_Z}",
+        "Minimum horizontal displacement (m/step)": VMIN_2D,
+        "Heading-change / speed-change limits (m/step)": f"{MAX_ACCEL_XY} / {DELTA_SPEED_MAX}",
+        "Flight-path-angle tangent limit": GAMMA_MAX_TAN,
+        "Big-M": BIG_M,
+        "Objective weights": f"time={w_time}, distance={w_dist}, smoothness={w_smooth}, vertical={w_z}, acceleration={w_accel}, descent={w_descent}, final_altitude={w_alt_final}",
+        "Distance / fuel model": "Exact quadratic distance; no fuel in the routing objective.",
+        "Arrival interval": "Excluded from the v15 time penalty.",
+        "Solver time limit (s) / target gap": f"{m.Params.TimeLimit} / {m.Params.MIPGap:.2%}",
+        "Solver threads / MIPFocus": f"{m.Params.Threads} / {m.Params.MIPFocus}",
+        "Solver status / runtime (s)": f"{_STATUS_NAMES.get(m.status, m.status)} / {m.Runtime:.3f}",
+        "Objective / best bound / achieved gap": f"{m.ObjVal:.6f} / {m.ObjBound:.6f} / {m.MIPGap:.2%}",
+        "Downstream analysis": "B737 for all flights; independent fuel-optimizing NLP retimes routes. Its results are not the routing schedule or a separation guarantee.",
+    }, _flights_display)
+    with record_terminal_output(report_path, "Flight Results"):
+        print_flight_results(flights, fix_sel, fix_names, star_fixes_xyz, f_z, N_steps,
+                              k_arrive, GRID_EPOCH_UTC, TIMESTEP_DT)
 
     df_wide = save_trajectory_csv_xyz(
         f_x, f_y, f_z, N_flights, N_steps, GRID_EPOCH_UTC, TIMESTEP_DT,
@@ -353,5 +388,13 @@ if m.status == GRB.OPTIMAL: # Only extract results if Gurobi found a valid optim
         {"acId": flights.iloc[i]['acId'], "acType": "B737"}
         for i in range(N_flights)
     ]
-    results = analyze_optimized_trajectory_xyz(df_wide, aircraft_list, DTW_LAT0, DTW_LON0)
+    try:
+        with record_terminal_output(report_path, "Downstream NLP Analysis"):
+            results = analyze_optimized_trajectory_xyz(df_wide, aircraft_list, DTW_LAT0, DTW_LON0)
+    finally:
+        with report_path.open("a", encoding="utf-8") as report:
+            report.write("\n## Appendix: MILP Solver Log\n\n```text\n")
+            report.write(solver_log)
+            report.write("\n```\n")
     print("Analysis and visualization complete!")
+    print(f"Simulation summary saved to {report_path}")

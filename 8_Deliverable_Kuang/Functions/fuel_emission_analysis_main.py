@@ -50,7 +50,7 @@ from Functions.fuel_emission_analysis_trajectory import Cruise_with_Multi_Waypoi
 from shapely.geometry import Polygon, Point
 import matplotlib.pyplot as plt
 
-def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
+def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None, output_dir=None):
     """
     Analyze and visualize optimized trajectories from MILP optimization.
     
@@ -58,6 +58,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
         df_wide (pd.DataFrame): Optimized trajectory data with columns ['t', 'f1_lat', 'f1_lon', 'f1_alt_ft', ...]
         aircraft_list (list): List of dicts with 'acId' and 'acType'. If None, uses default.
         final_times (dict): Dictionary mapping acId to final time in seconds from MILP is_end variable. Optional.
+        output_dir (Path): Optional output location; defaults to the existing Output folder.
     
     Returns:
         dict: Dictionary containing historic and optimized trajectory data
@@ -66,6 +67,8 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
     
     # Get the directory where main.py is located
     script_dir = Path(__file__).parent
+    analysis_output_dir = Path(output_dir) if output_dir is not None else script_dir.parent / "Output"
+    analysis_output_dir.mkdir(parents=True, exist_ok=True)
 
     ############
     # 1. Input #
@@ -429,7 +432,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
         aircraft_list, dic_hist_flights_preTracon, dic_opt_flights_preTracon,
         dic_waypoints_cleaned,
         star_fixes_csv_path  = script_dir.parent / "Input" / "star_fixes.csv",
-        output_csv_path      = script_dir.parent / "Output" / "altitude_at_arrival.csv",
+        output_csv_path      = analysis_output_dir / "altitude_at_arrival.csv",
     )
 
     # Total time & fuel summary
@@ -645,7 +648,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
 
 
     # Save all figures to Output/plots/
-    plots_dir = script_dir.parent / "Output" / "plots"
+    plots_dir = analysis_output_dir / "plots"
     fuel_dir  = plots_dir / "fuel"
     nox_dir   = plots_dir / "nox"
     plots_dir.mkdir(parents=True, exist_ok=True)
@@ -690,7 +693,7 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None):
 
 def analyze_optimized_trajectory_xyz(df_wide, aircraft_list=None,
                                      lat0=42.2125, lon0=-83.3534,
-                                     final_times=None):
+                                     final_times=None, output_dir=None):
     """XYZ variant of analyze_optimized_trajectory.
 
     Reads f{i}_x (east m), f{i}_y (north m), f{i}_z (altitude m) columns from
@@ -703,6 +706,7 @@ def analyze_optimized_trajectory_xyz(df_wide, aircraft_list=None,
         lat0 (float): Projection origin latitude  (default DTW = 42.2125).
         lon0 (float): Projection origin longitude (default DTW = -83.3534).
         final_times (dict): Same as analyze_optimized_trajectory.
+        output_dir (Path): Optional separate output location for the retimed NLP results.
 
     Returns:
         dict: Same structure as analyze_optimized_trajectory.
@@ -725,7 +729,7 @@ def analyze_optimized_trajectory_xyz(df_wide, aircraft_list=None,
         df_converted[f"f{i}_alt_ft"] = z / 0.3048
         i += 1
 
-    return analyze_optimized_trajectory(df_converted, aircraft_list, final_times)
+    return analyze_optimized_trajectory(df_converted, aircraft_list, final_times, output_dir=output_dir)
 
 
 if __name__ == "__main__":

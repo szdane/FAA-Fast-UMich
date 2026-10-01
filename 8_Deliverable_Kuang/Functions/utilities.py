@@ -1,6 +1,41 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from contextlib import contextmanager, redirect_stdout
+import sys
+
+
+def write_simulation_summary(output_dir, conditions, selected_flights):
+    report_path = Path(output_dir) / "simulation_summary.md"
+    with report_path.open("w", encoding="utf-8") as report:
+        report.write("# Simulation Summary\n\n## Conditions\n\n")
+        for name, value in conditions.items():
+            report.write(f"- **{name}:** {value}\n")
+        report.write("\n## Selected Flights\n\n```text\n")
+        report.write(selected_flights.to_string(index=False))
+        report.write("\n```\n\n## Terminal Results\n")
+    return report_path
+
+
+@contextmanager
+def record_terminal_output(report_path, heading):
+    terminal = sys.stdout
+    with Path(report_path).open("a", encoding="utf-8") as report:
+        class ReportOutput:
+            def write(self, text):
+                terminal.write(text)
+                return report.write(text)
+
+            def flush(self):
+                terminal.flush()
+                report.flush()
+
+        report.write(f"\n### {heading}\n\n```text\n")
+        try:
+            with redirect_stdout(ReportOutput()):
+                yield
+        finally:
+            report.write("\n```\n")
 
 
 def compute_time_grid(flights, n_steps_budget):
