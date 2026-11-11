@@ -1,8 +1,39 @@
+import argparse
+
+
+def build_arg_parser():
+    parser = argparse.ArgumentParser(description="Debug MILP with CWAM weather exclusion.")
+    parser.add_argument("--shape", choices=("circle", "square", "octagon"), default="octagon",
+                        help="Aircraft waypoint/end-cap clearance shape (default: octagon)")
+    parser.add_argument("--horizon-minutes", type=float, default=800,
+                        help="Minimum optimization horizon; extended to cover flight exits (default: 800)")
+    parser.add_argument("--weather-start", type=str,
+                        help="ISO UTC timestamp to replay weather at t=0; default: earliest flight entry")
+    parser.add_argument("--time-limit", type=float, default=None, help="Gurobi solve limit in seconds")
+    parser.add_argument("--plot", action="store_true", help="Save trajectory PNG and weather animation GIF")
+    parser.add_argument("--output-dir", type=str, default=None, help="Directory for solution and plots")
+    return parser
+
+
+args = build_arg_parser().parse_args()
+if args.horizon_minutes <= 0 or (args.time_limit is not None and args.time_limit <= 0):
+    raise SystemExit("Horizon and time limit must be positive")
+
 from gurobipy import *
 import numpy as np
 import pandas as pd
 from main_ver4_gurobi_debug import *
 import math
+import sys
+from pathlib import Path
+from bisect import bisect_right
+from datetime import timedelta, timezone
+
+# The numbered weather directory is not a regular Python package.
+_SCRIPT_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = (Path(args.output_dir).expanduser().resolve() if args.output_dir else
+              (_SCRIPT_DIR / "../../2.3_Outputs_and_Results/weather_debug").resolve())
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "5_Weather"))
 
 DT = 60.0*5
 FT2NM             = 1 / 6076.12
@@ -18,14 +49,303 @@ GLIDE_RATIO = 2
 # SEP_VERT_FT       = 100.0 + DT*V_MAX_Z
 SEP_HOR_NM = 500.0 * FT2NM
 SEP_VERT_FT = 100.0
+# Horizontal clearance shape at the waypoints (capsule end-caps and the
+# just-entered point check): "circle" (Euclidean) or "square" (|dx|,|dy| box) or "octagon".
+WAYPOINT_SHAPE = args.shape
 
 CT = 1
 CF = 1.5
 
 WEATHER_EPS_DEG = 1e-4
-EDGE_ALPHAS = [0.25, 0.5, 0.75]
-M_LAT = 10.0
-M_LON = 10.0
+WEATHER_STEP_MINUTES = 5
+WEATHER_AIRPORT = "DTW"
+# A square infeasible at ANY evaluated flight level is excluded at all heights.
+# Adjust CWAM grid/probability settings here; dates follow the flight data (UTC).
+CWAM_OPTIONS = {
+    "radius_km": 300,
+    "cell_size_km": 16,
+    "mask_probability_threshold": 0.6,
+    "missing_data_policy": "infeasible",
+}
+
+
+# CWAM loading and weather exclusion live here with the MILP model.
+def utc_naive(value):
+    """Naive flight timestamps are assumed UTC, as in CWAM."""
+    if value.tzinfo is not None:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
+
+
+def load_weather_frames(start, end, *, apt_code="DTW", step_minutes=5,
+                        cwam_options=None, runner=None, return_tracon=False):
+    """Call CWAM across UTC dates; return (time, blocked rectangles) frames.
+
+    Rectangles are (min_lat, max_lat, min_lon, max_lon). A cell blocked at
+    ANY evaluated flight level is blocked horizontally at every altitude.
+    Missing snapshots/levels raise rather than silently permitting flight.
+    With return_tracon=True, also return the CWAM TRACON exterior (lon, lat).
+    """
+    if runner is None:
+        from cwam_weather import run_cwam
+        runner = run_cwam
+    if not isinstance(step_minutes, int) or not 0 < step_minutes <= 60 or 60 % step_minutes:
+        raise ValueError("step_minutes must be a positive integer divisor of 60")
+    start, end = utc_naive(start), utc_naive(end)
+    if end < start:
+        raise ValueError("Weather end precedes start")
+    step = timedelta(minutes=step_minutes)
+    first = start.replace(minute=start.minute // step_minutes * step_minutes,
+                          second=0, microsecond=0)
+    stamps = []
+    stamp = first
+    while stamp <= end:
+        stamps.append(stamp)
+        stamp += step
+
+    options = dict(cwam_options or {})
+    frames = []
+    tracon_polygon = None
+    for day in sorted({stamp.date() for stamp in stamps}):
+        daily = [stamp for stamp in stamps if stamp.date() == day]
+        result = runner(date=day.isoformat(), start_time=daily[0].strftime("%H:%M"),
+                        end_time=daily[-1].strftime("%H:%M"), apt_code=apt_code,
+                        step_minutes=step_minutes, return_data=True, **options)
+        if return_tracon and tracon_polygon is None:
+            # Use the same STAR-hull boundary that defines CWAM's weather ROI.
+            tracon_polygon = tuple(result["roi"]["tracon"].exterior.coords)
+        levels = result["flight_levels"]
+        if not levels:
+            raise ValueError("CWAM returned no flight levels")
+        for stamp in daily:
+            blocked = set()
+            for level in levels:
+                df = result["data"].get((stamp, level))
+                if df is None or df.empty:
+                    raise ValueError(f"Missing CWAM weather for {stamp} UTC / {level}")
+                columns = ["infeasible", "min_lat", "max_lat", "min_lon", "max_lon"]
+                for flag, *bounds in df[columns].itertuples(index=False, name=None):
+                    # run_cwam returns boolean flags in memory, not CSV strings.
+                    if flag not in (True, False):
+                        raise ValueError(f"Invalid CWAM infeasible flag: {flag!r}")
+                    if not flag:
+                        continue
+                    bounds = tuple(float(v) for v in bounds)
+                    lo_lat, hi_lat, lo_lon, hi_lon = bounds
+                    if (not all(math.isfinite(v) for v in bounds)
+                            or not -90 <= lo_lat < hi_lat <= 90
+                            or not -180 <= lo_lon < hi_lon <= 180):
+                        raise ValueError(f"Invalid CWAM rectangle: {bounds}")
+                    blocked.add(bounds)
+            frames.append((stamp, tuple(sorted(blocked))))
+    return (frames, tracon_polygon) if return_tracon else frames
+
+
+def add_weather_constraints(model, x, y, entry_indices, times, reference_time,
+                            frames, *, step_minutes=5, epsilon=1e-4):
+    """Keep each waypoint and each segment portion outside blocked squares.
+
+    Weather is held constant until the next snapshot. Segments crossing a
+    snapshot boundary are split by linear interpolation. Both ends of each
+    portion must lie on the SAME exterior side of each rectangle. This is
+    conservative near corners but prevents between-waypoint crossings.
+    Gurobi indicators avoid arbitrary geographic big-M constants.
+    """
+    if not frames or epsilon <= 0:
+        raise ValueError("Weather frames and a positive clearance are required")
+    reference_time = utc_naive(reference_time)
+    stamps = [stamp for stamp, _ in frames]
+    step = timedelta(minutes=step_minutes)
+    if any(b - a != step for a, b in zip(stamps, stamps[1:])):
+        raise ValueError("CWAM weather frames must be consecutive")
+
+    def frame_index(stamp):
+        idx = bisect_right(stamps, stamp) - 1
+        if idx < 0 or stamp >= stamps[-1] + step:
+            raise ValueError(f"Weather does not cover {stamp} UTC")
+        return idx
+
+    count = 0
+
+    def outside(points, rectangles, tag):
+        nonlocal count
+        for r, (min_lat, max_lat, min_lon, max_lon) in enumerate(rectangles):
+            side = model.addVars(4, vtype="B", name=f"weather_side_{tag}_{r}")
+            model.addConstr(side.sum() >= 1, name=f"weather_outside_{tag}_{r}")
+            for p, (lat, lon) in enumerate(points):
+                for s, condition in enumerate((lat <= min_lat - epsilon,
+                                                lat >= max_lat + epsilon,
+                                                lon <= min_lon - epsilon,
+                                                lon >= max_lon + epsilon)):
+                    model.addGenConstrIndicator(side[s], True, condition,
+                                                name=f"weather_bound_{tag}_{r}_{p}_{s}")
+            count += 1
+
+    for i, entry in enumerate(entry_indices):
+        for k in range(entry, len(times)):
+            stamp = reference_time + timedelta(seconds=float(times[k]))
+            idx = frame_index(stamp)
+            outside([(x[i][k], y[i][k])], frames[idx][1], f"point_{i}_{k}")
+            if k == len(times) - 1:
+                continue
+            finish = reference_time + timedelta(seconds=float(times[k + 1]))
+            frame_index(finish)
+            duration = (finish - stamp).total_seconds()
+            if duration <= 0:
+                raise ValueError("MILP times must increase strictly")
+            cursor = stamp
+            part = 0
+            while cursor < finish:
+                idx = frame_index(cursor)
+                stop = min(finish, stamps[idx] + step)
+                points = []
+                for instant in (cursor, stop):
+                    alpha = (instant - stamp).total_seconds() / duration
+                    points.append(((1 - alpha) * x[i][k] + alpha * x[i][k + 1],
+                                   (1 - alpha) * y[i][k] + alpha * y[i][k + 1]))
+                outside(points, frames[idx][1], f"segment_{i}_{k}_{part}")
+                cursor = stop
+                part += 1
+    return count
+
+
+def plot_weather_results(solution, flights, entries, frames, reference, output_dir,
+                         shape, clearance, *, tracon_polygon=None):
+    """Save an overview and an animation using the actual constrained frames."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation, PillowWriter
+    from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Rectangle, Patch, Polygon
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    times = solution["t"].to_numpy()
+    tracks = [(solution[f"f{i+1}_lon"].to_numpy(),
+               solution[f"f{i+1}_lat"].to_numpy(),
+               solution[f"f{i+1}_alt_ft"].to_numpy()) for i in range(len(flights))]
+    colors = [plt.get_cmap("tab10")(i % 10) for i in range(len(flights))]
+    all_rects = sorted({rect for _, rectangles in frames for rect in rectangles})
+    longitude = [v for lon, _, _ in tracks for v in lon]
+    latitude = [v for _, lat, _ in tracks for v in lat]
+    for min_lat, max_lat, min_lon, max_lon in all_rects:
+        longitude.extend([min_lon, max_lon])
+        latitude.extend([min_lat, max_lat])
+    if tracon_polygon is not None:
+        longitude.extend(lon for lon, lat in tracon_polygon)
+        latitude.extend(lat for lon, lat in tracon_polygon)
+    lon_pad = max(0.05, (max(longitude) - min(longitude)) * 0.05)
+    lat_pad = max(0.05, (max(latitude) - min(latitude)) * 0.05)
+
+    def map_axes(ax):
+        if tracon_polygon is not None:
+            ax.add_patch(Polygon(tracon_polygon, closed=True,
+                                 facecolor=(0.12, 0.35, 0.75, 0.07),
+                                 edgecolor="royalblue", linewidth=1.8, zorder=1.5,
+                                 label="TRACON (CWAM STAR hull)"))
+        ax.set_xlim(min(longitude) - lon_pad, max(longitude) + lon_pad)
+        ax.set_ylim(min(latitude) - lat_pad, max(latitude) + lat_pad)
+        ax.set_aspect(1 / math.cos(math.radians(float(np.mean(latitude)))) )
+        ax.set_xlabel("Longitude (degrees)")
+        ax.set_ylabel("Latitude (degrees)")
+        ax.grid(alpha=0.2)
+
+    def weather(ax, rectangles):
+        patches = [Rectangle((lo_lon, lo_lat), hi_lon - lo_lon, hi_lat - lo_lat)
+                   for lo_lat, hi_lat, lo_lon, hi_lon in rectangles]
+        ax.add_collection(PatchCollection(patches, facecolor="tomato", edgecolor="firebrick",
+                                          alpha=0.22, linewidth=0.5))
+
+    fig, (ax, altitude_ax) = plt.subplots(1, 2, figsize=(14, 6), constrained_layout=True)
+    map_axes(ax)
+    weather(ax, all_rects)
+    for i, ((lon, lat, alt), color) in enumerate(zip(tracks, colors)):
+        entry = entries[i]
+        ax.plot(lon[entry:], lat[entry:], ".-", color=color, label=str(flights[i][0]))
+        ax.scatter(lon[entry], lat[entry], marker="^", color=color, s=70)
+        ax.scatter(lon[-1], lat[-1], marker="*", color=color, s=100)
+        altitude_ax.plot(times[entry:] / 60, alt[entry:], ".-", color=color,
+                         label=str(flights[i][0]))
+    ax.set_title("Routes + union of blocked cells over all times\n"
+                 "Red cells are not necessarily blocked simultaneously")
+    ax.legend(fontsize=8)
+    altitude_ax.set(xlabel="Elapsed time (minutes)", ylabel="Altitude (ft)",
+                    title=f"Aircraft altitude — {shape} waypoint/end-cap separation")
+    altitude_ax.grid(alpha=0.2)
+    altitude_ax.legend(fontsize=8)
+    fig.savefig(output_dir / "trajectories.png", dpi=160)
+    plt.close(fig)
+
+    stamps = [stamp for stamp, _ in frames]
+    # End each displayed track on entry to the TRACON (boundary included).
+    # Fall back to its selected terminal fix when no polygon is supplied or
+    # reference-table rounding places that fix just outside the CWAM hull.
+    tracon_vertices = None
+    if tracon_polygon is not None:
+        from matplotlib.path import Path as PolygonPath
+        tracon_vertices = np.asarray(tracon_polygon, dtype=float)
+        tracon_region = PolygonPath(tracon_vertices)
+    arrival_times = []
+    for i, (lon, lat, _) in enumerate(tracks):
+        entry = entries[i]
+        if tracon_vertices is not None:
+            points = np.column_stack((lon, lat))
+            reached = tracon_region.contains_points(points)
+            # Include points on the boundary, independent of vertex ordering.
+            for a, b in zip(tracon_vertices, np.roll(tracon_vertices, -1, axis=0)):
+                edge = b - a
+                alpha = np.clip((points - a) @ edge / max(float(edge @ edge), 1e-30), 0, 1)
+                distance_sq = np.sum((points - a - alpha[:, None] * edge) ** 2, axis=1)
+                reached |= distance_sq <= 1e-14
+        else:
+            reached = np.zeros(len(times), dtype=bool)
+        if not reached[entry:].any():
+            reached = (np.isclose(lon, lon[-1], rtol=0, atol=1e-6) &
+                       np.isclose(lat, lat[-1], rtol=0, atol=1e-6))
+        arrival = entry + int(np.flatnonzero(reached[entry:])[0])
+        arrival_times.append(float(times[arrival]))
+    animation_end = max(arrival_times)
+    # Include every weather update and model waypoint, so changes occurring
+    # between model timesteps are visible, up to the last aircraft's arrival.
+    animation_times = sorted({float(t) for t in times if t <= animation_end} |
+                             {(stamp - reference).total_seconds() for stamp in stamps
+                              if reference <= stamp <= reference + timedelta(seconds=animation_end)})
+    fig, ax = plt.subplots(figsize=(8, 7), constrained_layout=True)
+
+    def draw(t):
+        ax.clear()
+        map_axes(ax)
+        stamp = reference + timedelta(seconds=t)
+        idx = bisect_right(stamps, stamp) - 1
+        weather(ax, frames[idx][1])
+        for i, ((lon, lat, _), color) in enumerate(zip(tracks, colors)):
+            if t < times[entries[i]]:
+                continue
+            track_time = min(t, arrival_times[i])
+            mask = (times >= times[entries[i]]) & (times <= track_time)
+            current_lon = np.interp(track_time, times, lon)
+            current_lat = np.interp(track_time, times, lat)
+            ax.plot(np.append(lon[mask], current_lon), np.append(lat[mask], current_lat),
+                    "-", color=color, label=str(flights[i][0]))
+            ax.plot(current_lon, current_lat, "o", color=color)
+            if shape == "square":
+                ax.add_patch(Rectangle((current_lon - clearance, current_lat - clearance),
+                                       2 * clearance, 2 * clearance, fill=False,
+                                       edgecolor=color, linewidth=1))
+        ax.set_title(f"{stamp:%Y-%m-%d %H:%M:%S} UTC | t={t/60:.1f} min\n"
+                     f"{shape} waypoint/end-cap separation; current weather only")
+        handles, labels = ax.get_legend_handles_labels()
+        handles.append(Patch(facecolor="tomato", alpha=0.3))
+        labels.append("Infeasible at any evaluated flight level")
+        ax.legend(handles, labels, fontsize=8)
+
+    animation = FuncAnimation(fig, draw, frames=animation_times, interval=500, repeat=False)
+    animation.save(output_dir / "weather_trajectories.gif", writer=PillowWriter(fps=2), dpi=100)
+    plt.close(fig)
+    print(f"Plots saved to {output_dir / 'trajectories.png'} and "
+          f"{output_dir / 'weather_trajectories.gif'}")
+
 
 # DAL1066, DAL498, EDV5018
 # Format: [start_lat, start_lon, start_alt, entry_time_sec, end_lat, end_lon, end_alt, landing_time_sec]
@@ -58,7 +378,7 @@ k = 0.045      # induced drag factor
 
 try:
     # flights_df = pd.concat ([pd.read_csv("../2.1.1_Input_Data/entry_exit_points.csv")[:1], (pd.read_csv("../2.1.1_Input_Data/entry_exit_points.csv")[2:3])], ignore_index=True)
-    flights_df = pd.read_csv("../2.1.1_Input_Data/entry_exit_points.csv")[:2]
+    flights_df = pd.read_csv(_SCRIPT_DIR / "../2.1.1_Input_Data/entry_exit_points.csv")[:2]
     print(flights_df)
     flights_df = flights_df.sort_values(by='entry_rectime').reset_index(drop=True)
     flights_df = flights_df
@@ -93,36 +413,6 @@ except Exception as e:
     print(f"An error occurred while reading the CSV file: {e}")
     flights = []
 
-WEATHER_STEP_SEC = 300  # 5 minutes
-
-weather_files = [
-    "../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_fake_east/infeasible_regions_t00min.csv", 
-    "../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_fake_east/infeasible_regions_t05min.csv", 
-    "../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_fake_east/infeasible_regions_t10min.csv", 
-    "../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_fake_east/infeasible_regions_t15min.csv", 
-    "../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_fake_east/infeasible_regions_t20min.csv", 
-    "../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_fake_east/infeasible_regions_t25min.csv", 
-    "../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_fake_east/infeasible_regions_t30min.csv", 
-]
-
-# weather_files = ["../2.1.1_Input_Data/infeasible_regions_testing/infeasible_regions_static_single/infeasible_regions_t00min.csv"]
-weather_dfs = []
-for fp in weather_files:
-    try:
-        dfw = pd.read_csv(fp)
-        dfw = dfw[['min_lat', 'max_lat', 'min_lon', 'max_lon']].dropna().reset_index(drop=True)
-        weather_dfs.append(dfw)
-    except FileNotFoundError:
-        print(f"WARNING: missing weather file: {fp}")
-    except Exception as e:
-        print(f"WARNING: could not read {fp}: {e}")
-
-# If nothing loaded, use empty list
-if len(weather_dfs) == 0:
-    print("No weather south loaded; skipping weather constraints.")
-
-
-
 v_avg = []
 for i in range(len(flights)):
     dt = (flights[i][8]-flights[i][4])
@@ -150,20 +440,12 @@ star_fixes ={
 #               'RKCTY': (np.float64(-49605.97832190019), np.float64(52938.81765769922), (13000, 11000)), 'VCTRZ': (np.float64(-58978.255222062704), np.float64(-24728.180763285345), (15000, 12000))}
 
 max_time = max(f[8] for f in flights)
-if max_time > 48000:
-    t0 = 0
-    tN = max_time
-
-else:
-    t0 = 0
-    tN = 48000
-
-print("tN", tN)
-    
-print(f"Actual number of time steps:{((max_time-t0)/DT)+1}")
-N  = int((tN - t0) / DT) + 1
-print(f"Number of time steps: {N}")
-times = np.linspace(t0, tN, N, dtype=int)
+t0 = 0
+# Use exact DT intervals so dynamics, weather timestamps, and exports agree.
+tN = math.ceil(max(max_time, args.horizon_minutes * 60) / DT) * DT
+N = int(tN / DT) + 1
+times = np.arange(N) * DT
+print(f"Horizon: {tN / 60:g} minutes; {N} steps; separation shape: {WAYPOINT_SHAPE}")
 
 # Convert entry times in seconds to discrete time step indices
 entry_indices = [int(f[4] / DT) for f in flights]
@@ -171,6 +453,8 @@ print(f"Entry time indices for flights: {entry_indices}")
 
 m = Model("mip1")
 m.Params.NonConvex = 2
+if args.time_limit is not None:
+    m.Params.TimeLimit = args.time_limit
 
 n = len(flights)
 x = []
@@ -228,75 +512,28 @@ is_end = [[m.addVar(vtype=GRB.BINARY, name=f'is_end_{i}_{k}') for k in range(N)]
 # derivation) - same function signatures, so it's a drop-in swap for the
 # two imports below if ever wanted; both are checked against each other and
 # against a reference formula in test_capsule_geometry.py.
-from capsule_geometry_slope import build_seg_geom_slope, add_capsule_direction_slope
+from capsule_geometry_slope import build_seg_geom_slope, add_capsule_direction_slope, add_waypoint_clearance
 
 
-# if len(weather_dfs) > 0:
-#     last_idx = len(weather_dfs) - 1
+# Generate actual CWAM weather for the complete optimization horizon, including
+# midnight crossings. Missing weather raises before optimization can proceed.
+weather_reference = utc_naive(pd.Timestamp(args.weather_start).to_pydatetime()
+                              if args.weather_start else min_time.to_pydatetime())
+print(f"Weather scenario starts at {weather_reference} UTC")
+weather_frames, tracon_polygon = load_weather_frames(
+    weather_reference,
+    weather_reference + timedelta(seconds=float(times[-1])),
+    apt_code=WEATHER_AIRPORT,
+    step_minutes=WEATHER_STEP_MINUTES,
+    cwam_options=CWAM_OPTIONS,
+    return_tracon=True,
+)
+weather_constraint_count = add_weather_constraints(
+    m, x, y, entry_indices, times, weather_reference, weather_frames,
+    step_minutes=WEATHER_STEP_MINUTES, epsilon=WEATHER_EPS_DEG,
+)
+print(f"Added {weather_constraint_count} weather exclusion groups from CWAM")
 
-#     for i in range(n):
-#         entry_k = entry_indices[i]
-
-#         for k in range(entry_k, N):
-#             t_sec = k * DT
-#             frame_idx = int(t_sec // WEATHER_STEP_SEC)
-#             if frame_idx > last_idx:
-#                 frame_idx = last_idx  # hold the last frame after 30 min for now
-
-#             dfw = weather_dfs[frame_idx]
-#             if dfw.empty:
-#                 continue
-
-#             # One set of "outside rectangle" constraints per rectangle row
-#             for r, row in dfw.iterrows():
-#                 out = m.addVars(4, vtype=GRB.BINARY, name=f"w_out_{i}_{k}_{frame_idx}_{r}")
-#                 m.addConstr(out.sum() >= 1, name=f"w_outside_{i}_{k}_{frame_idx}_{r}")
-
-#                 m.addConstr(x[i][k] <= row['min_lat'] - WEATHER_EPS_DEG + BIG_M * (1 - out[0]),
-#                             name=f"w_left_{i}_{k}_{frame_idx}_{r}")
-#                 m.addConstr(x[i][k] >= row['max_lat'] + WEATHER_EPS_DEG - BIG_M * (1 - out[1]),
-#                             name=f"w_right_{i}_{k}_{frame_idx}_{r}")
-#                 m.addConstr(y[i][k] <= row['min_lon'] - WEATHER_EPS_DEG + BIG_M * (1 - out[2]),
-#                             name=f"w_below_{i}_{k}_{frame_idx}_{r}")
-#                 m.addConstr(y[i][k] >= row['max_lon'] + WEATHER_EPS_DEG - BIG_M * (1 - out[3]),
-#                             name=f"w_above_{i}_{k}_{frame_idx}_{r}")
-#         # sample the trajectory in between two waypoints to have a better discretization to 
-#         # stay out of weather regions in between two nodes
-#         for k in range(entry_k, N - 1):
-#             for s, alpha in enumerate(EDGE_ALPHAS):
-#                 t_sec_alpha = (k + alpha) * DT
-#                 frame_idx = int(t_sec_alpha // WEATHER_STEP_SEC)
-#                 if frame_idx > last_idx:
-#                     frame_idx = last_idx
-
-#                 dfw = weather_dfs[frame_idx]
-#                 if dfw.empty:
-#                     continue
-
-#                 x_alpha = (1 - alpha) * x[i][k] + alpha * x[i][k + 1]
-#                 y_alpha = (1 - alpha) * y[i][k] + alpha * y[i][k + 1]
-
-#                 for r, row in dfw.iterrows():
-#                     out = m.addVars(4, vtype=GRB.BINARY, name=f"w_edge_out_{i}_{k}_{s}_{frame_idx}_{r}")
-#                     m.addConstr(out.sum() >= 1, name=f"w_edge_outside_{i}_{k}_{s}_{frame_idx}_{r}")
-
-#                     m.addConstr(
-#                         x_alpha <= row['min_lat'] - WEATHER_EPS_DEG + M_LAT * (1 - out[0]),
-#                         name=f"w_edge_left_{i}_{k}_{s}_{frame_idx}_{r}"
-#                     )
-#                     m.addConstr(
-#                         x_alpha >= row['max_lat'] + WEATHER_EPS_DEG - M_LAT * (1 - out[1]),
-#                         name=f"w_edge_right_{i}_{k}_{s}_{frame_idx}_{r}"
-#                     )
-#                     m.addConstr(
-#                         y_alpha <= row['min_lon'] - WEATHER_EPS_DEG + M_LON * (1 - out[2]),
-#                         name=f"w_edge_below_{i}_{k}_{s}_{frame_idx}_{r}"
-#                     )
-#                     m.addConstr(
-#                         y_alpha >= row['max_lon'] + WEATHER_EPS_DEG - M_LON * (1 - out[3]),
-#                         name=f"w_edge_above_{i}_{k}_{s}_{frame_idx}_{r}"
-#                     )
-                
 
 obj = LinExpr()
 
@@ -495,14 +732,14 @@ for k in range(N):
                         x[i][k], y[i][k], x[i][k-1], y[i][k-1],
                         x[j][k], y[j][k],
                         bin_vars[0], relax_common, SEP_HOR_NM,
-                        tag=f"ij_{i}_{j}_{k}", big_m=BIG_M)
+                        tag=f"ij_{i}_{j}_{k}", big_m=BIG_M, endcap=WAYPOINT_SHAPE)
                 else:
                     # aircraft i has no real segment yet (just entered) - fall back
                     # to a plain point separation check for this branch
-                    m.addConstr(
-                        (x[i][k]-x[j][k])*(x[i][k]-x[j][k]) + (y[i][k]-y[j][k])*(y[i][k]-y[j][k]) >=
-                        SEP_HOR_NM*SEP_HOR_NM - BIG_M*(1-bin_vars[0]) - relax_common,
-                        name=f"cap_fallback_ij_{i}_{j}_{k}")
+                    add_waypoint_clearance(
+                        m, x[i][k], y[i][k], x[j][k], y[j][k], SEP_HOR_NM,
+                        BIG_M*(1-bin_vars[0]) + relax_common,
+                        f"cap_fallback_ij_{i}_{j}_{k}", BIG_M, WAYPOINT_SHAPE)
 
                 # Branch 1: aircraft j's segment [k-1,k] capsule vs aircraft i's point at k
                 if k >= entry_indices[j] + 1:
@@ -511,12 +748,12 @@ for k in range(N):
                         x[j][k], y[j][k], x[j][k-1], y[j][k-1],
                         x[i][k], y[i][k],
                         bin_vars[1], relax_common, SEP_HOR_NM,
-                        tag=f"ji_{i}_{j}_{k}", big_m=BIG_M)
+                        tag=f"ji_{i}_{j}_{k}", big_m=BIG_M, endcap=WAYPOINT_SHAPE)
                 else:
-                    m.addConstr(
-                        (x[i][k]-x[j][k])*(x[i][k]-x[j][k]) + (y[i][k]-y[j][k])*(y[i][k]-y[j][k]) >=
-                        SEP_HOR_NM*SEP_HOR_NM - BIG_M*(1-bin_vars[1]) - relax_common,
-                        name=f"cap_fallback_ji_{i}_{j}_{k}")
+                    add_waypoint_clearance(
+                        m, x[i][k], y[i][k], x[j][k], y[j][k], SEP_HOR_NM,
+                        BIG_M*(1-bin_vars[1]) + relax_common,
+                        f"cap_fallback_ji_{i}_{j}_{k}", BIG_M, WAYPOINT_SHAPE)
 
                 # Branch 2: vertical separation (unchanged from the original formulation)
                 m.addConstr(
@@ -526,7 +763,9 @@ for k in range(N):
 
 m.setObjective(obj, GRB.MINIMIZE)
 m.optimize()
-if m.status == GRB.OPTIMAL:
+if m.SolCount > 0:
+    if m.status != GRB.OPTIMAL:
+        print(f"Using feasible incumbent; solver status {m.status}; optimality not proven")
     print('Obj: %g' % m.ObjVal)
     pat = []
     for i in range(N):
@@ -554,7 +793,13 @@ if m.status == GRB.OPTIMAL:
 
     wide = wide[ordered + [c for c in wide.columns if c not in ordered]]
 
-    wide.to_csv("../../2.3_Outputs_and_Results/test.csv", index=False)
-    print("Results saved to test.csv")
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    solution_path = OUTPUT_DIR / "solution.csv"
+    wide.to_csv(solution_path, index=False)
+    print(f"Results saved to {solution_path}")
+    if args.plot:
+        plot_weather_results(wide, flights, entry_indices, weather_frames,
+                             weather_reference, OUTPUT_DIR, WAYPOINT_SHAPE, SEP_HOR_NM,
+                             tracon_polygon=tracon_polygon)
 else:
     print("Optimization was not successful. Status code:", m.status)

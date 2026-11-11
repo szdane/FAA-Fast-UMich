@@ -26,6 +26,7 @@ by dx/dy the way capsule_geometry.py does):
     offset - computed via Gurobi's power general constraint.
 """
 from gurobipy import GRB
+import math
 
 
 def build_seg_geom_slope(m, diffx1, diffy1, tag, eps=1e-3, big_m=1e5, slope_bound=1e4):
@@ -92,10 +93,16 @@ def build_seg_geom_slope(m, diffx1, diffy1, tag, eps=1e-3, big_m=1e5, slope_boun
 
 
 def add_capsule_direction_slope(m, geom, x_far, y_far, x_near, y_near, x_o, y_o,
-                                 bin_var, relax_common, delta_sep, tag, big_m):
+                                 bin_var, relax_common, delta_sep, tag, big_m,
+                                 endcap="circle"):
     """Scalar-slope counterpart to capsule_geometry.add_capsule_direction:
     same 4-way disjunction ((3) or (4) or (1 AND 2) or (5 AND 6)), same
-    external contract, different internal algebra."""
+    external contract, different internal algebra.
+
+    endcap="circle" uses the Euclidean disk of radius delta_sep around each
+    waypoint for (2)/(5); endcap="square" replaces it with the axis-aligned
+    square of half-width delta_sep (|dx| >= delta OR |dy| >= delta), which
+    is linear and contains the disk. The strip lines (3)/(4) are unchanged."""
     dxpos, dxneg = geom['dxpos'], geom['dxneg']
     dypos, dyneg = geom['dypos'], geom['dyneg']
     m_slope, m_perp = geom['m_slope'], geom['m_perp']
@@ -118,7 +125,7 @@ def add_capsule_direction_slope(m, geom, x_far, y_far, x_near, y_near, x_o, y_o,
     # m is delta_sep*sqrt(1+m^2).
     # Explicit finite bounds (derived from m_slope's own bound) so presolve
     # doesn't have to re-derive them through the quadratic/power constraints.
-    m_slope_ub = m_slope.UB
+    m_slope_ub = geom['slope_bound']  # m_slope.UB is unreadable before m.update()
     msq_ub = m_slope_ub * m_slope_ub
     msq = m.addVar(lb=0, ub=msq_ub, name=f"mslopesq_{tag}")
     m.addConstr(msq == m_slope * m_slope, name=f"mslopesq_def_{tag}")
@@ -168,10 +175,8 @@ def add_capsule_direction_slope(m, geom, x_far, y_far, x_near, y_near, x_o, y_o,
         x_o - x_far <= 0 + c1_relax + big_m * dypos + big_m * dyneg + big_m * (1 - dxneg),
         name=f"cap1_horiz_neg_{tag}")
 
-    m.addConstr(
-        (x_far - x_o) * (x_far - x_o) + (y_far - y_o) * (y_far - y_o) >=
-        delta_sep * delta_sep - c1_relax,
-        name=f"cap2_{tag}")
+    add_waypoint_clearance(m, x_far, y_far, x_o, y_o, delta_sep, c1_relax,
+                           f"cap2_{tag}", big_m, endcap)
 
     # --- (5),(6): near end-cap - mirror of (1),(2), senses reversed --------
     c6_relax = branch_relax + big_m * (1 - case_D)
@@ -189,7 +194,43 @@ def add_capsule_direction_slope(m, geom, x_far, y_far, x_near, y_near, x_o, y_o,
         x_o - x_near >= 0 - c6_relax - big_m * dypos - big_m * dyneg - big_m * (1 - dxneg),
         name=f"cap6_horiz_neg_{tag}")
 
-    m.addConstr(
-        (x_near - x_o) * (x_near - x_o) + (y_near - y_o) * (y_near - y_o) >=
-        delta_sep * delta_sep - c6_relax,
-        name=f"cap5_{tag}")
+    add_waypoint_clearance(m, x_near, y_near, x_o, y_o, delta_sep, c6_relax,
+                           f"cap5_{tag}", big_m, endcap)
+
+
+def add_waypoint_clearance(m, x_w, y_w, x_o, y_o, delta_sep, relax, name, big_m,
+                           endcap):
+    """Point (x_o,y_o) is at least delta_sep from waypoint (x_w,y_w), unless
+    relaxed. "circle": Euclidean distance. "square": outside the axis-aligned
+    square of half-width delta_sep, i.e. one of the four half-planes holds.
+    "octagon": outside the regular octagon circumscribing the circle, i.e.
+    one of the four axis or four diagonal half-planes holds."""
+    if endcap == "circle":
+        m.addConstr(
+            (x_w - x_o) * (x_w - x_o) + (y_w - y_o) * (y_w - y_o) >=
+            delta_sep * delta_sep - relax,
+            name=name)
+    elif endcap == "square":
+        sq = m.addVars(4, vtype=GRB.BINARY, name=f"{name}_sq")
+        m.addConstr(sq.sum() >= 1, name=f"{name}_sq_or")
+        m.addConstr(x_o - x_w >= delta_sep - relax - big_m * (1 - sq[0]), name=f"{name}_sq_xpos")
+        m.addConstr(x_w - x_o >= delta_sep - relax - big_m * (1 - sq[1]), name=f"{name}_sq_xneg")
+        m.addConstr(y_o - y_w >= delta_sep - relax - big_m * (1 - sq[2]), name=f"{name}_sq_ypos")
+        m.addConstr(y_w - y_o >= delta_sep - relax - big_m * (1 - sq[3]), name=f"{name}_sq_yneg")
+    elif endcap == "octagon":
+        sq = m.addVars(8, vtype=GRB.BINARY, name=f"{name}_sq")
+        m.addConstr(sq.sum() >= 1, name=f"{name}_sq_or")
+        m.addConstr(x_o - x_w >= delta_sep - relax - big_m * (1 - sq[0]), name=f"{name}_sq_xpos")
+        m.addConstr(x_w - x_o >= delta_sep - relax - big_m * (1 - sq[1]), name=f"{name}_sq_xneg")
+        m.addConstr(y_o - y_w >= delta_sep - relax - big_m * (1 - sq[2]), name=f"{name}_sq_ypos")
+        m.addConstr(y_w - y_o >= delta_sep - relax - big_m * (1 - sq[3]), name=f"{name}_sq_yneg")
+        # Diagonal faces of the octagon circumscribing the delta_sep circle:
+        # |(x_o-x_w) +/- (y_o-y_w)| >= delta_sep*sqrt(2).
+        d2 = delta_sep * math.sqrt(2)
+        ddx, ddy = x_o - x_w, y_o - y_w
+        m.addConstr( ddx + ddy >= d2 - relax - big_m * (1 - sq[4]), name=f"{name}_oct_pp")
+        m.addConstr(-ddx - ddy >= d2 - relax - big_m * (1 - sq[5]), name=f"{name}_oct_nn")
+        m.addConstr( ddx - ddy >= d2 - relax - big_m * (1 - sq[6]), name=f"{name}_oct_pn")
+        m.addConstr(-ddx + ddy >= d2 - relax - big_m * (1 - sq[7]), name=f"{name}_oct_np")
+    else:
+        raise ValueError(f"unknown endcap shape: {endcap}")
