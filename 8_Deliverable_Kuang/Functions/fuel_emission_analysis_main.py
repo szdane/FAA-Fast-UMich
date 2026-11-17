@@ -61,7 +61,8 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None, 
         output_dir (Path): Optional output location; defaults to the existing Output folder.
     
     Returns:
-        dict: Dictionary containing historic and optimized trajectory data
+        dict: Historic/optimized trajectories, waypoints, and per-flight nlp_info
+            including solver return status and duration-scaling diagnostics.
     """
     start_time = time.time()  # Record start time
     
@@ -687,7 +688,8 @@ def analyze_optimized_trajectory(df_wide, aircraft_list=None, final_times=None, 
     return {
         'historic': dic_hist_flights_preTracon,
         'optimized': dic_opt_flights_preTracon,
-        'waypoints': dic_waypoints_cleaned
+        'waypoints': dic_waypoints_cleaned,
+        'nlp_info': _nlp_rows,
     }
 
 

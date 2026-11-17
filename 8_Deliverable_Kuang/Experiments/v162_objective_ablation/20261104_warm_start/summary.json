@@ -1,0 +1,30 @@
+[
+  {
+    "case": "no_distance",
+    "seed": 1,
+    "status": "TIME_LIMIT",
+    "outcome": "FEASIBLE_GAP_OPEN",
+    "runtime_s": 1200.1659998893738,
+    "build_and_export_s": 6.583703799988143,
+    "work": 988.9532203210606,
+    "nodes": 104287.0,
+    "simplex_iterations": 653438.0,
+    "solutions": 9,
+    "objective": 48158.67791155973,
+    "bound": 47602.71898060646,
+    "gap": 0.011544314650295215,
+    "absolute_gap": 555.9589309532676,
+    "first_incumbent_s": 0.0,
+    "first_incumbent_objective": 48205.341373511765,
+    "last_improvement_s": 441.81900000572205,
+    "quality_ok": true,
+    "constraint_violation": 9.846768875831913e-07,
+    "bound_violation": 5.395343894656157e-09,
+    "integer_violation": 0.0,
+    "original_objective_at_solution": 171817.36944372326,
+    "horizontal_pwl_m": 1236586.9153216353,
+    "heading_l1_m_per_step": 551812.9604497186,
+    "pwl_fuel_kg": 1578.2020796264117,
+    "active_flight_seconds": 7600.0
+  }
+]

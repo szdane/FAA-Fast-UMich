@@ -1,0 +1,55 @@
+{
+  "created_utc": "2026-11-04T06:08:20.873990+00:00",
+  "cases": [
+    "baseline",
+    "no_distance",
+    "no_heading",
+    "no_both"
+  ],
+  "seeds": [
+    0
+  ],
+  "python": "3.11.16 | packaged by conda-forge | (main, Aug 21 2026, 22:37:11) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "D:\\Folder\\3. Files\\U-M\\Year 1\\Semester 2\\Summer LATTICE Lab Fast Project\\FAST Code 4.0\\.conda\\python.exe",
+  "platform": "Windows-10-10.0.22000-SP0",
+  "logical_cpus": 16,
+  "gurobi": [
+    12,
+    0,
+    3
+  ],
+  "packages": {
+    "gurobipy": "12.0.3",
+    "numpy": "2.4.6",
+    "pandas": "2.3.0",
+    "openap": "2.2"
+  },
+  "source_sha256": {
+    "main_v16.2_test.py": "2fd379e7b0fb01bc72aeab719c4d53325cac54fdbed2c4928edea8805fc11c58",
+    "run_v162_objective_ablation.py": "fdceb25e6f16f0fa73d8e9fa8ba06dc0bd031c8a82547297a5daff62c91324e4",
+    "Functions\\find_concurrent_flights.py": "abb2c70837c4572b13eb6ea5657a473a0cd2b396645d47e7368e77c2b17ef694",
+    "Functions\\free_holding.py": "3ec10b8377d27bd473fc1617d5caf651dd9d39463c3d0505c7fe4e1046c1b01f",
+    "Functions\\fuel_emission_analysis_base.py": "8b7deda97fa2b848de13583577e3f50854b5db4b3d47fef30a195ceb4cbdf66f",
+    "Functions\\fuel_emission_analysis_computation.py": "e2f705365142a8e65f4dba29270e8a49024b5bd4f3d5e5b04faf748d768fd915",
+    "Functions\\fuel_emission_analysis_main.py": "194026e8badc7fbd7d00fc5ed717a7414dabdcc46278622ccc7622c680ed6f11",
+    "Functions\\fuel_emission_analysis_main_holding.py": "b116e2faeb650fcd386d60a4cc7221e8f5f759effe923dd30eee217cf4af2049",
+    "Functions\\fuel_emission_analysis_main_weather_nlp.py": "14d2fd12b36d38f9558f04ef4f53f6bcabe3b32fe87247834c99479f9c5f365a",
+    "Functions\\fuel_emission_analysis_plot.py": "5bf5e00d5c0e3a0779ea1bd6a26d92222efcf41f5ebf602ec22e0de017be4432",
+    "Functions\\fuel_emission_analysis_trajectory.py": "cfaf29b19db30886b6f9864afefc1b76e20b296a2792605f80819d002f10f045",
+    "Functions\\fuel_emission_analysis_trajectory_holding.py": "fe0c6e796f91e43aac6e0e78636908c6e5b9c335f592f2f95a0dad37c16397f9",
+    "Functions\\fuel_emission_analysis_trajectory_weather_nlp.py": "2f0c530553f65f67082fe126998aadf9f56909c65fc9271a0dc756470b7cb738",
+    "Functions\\fuel_model.py": "f193d9e36ee55809ce2f88fc5ca39a8a3a2a27e37a5d1458d1e008c3ff5ffd7b",
+    "Functions\\fuel_pwl.py": "a7a9a98eabc9f2a5065e36b0f1b23e438046b0d78abfe8db1c2b1bff4cf1f4c4",
+    "Functions\\fuel_pwl_v1.py": "e35e1af7b59cc81a037703746f8eb19c9a25da05bc2a331a82a6936456023e90",
+    "Functions\\holding_output.py": "ac1ef760e1ccd75014b789ace84a76ce2be7d673cb2ee24e093a3ee3d2236522",
+    "Functions\\interior_holding.py": "48c0b617c9a2339a7a59b72d7859318d511a9f91ce8d23020974dc557ca4e88d",
+    "Functions\\openap_tools.py": "76dc5b1971322c94e05c8390f38275ed62234a86dda136c849dad38486d1f3d1",
+    "Functions\\utilities.py": "4bc58da73095b622dfb7a76fc3d0bae1771af0b70a048db382c2dce1cd9314d2",
+    "Input\\entry_exit_points.csv": "e37516413c3875f74467009a416e78fe90c1a3946e22e9406867e1a666d52d87",
+    "Input\\star_fixes.csv": "4c12efc067f0ed7ae2001b59847b12d7fe3fc81c3e56200a8a205a21b52619b8"
+  },
+  "time_limit_s": 1200.0,
+  "acceptable_seconds": 900.0,
+  "target_gap": 0.01,
+  "start_from": null
+}

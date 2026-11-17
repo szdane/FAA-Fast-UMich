@@ -1,0 +1,7 @@
+TimeLimit  1200
+MIPGap  0.01
+LicenseID  2873147
+LogToConsole  0
+NonConvex  0
+Seed  1
+Threads  4

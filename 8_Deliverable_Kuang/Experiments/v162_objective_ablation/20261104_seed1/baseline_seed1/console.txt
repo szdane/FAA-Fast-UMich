@@ -1,0 +1,36 @@
+D:\Folder\3. Files\U-M\Year 1\Semester 2\Summer LATTICE Lab Fast Project\FAST Code 4.0\.conda\Lib\site-packages\pyproj\network.py:59: UserWarning: pyproj unable to set PROJ database path.
+  _set_context_ca_bundle_path(ca_bundle_path)
+ === PROBLEM SETUP ===
+
+====================================================
+  CLUSTER SELECTION  (query: 08:11 UTC, window: 15 min)
+====================================================
+  Time span : 2023-12-22 08:10:01 → 08:21:21 UTC  (11.3 min)
+  Flights   : 6
+   entry_utc               acId        entry_x        entry_y      entry_z  entry_epoch_s        exit_x        exit_y      exit_z  exit_epoch_s  flight_entry_timestep
+08:10:01 UTC DAL1120_KMSNtoKDTW -227097.574537  121040.690954  8229.600000          201.0 -49377.675828  53123.786280 3956.196963        1113.0                      0
+08:18:06 UTC DAL1655_KPHLtoKDTW  216749.788083 -168012.095855  9144.000000          686.0  46136.239399 -51471.125055 5403.392593        1733.0                      1
+08:12:47 UTC EDV5018_CYULtoKDTW  233181.762956  100456.400666  8685.908120          367.0  47416.490976  31514.770631 2195.157940        1507.0                      0
+08:13:48 UTC EDV5043_KOMAtoKDTW -227983.236650  118056.557847 10058.400000          428.0 -49340.671955  53155.569335 4037.277062        1306.0                      1
+08:21:21 UTC EDV5455_KGRBtoKDTW -213458.502080  159218.851857  7620.000000          881.0 -49365.430235  53134.304575 3423.375145        1762.0                      2
+08:14:51 UTC NKS1449_KFLLtoKDTW  127525.298731 -288151.439107 10598.490775          491.0  45954.045680 -51600.899875 6017.430526        1629.0                      1
+====================================================
+
+UTC grid epoch  : 2023-12-22 08:06:40 UTC (k=0)
+Grid step size  : 400s  (7 min per step)
+Time steps      : 6  (k=0 → 08:06 UTC, k=5 → 08:40 UTC)
+max_entry_k=2, horizon=3 extra steps...
+
+ === MILP OPTIMIZATION ===
+Set parameter OutputFlag to value 1
+Set parameter NonConvex to value 0
+Set parameter TimeLimit to value 1200
+Set parameter MIPGap to value 0.01
+Set parameter Threads to value 4
+Set parameter OutputFlag to value 1
+Set parameter LogToConsole to value 1
+Warning for adding constraints: zero or small (< 1e-13) coefficients, ignored
+Set parameter TimeLimit to value 1200
+Set parameter Seed to value 1
+Set parameter MIPGap to value 0.01
+Set parameter LogToConsole to value 0
